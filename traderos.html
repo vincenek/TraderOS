@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TraderOS Ultimate</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --dark: #1a1d28;
+            --accent: #00c3ff;
+            --secondary: #2d3247;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: var(--dark);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .trade-card {
+            background: var(--secondary);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        button {
+            background: var(--accent);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        button:hover { opacity: 0.8; }
+        .emotion-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin: 10px 0;
+        }
+        .emotion-btn {
+            background: #ffffff15;
+            border: 1px solid #ffffff30;
+            padding: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .emotion-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        canvas { background: #00000020; }
+    </style>
+</head>
+<body>
+    <h1>📈 TraderOS Ultimate</h1>
+    
+    <!-- Controls -->
+    <div class="trade-card">
+        <button onclick="exportData()">📤 Export</button>
+        <input type="file" id="importFile" style="display:none">
+        <button onclick="document.getElementById('importFile').click()">📥 Import</button>
+    </div>
+
+    <!-- Trade Log Form -->
+    <div class="trade-card">
+        <h2>➕ Log New Trade</h2>
+        <form id="tradeForm">
+            <input type="text" id="pair" placeholder="Currency Pair (e.g., EUR/USD)" required>
+            <select id="direction" style="margin: 10px 0">
+                <option>Long</option>
+                <option>Short</option>
+            </select>
+            
+            <div style="margin: 15px 0">
+                <label>Profit/Loss ($):</label>
+                <input type="number" id="profit" step="0.01" required>
+            </div>
+
+            <h4>Pre-Trade Emotions:</h4>
+            <div class="emotion-grid" id="emotionGrid">
+                <button type="button" class="emotion-btn">😌 Confident</button>
+                <button type="button" class="emotion-btn">😰 Anxious</button>
+                <button type="button" class="emotion-btn">😠 Revenge</button>
+                <button type="button" class="emotion-btn">😐 Neutral</button>
+                <button type="button" class="emotion-btn">🤔 Uncertain</button>
+                <button type="button" class="emotion-btn">🎯 Focused</button>
+            </div>
+
+            <button type="submit">💾 Save Trade</button>
+        </form>
+    </div>
+
+    <!-- Insights & Charts -->
+    <div class="trade-card">
+        <h2>📊 Performance Dashboard</h2>
+        <canvas id="performanceChart"></canvas>
+        <div id="aiInsights" style="margin-top: 15px"></div>
+    </div>
+
+    <!-- Trade History -->
+    <div id="tradesList"></div>
+
+    <script>
+        // Local Storage Database
+        const DB_NAME = 'traderOSDB';
+        let chartInstance = null;
+
+        // Initialize
+        document.querySelectorAll('.emotion-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.classList.toggle('active');
+            });
+        });
+
+        // Save Trade
+        document.getElementById('tradeForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const emotions = Array.from(document.querySelectorAll('.emotion-btn.active'))
+                            .map(btn => btn.textContent.trim());
+            
+            saveTrade({
+                pair: document.getElementById('pair').value.toUpperCase(),
+                direction: document.getElementById('direction').value,
+                profit: parseFloat(document.getElementById('profit').value),
+                emotions: emotions,
+                date: new Date().toLocaleString()
+            });
+            
+            e.target.reset();
+            document.querySelectorAll('.emotion-btn').forEach(btn => 
+                btn.classList.remove('active'));
+        });
+
+        function saveTrade(trade) {
+            const trades = JSON.parse(localStorage.getItem(DB_NAME)) || [];
+            trades.push(trade);
+            localStorage.setItem(DB_NAME, JSON.stringify(trades));
+            updateDashboard();
+        }
+
+        // Analytics
+        function generateInsights(trades) {
+            if(trades.length === 0) return '';
+            
+            const profits = trades.map(t => t.profit);
+            const totalProfit = profits.reduce((a,b) => a + b, 0);
+            const winRate = (profits.filter(p => p > 0).length / trades.length * 100).toFixed(1);
+            
+            const emotionCounts = trades.flatMap(t => t.emotions).reduce((acc, e) => {
+                acc[e] = (acc[e] || 0) + 1;
+                return acc;
+            }, {});
+            
+            const topEmotion = Object.entries(emotionCounts).sort((a,b) => b[1] - a[1])[0] || ['None', 0];
+            
+            return `
+                <h3>🧠 AI Insights</h3>
+                • Total Profit: $${totalProfit.toFixed(2)}<br>
+                • Win Rate: ${winRate}%<br>
+                • Most Common Emotion: ${topEmotion[0]} (${topEmotion[1]}x)<br>
+                • Avg. Profit: $${(totalProfit/trades.length).toFixed(2)}<br>
+                • Best Trade: $${Math.max(...profits).toFixed(2)}
+            `;
+        }
+
+        // Chart
+        function updateChart(trades) {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            
+            if(chartInstance) chartInstance.destroy();
+            
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: trades.map((t,i) => `Trade ${i+1}`),
+                    datasets: [{
+                        label: 'Profit/Loss ($)',
+                        data: trades.map(t => t.profit),
+                        backgroundColor: trades.map(t => 
+                            t.profit > 0 ? '#00ff8877' : '#ff006677')
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        // Data Management
+        function exportData() {
+            const data = localStorage.getItem(DB_NAME);
+            const blob = new Blob([data], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'traderos-backup.json';
+            a.click();
+        }
+
+        document.getElementById('importFile').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    localStorage.setItem(DB_NAME, JSON.stringify(data));
+                    updateDashboard();
+                } catch {
+                    alert('Invalid backup file!');
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        // UI Update
+        function updateDashboard() {
+            const trades = JSON.parse(localStorage.getItem(DB_NAME)) || [];
+            
+            // Update Trade List
+            document.getElementById('tradesList').innerHTML = trades
+                .map(t => `
+                    <div class="trade-card">
+                        <b>${t.pair}</b> ${t.direction}<br>
+                        ${t.profit > 0 ? '🟢' : '🔴'} $${t.profit.toFixed(2)}<br>
+                        <small>${t.date} • ${t.emotions.join(', ')}</small>
+                    </div>
+                `).join('');
+            
+            // Update Insights
+            document.getElementById('aiInsights').innerHTML = generateInsights(trades);
+            
+            // Update Chart
+            if(trades.length > 0) updateChart(trades);
+        }
+
+        // Initial Load
+        updateDashboard();
+    </script>
+</body>
+</html>
