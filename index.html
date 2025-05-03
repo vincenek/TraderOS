@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TRADEROS | AI-Powered Trading Journal</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -25,6 +25,7 @@
             color: var(--text);
             margin: 0;
             line-height: 1.6;
+            touch-action: pan-y;
         }
 
         .header {
@@ -69,6 +70,7 @@
             width: 100%;
             max-width: 600px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            overflow: hidden;
         }
 
         .direction-toggle {
@@ -88,6 +90,7 @@
             font-weight: 600;
             font-size: 1rem;
             transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .direction-btn.active {
@@ -110,6 +113,7 @@
             background: none;
             color: var(--text);
             font-size: 1rem;
+            -webkit-appearance: none;
         }
 
         .emotion-grid {
@@ -130,6 +134,7 @@
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .emotion-btn.active {
@@ -148,11 +153,7 @@
             width: 100%;
             transition: all 0.2s;
             margin-top: 1rem;
-        }
-
-        button.cta:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
+            -webkit-tap-highlight-color: transparent;
         }
 
         #performanceChart {
@@ -161,6 +162,8 @@
             padding: 1rem;
             margin: 2rem 0;
             height: 300px;
+            width: 100%;
+            position: relative;
         }
 
         .trade-entry {
@@ -181,20 +184,6 @@
             margin: 2rem auto;
             max-width: 600px;
             text-align: center;
-        }
-
-        .ai-insight {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1rem;
-            background: rgba(255,255,255,0.05);
-            border-radius: 12px;
-            margin: 1rem 0;
-        }
-
-        .insight-icon {
-            font-size: 1.5rem;
         }
 
         @media (min-width: 768px) {
@@ -258,18 +247,6 @@
             <button class="cta" onclick="saveTrade()">EXECUTE TRADE</button>
         </div>
 
-        <!-- AI Insights -->
-        <div class="trade-card">
-            <h2 style="margin: 0 0 1.5rem; font-size: 1.5rem;">AI INSIGHTS</h2>
-            <div id="aiInsights">
-                <div class="ai-insight">
-                    <div class="insight-icon">📈</div>
-                    <div class="insight-text">Analyzing trades...<br>
-                    <strong>Initializing AI patterns:</strong> Collect more data</div>
-                </div>
-            </div>
-        </div>
-
         <!-- Trade Journal -->
         <div class="trade-card">
             <h2 style="margin: 0 0 1.5rem; font-size: 1.5rem;">TRADE JOURNAL</h2>
@@ -281,16 +258,6 @@
             <h2 style="margin: 0 0 1.5rem; font-size: 1.5rem;">EQUITY CURVE</h2>
             <canvas id="performanceChart"></canvas>
         </div>
-
-        <!-- Coming Soon -->
-        <div class="coming-soon">
-            <h3>🚀 Coming Soon</h3>
-            <div class="roadmap">
-                <div class="roadmap-item">🔒 Broker Integrations</div>
-                <div class="roadmap-item">🤖 AI Weekly Reports</div>
-                <div class="roadmap-item">🌐 Multi-Device Sync</div>
-            </div>
-        </div>
     </div>
 
     <script>
@@ -299,18 +266,22 @@
         let currentDirection = 'Long';
         let selectedEmotions = [];
 
-        // Initialize UI
+        // Initialize UI with proper event delegation
         function initializeUI() {
+            // Direction buttons
             document.querySelectorAll('.direction-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
                     document.querySelectorAll('.direction-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     currentDirection = btn.dataset.direction;
                 });
             });
 
+            // Emotion buttons
             document.querySelectorAll('.emotion-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
                     btn.classList.toggle('active');
                     const emotion = btn.dataset.emotion;
                     selectedEmotions = selectedEmotions.includes(emotion) 
@@ -336,7 +307,6 @@
                 const trades = this.load();
                 this.renderJournal(trades);
                 this.renderChart(trades);
-                this.generateInsights(trades);
             }
 
             static renderJournal(trades) {
@@ -395,6 +365,14 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        layout: {
+                            padding: {
+                                left: 10,
+                                right: 10,
+                                top: 10,
+                                bottom: 10
+                            }
+                        },
                         plugins: {
                             legend: { display: false },
                             tooltip: {
@@ -405,34 +383,24 @@
                         scales: {
                             y: {
                                 grid: { color: 'rgba(255,255,255,0.1)' },
-                                ticks: { color: '#6B7280', font: { size: 12 } }
+                                ticks: { 
+                                    color: '#6B7280', 
+                                    font: { size: 12 },
+                                    padding: 5
+                                }
                             },
                             x: {
                                 grid: { display: false },
-                                ticks: { color: '#6B7280', font: { size: 12 } }
+                                ticks: { 
+                                    color: '#6B7280', 
+                                    font: { size: 12 },
+                                    maxRotation: 0,
+                                    autoSkip: true
+                                }
                             }
                         }
                     }
                 });
-            }
-
-            static generateInsights(trades) {
-                if(trades.length < 3) return;
-                
-                const winRate = (trades.filter(t => t.profit > 0).length / trades.length * 100;
-                const bestPair = [...new Set(trades.map(t => t.pair))].reduce((a,b) => 
-                    trades.filter(t => t.pair === a).length > trades.filter(t => t.pair === b).length ? a : b
-                );
-
-                document.getElementById('aiInsights').innerHTML = `
-                    <div class="ai-insight">
-                        <div class="insight-icon">📊</div>
-                        <div class="insight-text">
-                            <strong>Current Stats:</strong><br>
-                            ${winRate.toFixed(1)}% Win Rate | Favorite Pair: ${bestPair}
-                        </div>
-                    </div>
-                `;
             }
         }
 
@@ -470,9 +438,11 @@
             document.querySelector('.direction-btn[data-direction="Long"]').click();
         }
 
-        // Initial Load
-        initializeUI();
-        TradeJournal.updateUI();
+        // Initialize after DOM load
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeUI();
+            TradeJournal.updateUI();
+        });
     </script>
 </body>
 </html>
