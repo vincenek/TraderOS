@@ -3,330 +3,366 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TraderOS - Professional Trading Journal</title>
+    <title>TraderOS Pro | Institutional Trading Journal</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --dark: #0D0F18;
+            --base: #0A0C16;
+            --surface: #15182B;
             --accent: #00C3FF;
-            --secondary: #1A1D28;
             --profit: #00FF88;
             --loss: #FF0066;
+            --text: #E0E0FF;
         }
 
         body {
-            font-family: 'Inter', system-ui, sans-serif;
-            background: var(--dark);
-            color: white;
+            font-family: 'Inter', system-ui;
+            background: var(--base);
+            color: var(--text);
             margin: 0;
-            padding: 2rem;
             line-height: 1.6;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 3rem;
+        .header {
+            background: var(--surface);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 100;
         }
 
         .logo {
-            height: 50px;
+            height: 60px;
             width: auto;
         }
 
-        .trade-card {
-            background: var(--secondary);
-            border-radius: 12px;
-            padding: 2rem;
-            margin: 1rem 0;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+        .main-container {
+            max-width: 1400px;
+            margin: 100px auto 2rem;
+            padding: 0 2rem;
         }
 
-        .grid-2 {
+        .grid-container {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1.5rem;
+            grid-template-columns: 1fr 400px;
+            gap: 2rem;
+        }
+
+        .trade-card {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .direction-toggle {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
             margin: 1.5rem 0;
         }
 
-        input, select, textarea {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 8px;
-            padding: 0.75rem;
-            color: white;
-            width: 100%;
+        .direction-btn {
+            padding: 1.5rem;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            cursor: pointer;
             transition: all 0.2s;
+            background: none;
+            color: var(--text);
+            font-weight: 600;
         }
 
-        input:focus, select:focus, textarea:focus {
+        .direction-btn.active {
+            border-color: var(--accent);
+            background: rgba(0,195,255,0.1);
+        }
+
+        .pl-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .pl-input {
+            padding: 1rem;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            background: none;
+            color: var(--text);
+            font-size: 1.1rem;
+        }
+
+        .pl-input:focus {
             border-color: var(--accent);
             outline: none;
         }
 
-        .pill-toggle {
-            display: flex;
+        .emotion-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
             gap: 1rem;
-            margin: 1rem 0;
+            margin: 2rem 0;
         }
 
-        .pill-toggle button {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 0.5rem 1.5rem;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .pill-toggle button.active {
-            background: var(--accent);
-            border-color: var(--accent);
-            color: var(--dark);
-            font-weight: 600;
-        }
-
-        button.primary {
-            background: var(--accent);
-            color: var(--dark);
-            border: none;
-            padding: 1rem 2rem;
+        .emotion-btn {
+            padding: 1rem;
+            border: 2px solid rgba(255,255,255,0.1);
             border-radius: 8px;
             cursor: pointer;
-            font-weight: 600;
+            background: none;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .emotion-btn.active {
+            border-color: var(--accent);
+            background: rgba(0,195,255,0.1);
+        }
+
+        button.cta {
+            background: var(--accent);
+            color: var(--base);
+            padding: 1.5rem;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
             transition: all 0.2s;
         }
 
-        button.primary:hover {
+        button.cta:hover {
             opacity: 0.9;
-            transform: translateY(-1px);
+            transform: translateY(-2px);
         }
-
-        .profit { color: var(--profit); }
-        .loss { color: var(--loss); }
 
         #performanceChart {
-            margin: 2rem 0;
             background: rgba(0,0,0,0.2);
-            border-radius: 12px;
-            padding: 1rem;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-top: 2rem;
         }
 
-        .trade-note {
-            color: rgba(255,255,255,0.7);
-            font-style: italic;
-            margin-top: 1rem;
-            padding-left: 1rem;
-            border-left: 2px solid var(--accent);
+        .trade-entry {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            display: grid;
+            grid-template-columns: 100px 1fr auto;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .pnl-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 700;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <img src="https://i.postimg.cc/30RjDVfz/IMG-0540.jpg" class="logo" alt="TraderOS Logo">
-            <h1 style="font-weight: 600; letter-spacing: -0.03em">TRADER OS</h1>
-        </header>
+    <header class="header">
+        <img src="https://i.postimg.cc/30RjDVfz/IMG-0540.jpg" class="logo" alt="TraderOS Pro Logo">
+    </header>
 
-        <!-- Trade Log Form -->
-        <div class="trade-card">
-            <h2 style="font-size: 1.5rem; margin-bottom: 1.5rem;">New Trade Entry</h2>
-            <form id="tradeForm">
-                <div class="grid-2">
-                    <div>
-                        <input type="text" id="pair" placeholder="Currency Pair (e.g., EUR/USD)" required>
+    <div class="main-container">
+        <div class="grid-container">
+            <!-- Left Column -->
+            <div>
+                <!-- Trade Entry -->
+                <div class="trade-card">
+                    <h2 style="font-size: 1.5rem; margin-bottom: 1rem;">Trade Entry</h2>
+                    
+                    <div class="direction-toggle">
+                        <button class="direction-btn active" data-direction="Long">LONG</button>
+                        <button class="direction-btn" data-direction="Short">SHORT</button>
                     </div>
-                    <div>
-                        <select id="direction" required>
-                            <option value="">Select Direction</option>
-                            <option>Long</option>
-                            <option>Short</option>
-                        </select>
+
+                    <input type="text" id="pair" class="pl-input" placeholder="Instrument (e.g. EUR/USD)" required>
+
+                    <div class="pl-container">
+                        <input type="number" id="profit" class="pl-input" placeholder="Profit (Pips)" step="0.01">
+                        <input type="number" id="loss" class="pl-input" placeholder="Loss (Pips)" step="0.01">
                     </div>
+
+                    <div class="emotion-grid">
+                        <button class="emotion-btn" data-emotion="confident"><span>😌</span> Confident</button>
+                        <button class="emotion-btn" data-emotion="fearful"><span>😨</span> Fearful</button>
+                        <button class="emotion-btn" data-emotion="disciplined"><span>🧘</span> Disciplined</button>
+                        <button class="emotion-btn" data-emotion="rushed"><span>⏱️</span> Rushed</button>
+                    </div>
+
+                    <textarea id="notes" class="pl-input" rows="3" placeholder="Trade rationale, market context, or lessons learned..."></textarea>
+
+                    <button class="cta" onclick="saveTrade()">Commit Trade</button>
                 </div>
 
-                <div class="pill-toggle">
-                    <button type="button" class="active" data-type="profit">Profit</button>
-                    <button type="button" data-type="loss">Loss</button>
+                <!-- Performance Chart -->
+                <div class="trade-card">
+                    <h2 style="font-size: 1.5rem; margin-bottom: 1rem;">Equity Curve</h2>
+                    <canvas id="performanceChart"></canvas>
                 </div>
+            </div>
 
-                <div class="grid-2">
-                    <input type="number" id="profitAmount" placeholder="Amount gained" step="0.01" required>
-                    <input type="number" id="lossAmount" placeholder="Amount lost" step="0.01" disabled>
+            <!-- Right Column -->
+            <div>
+                <!-- Trade Journal -->
+                <div class="trade-card">
+                    <h2 style="font-size: 1.5rem; margin-bottom: 1rem;">Trade Journal</h2>
+                    <div id="tradeJournal"></div>
                 </div>
-
-                <div style="margin: 1.5rem 0">
-                    <textarea id="notes" rows="3" placeholder="Trade notes (optional)"></textarea>
-                </div>
-
-                <button type="submit" class="primary">Save Trade Entry</button>
-            </form>
+            </div>
         </div>
-
-        <!-- Dashboard -->
-        <div class="trade-card">
-            <h2 style="font-size: 1.5rem; margin-bottom: 1.5rem;">Performance Dashboard</h2>
-            <canvas id="performanceChart"></canvas>
-            <div id="aiInsights"></div>
-        </div>
-
-        <!-- Trade History -->
-        <div id="tradesList"></div>
     </div>
 
     <script>
         const DB_NAME = 'traderOSPro';
         let chartInstance = null;
-        let currentTradeType = 'profit';
+        let currentDirection = 'Long';
+        let selectedEmotions = [];
 
-        // Initialize
-        document.querySelectorAll('.pill-toggle button').forEach(btn => {
+        // Initialize UI
+        document.querySelectorAll('.direction-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                document.querySelectorAll('.pill-toggle button').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.direction-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                currentTradeType = btn.dataset.type;
-                
-                document.getElementById('profitAmount').disabled = currentTradeType !== 'profit';
-                document.getElementById('lossAmount').disabled = currentTradeType === 'profit';
+                currentDirection = btn.dataset.direction;
             });
         });
 
-        // Save Trade
-        document.getElementById('tradeForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            
-            const amount = currentTradeType === 'profit' 
-                ? parseFloat(document.getElementById('profitAmount').value)
-                : -parseFloat(document.getElementById('lossAmount').value);
+        document.querySelectorAll('.emotion-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.classList.toggle('active');
+                const emotion = btn.dataset.emotion;
+                selectedEmotions = selectedEmotions.includes(emotion) 
+                    ? selectedEmotions.filter(e => e !== emotion)
+                    : [...selectedEmotions, emotion];
+            });
+        });
 
-            saveTrade({
+        // Trade Class
+        class TradeJournal {
+            static save(trade) {
+                const trades = JSON.parse(localStorage.getItem(DB_NAME)) || [];
+                trades.push(trade);
+                localStorage.setItem(DB_NAME, JSON.stringify(trades));
+                this.updateUI();
+            }
+
+            static load() {
+                return JSON.parse(localStorage.getItem(DB_NAME)) || [];
+            }
+
+            static updateUI() {
+                const trades = this.load();
+                this.renderJournal(trades);
+                this.renderChart(trades);
+            }
+
+            static renderJournal(trades) {
+                const html = trades.map(trade => `
+                    <div class="trade-entry">
+                        <div>
+                            <div style="font-weight: 700;">${trade.pair}</div>
+                            <div style="color: #6B7280;">${trade.date}</div>
+                        </div>
+                        <div>
+                            <div>${trade.direction} • ${trade.emotions.join(', ')}</div>
+                            ${trade.notes ? `<div style="color: #6B7280; margin-top: 0.5rem;">${trade.notes}</div>` : ''}
+                        </div>
+                        <div class="pnl-badge" style="background: ${trade.profit > 0 ? 'rgba(0,255,136,0.15)' : 'rgba(255,0,102,0.15)'}; color: ${trade.profit > 0 ? '#00FF88' : '#FF0066'}">
+                            ${trade.profit > 0 ? '+' : ''}${trade.profit.toFixed(1)} pips
+                        </div>
+                    </div>
+                `).reverse().join('');
+                document.getElementById('tradeJournal').innerHTML = html;
+            }
+
+            static renderChart(trades) {
+                const ctx = document.getElementById('performanceChart').getContext('2d');
+                if(chartInstance) chartInstance.destroy();
+
+                const cumulative = [];
+                trades.reduce((acc, trade) => {
+                    cumulative.push(acc + trade.profit);
+                    return acc + trade.profit;
+                }, 0);
+
+                chartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: trades.map((_, i) => i + 1),
+                        datasets: [{
+                            label: 'Cumulative P/L',
+                            data: cumulative,
+                            borderColor: '#00C3FF',
+                            tension: 0.4,
+                            fill: true,
+                            backgroundColor: 'rgba(0,195,255,0.05)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: {
+                                grid: { color: 'rgba(255,255,255,0.1)' },
+                                ticks: { color: '#6B7280' }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: '#6B7280' }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Save Trade
+        function saveTrade() {
+            const profit = parseFloat(document.getElementById('profit').value) || 0;
+            const loss = parseFloat(document.getElementById('loss').value) || 0;
+            const netPL = profit - loss;
+
+            if(!document.getElementById('pair').value) {
+                alert('Instrument required');
+                return;
+            }
+
+            TradeJournal.save({
                 pair: document.getElementById('pair').value.toUpperCase(),
-                direction: document.getElementById('direction').value,
-                type: currentTradeType,
-                amount: amount,
-                notes: document.getElementById('notes').value.trim(),
+                direction: currentDirection,
+                profit: netPL,
+                emotions: selectedEmotions,
+                notes: document.getElementById('notes').value,
                 date: new Date().toLocaleString('en-US', {
-                    weekday: 'short', 
-                    hour: '2-digit', 
-                    minute: '2-digit',
-                    day: 'numeric',
-                    month: 'short'
+                    month: 'short',
+                    day: 'numeric', 
+                    hour: '2-digit',
+                    minute: '2-digit'
                 })
             });
 
-            e.target.reset();
-            document.getElementById('profitAmount').disabled = false;
-            document.getElementById('lossAmount').disabled = true;
-            document.querySelector('.pill-toggle button').click();
-        });
-
-        function saveTrade(trade) {
-            const trades = JSON.parse(localStorage.getItem(DB_NAME)) || [];
-            trades.push(trade);
-            localStorage.setItem(DB_NAME, JSON.stringify(trades));
-            updateDashboard();
-        }
-
-        // Analytics
-        function generateInsights(trades) {
-            if(trades.length === 0) return '<p>No trades recorded yet</p>';
-            
-            const profits = trades.map(t => t.amount);
-            const total = profits.reduce((a,b) => a + b, 0);
-            const winRate = (trades.filter(t => t.amount > 0).length / trades.length * 100;
-            
-            return `
-                <div class="grid-2">
-                    <div class="trade-card">
-                        <h3>📈 Profit</h3>
-                        <p class="profit">$${total > 0 ? total.toFixed(2) : '0.00'}</p>
-                    </div>
-                    <div class="trade-card">
-                        <h3>📉 Loss</h3>
-                        <p class="loss">$${Math.abs(total < 0 ? total : 0).toFixed(2)}</p>
-                    </div>
-                </div>
-                <div class="trade-card" style="margin-top: 1.5rem">
-                    <h3>📊 Statistics</h3>
-                    <p>Total Trades: ${trades.length}</p>
-                    <p>Win Rate: ${winRate.toFixed(1)}%</p>
-                    <p>Avg. Profit: $${(total/trades.length).toFixed(2)}</p>
-                </div>
-            `;
-        }
-
-        // Chart
-        function updateChart(trades) {
-            const ctx = document.getElementById('performanceChart').getContext('2d');
-            
-            if(chartInstance) chartInstance.destroy();
-            
-            chartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: trades.map((t,i) => `Trade ${i+1}`),
-                    datasets: [{
-                        label: 'Profit/Loss',
-                        data: trades.map(t => t.amount),
-                        backgroundColor: trades.map(t => 
-                            t.amount > 0 ? 'rgba(0, 255, 136, 0.8)' : 'rgba(255, 0, 102, 0.8)'),
-                        borderColor: trades.map(t => 
-                            t.amount > 0 ? 'rgba(0, 255, 136, 1)' : 'rgba(255, 0, 102, 1)'),
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false },
-                    },
-                    scales: {
-                        y: {
-                            grid: { color: 'rgba(255,255,255,0.1)' },
-                            ticks: { color: 'rgba(255,255,255,0.7)' }
-                        },
-                        x: {
-                            grid: { display: false },
-                            ticks: { color: 'rgba(255,255,255,0.7)' }
-                        }
-                    }
-                }
-            });
-        }
-
-        // UI Update
-        function updateDashboard() {
-            const trades = JSON.parse(localStorage.getItem(DB_NAME)) || [];
-            
-            document.getElementById('tradesList').innerHTML = trades
-                .map(t => `
-                    <div class="trade-card">
-                        <div style="display: flex; justify-content: space-between; align-items: center">
-                            <div>
-                                <h3 style="margin: 0">${t.pair} • ${t.direction}</h3>
-                                <small>${t.date}</small>
-                            </div>
-                            <span class="${t.type === 'profit' ? 'profit' : 'loss'}" 
-                                  style="font-size: 1.2rem; font-weight: 600">
-                                $${Math.abs(t.amount).toFixed(2)}
-                            </span>
-                        </div>
-                        ${t.notes ? `<div class="trade-note">${t.notes}</div>` : ''}
-                    </div>
-                `).reverse().join('');
-            
-            document.getElementById('aiInsights').innerHTML = generateInsights(trades);
-            if(trades.length > 0) updateChart(trades);
+            // Reset form
+            document.getElementById('profit').value = '';
+            document.getElementById('loss').value = '';
+            document.getElementById('notes').value = '';
+            selectedEmotions = [];
+            document.querySelectorAll('.emotion-btn').forEach(btn => btn.classList.remove('active'));
         }
 
         // Initial Load
-        updateDashboard();
+        TradeJournal.updateUI();
     </script>
 </body>
 </html>
