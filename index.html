@@ -25,7 +25,7 @@
 
         .header {
             background: var(--surface);
-            padding: 1rem;
+            padding: 1rem 2rem;
             border-bottom: 1px solid rgba(255,255,255,0.1);
             position: fixed;
             width: 100%;
@@ -33,25 +33,36 @@
             z-index: 100;
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 1.5rem;
         }
 
         .logo {
-            height: 80px;
+            height: 50px;
             width: auto;
+            border-radius: 8px;
+        }
+
+        .brand {
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            background: linear-gradient(45deg, #00C3FF, #00FF88);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
         }
 
         .main-container {
             max-width: 1400px;
             margin: 100px auto 2rem;
-            padding: 0 1rem;
+            padding: 0 1.5rem;
         }
 
         .trade-card {
             background: var(--surface);
             border-radius: 16px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
             box-shadow: 0 8px 32px rgba(0,0,0,0.3);
         }
 
@@ -59,11 +70,11 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1rem;
-            margin: 1.5rem 0;
+            margin: 2rem 0;
         }
 
         .direction-btn {
-            padding: 1.2rem;
+            padding: 1.5rem;
             border: 2px solid rgba(255,255,255,0.1);
             border-radius: 12px;
             cursor: pointer;
@@ -71,18 +82,18 @@
             background: none;
             color: var(--text);
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 1rem;
         }
 
         .pl-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin: 1.5rem 0;
+            gap: 1.5rem;
+            margin: 2rem 0;
         }
 
         .pl-input {
-            padding: 1rem;
+            padding: 1.2rem;
             border: 2px solid rgba(255,255,255,0.1);
             border-radius: 12px;
             background: none;
@@ -94,48 +105,52 @@
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 1rem;
-            margin: 1.5rem 0;
+            margin: 2rem 0;
         }
 
         button.cta {
             background: var(--accent);
             color: var(--base);
-            padding: 1.2rem;
+            padding: 1.5rem;
             border: none;
             border-radius: 12px;
             font-weight: 700;
             cursor: pointer;
             width: 100%;
             transition: all 0.2s;
+            margin-top: 1rem;
         }
 
         #performanceChart {
             background: rgba(0,0,0,0.2);
             border-radius: 16px;
-            padding: 1rem;
-            margin-top: 1rem;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            height: 400px;
         }
 
         .trade-entry {
             background: var(--surface);
             border-radius: 12px;
-            padding: 1rem;
-            margin: 1rem 0;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
+            gap: 1rem;
         }
 
         @media (min-width: 768px) {
-            .main-container {
-                padding: 0 2rem;
+            .header {
+                padding: 1rem 3rem;
             }
             .logo {
-                height: 100px;
+                height: 60px;
             }
-            .direction-btn {
-                padding: 1.5rem;
-                font-size: 1rem;
+            .brand {
+                font-size: 2.2rem;
+            }
+            .main-container {
+                padding: 0 3rem;
             }
             .emotion-grid {
                 grid-template-columns: repeat(4, 1fr);
@@ -151,12 +166,13 @@
 <body>
     <header class="header">
         <img src="https://i.postimg.cc/30RjDVfz/IMG-0540.jpg" class="logo" alt="TRADEROS Logo">
+        <div class="brand">TRADEROS</div>
     </header>
 
     <div class="main-container">
         <!-- Trade Entry -->
         <div class="trade-card">
-            <h2 style="margin: 0 0 1rem;">TRADE EXECUTION</h2>
+            <h2 style="margin: 0 0 1.5rem; font-size: 1.5rem;">TRADE EXECUTION</h2>
             <div class="direction-toggle">
                 <button class="direction-btn active" data-direction="Long">LONG</button>
                 <button class="direction-btn" data-direction="Short">SHORT</button>
@@ -176,20 +192,20 @@
                 <button class="emotion-btn" data-emotion="rushed">⏱️ Rushed</button>
             </div>
 
-            <textarea id="notes" class="pl-input" rows="3" placeholder="Market analysis & trade rationale..."></textarea>
+            <textarea id="notes" class="pl-input" rows="4" placeholder="Market analysis & trade rationale..."></textarea>
 
             <button class="cta" onclick="saveTrade()">EXECUTE TRADE</button>
         </div>
 
         <!-- Trade Journal -->
         <div class="trade-card">
-            <h2 style="margin: 0 0 1rem;">TRADE JOURNAL</h2>
+            <h2 style="margin: 0 0 1.5rem; font-size: 1.5rem;">TRADE JOURNAL</h2>
             <div id="tradeJournal"></div>
         </div>
 
         <!-- Equity Curve -->
         <div class="trade-card">
-            <h2 style="margin: 0 0 1rem;">EQUITY CURVE</h2>
+            <h2 style="margin: 0 0 1.5rem; font-size: 1.5rem;">EQUITY CURVE</h2>
             <canvas id="performanceChart"></canvas>
         </div>
     </div>
@@ -241,18 +257,18 @@
             static renderJournal(trades) {
                 const html = trades.map(trade => `
                     <div class="trade-entry">
-                        <div>
+                        <div style="flex: 1;">
                             <div style="font-weight: 700; font-size: 1.1rem;">${trade.pair}</div>
-                            <div style="font-size: 0.9rem; color: #6B7280;">
+                            <div style="font-size: 0.9rem; color: #6B7280; margin-top: 0.5rem;">
                                 ${trade.direction} • ${trade.date}
                             </div>
-                            ${trade.notes ? `<div style="margin-top: 0.5rem; font-size: 0.9rem;">${trade.notes}</div>` : ''}
+                            ${trade.notes ? `<div style="margin-top: 1rem; font-size: 0.9rem; line-height: 1.5;">${trade.notes}</div>` : ''}
                         </div>
-                        <div style="text-align: right;">
-                            <div style="font-weight: 700; color: ${trade.profit > 0 ? var(--profit) : var(--loss)}">
+                        <div style="text-align: right; min-width: 120px;">
+                            <div style="font-weight: 700; font-size: 1.2rem; color: ${trade.profit > 0 ? var(--profit) : var(--loss)}">
                                 ${trade.profit > 0 ? '+' : ''}${trade.profit.toFixed(1)} pips
                             </div>
-                            <div style="font-size: 0.9rem; color: #6B7280;">
+                            <div style="font-size: 0.9rem; color: #6B7280; margin-top: 0.5rem;">
                                 ${trade.emotions.join(', ')}
                             </div>
                         </div>
@@ -267,14 +283,15 @@
 
                 const cumulative = [];
                 trades.reduce((acc, trade) => {
-                    cumulative.push(acc + trade.profit);
-                    return acc + trade.profit;
+                    const total = acc + trade.profit;
+                    cumulative.push(total);
+                    return total;
                 }, 0);
 
                 chartInstance = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: trades.map((_, i) => i + 1),
+                        labels: trades.map((_, i) => `Trade ${i + 1}`),
                         datasets: [{
                             label: 'Cumulative P/L',
                             data: cumulative,
@@ -282,7 +299,8 @@
                             tension: 0.4,
                             fill: true,
                             backgroundColor: 'rgba(0,195,255,0.05)',
-                            borderWidth: 2
+                            borderWidth: 3,
+                            pointRadius: 0
                         }]
                     },
                     options: {
@@ -292,11 +310,11 @@
                         scales: {
                             y: {
                                 grid: { color: 'rgba(255,255,255,0.1)' },
-                                ticks: { color: '#6B7280' }
+                                ticks: { color: '#6B7280', font: { size: 12 } }
                             },
                             x: {
                                 grid: { display: false },
-                                ticks: { color: '#6B7280' }
+                                ticks: { color: '#6B7280', font: { size: 12 } }
                             }
                         }
                     }
