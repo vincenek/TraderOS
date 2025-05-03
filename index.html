@@ -6,7 +6,7 @@
     <title>TRADEROS | Institutional Trading Journal</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root {
+ :root {
             --base: #0A0C16;
             --surface: #15182B;
             --accent: #00C3FF;
@@ -52,18 +52,26 @@
             color: transparent;
         }
 
-        .main-container {
-            max-width: 1400px;
-            margin: 100px auto 2rem;
-            padding: 0 1.5rem;
+  .main-container {
+            max-width: 100%;
+            padding: 0 1rem;
         }
 
         .trade-card {
-            background: var(--surface);
-            border-radius: 16px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            width: calc(100% - 3rem);
+            margin: 1rem 0;
+            padding: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .main-container {
+                max-width: 1400px;
+                padding: 0 3rem;
+            }
+            .trade-card {
+                width: auto;
+                padding: 2rem;
+            }
         }
 
         .direction-toggle {
