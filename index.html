@@ -384,7 +384,7 @@
                 chartInstance = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: trades.map((_, i) => `Trade ${i + 1}`),
+                        labels: trades.map(trade => trade.date),
                         datasets: [{
                             label: 'Cumulative P/L',
                             data: cumulative,
