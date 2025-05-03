@@ -300,7 +300,6 @@
 
         // UI Initialization
         function initializeUI() {
-            // Direction buttons
             document.querySelectorAll('.direction-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -310,7 +309,6 @@
                 });
             });
 
-            // Emotion buttons
             document.querySelectorAll('.emotion-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -346,12 +344,18 @@
             static renderJournal(trades) {
                 const html = trades.map(trade => {
                     const profitColor = trade.profit > 0 ? '#00FF88' : '#FF0066';
+                    const date = new Date(trade.timestamp).toLocaleString('en-US', {
+                        month: 'short',
+                        day: 'numeric', 
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
                     return `
                         <div class="trade-entry">
                             <div style="flex: 1;">
                                 <div style="font-weight: 700; font-size: 1.1rem;">${trade.pair}</div>
                                 <div style="font-size: 0.9rem; color: #6B7280; margin-top: 0.5rem;">
-                                    ${trade.direction} • ${trade.date}
+                                    ${trade.direction} • ${date}
                                 </div>
                                 ${trade.notes ? `<div style="margin-top: 1rem; font-size: 0.9rem; line-height: 1.5;">${trade.notes}</div>` : ''}
                             </div>
@@ -378,13 +382,15 @@
                 
                 trades.forEach(trade => {
                     runningTotal += trade.profit;
-                    cumulative.push(runningTotal);
+                    cumulative.push({
+                        x: new Date(trade.timestamp),
+                        y: runningTotal
+                    });
                 });
 
                 chartInstance = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: trades.map(trade => trade.date),
                         datasets: [{
                             label: 'Cumulative P/L',
                             data: cumulative,
@@ -399,22 +405,16 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        layout: {
-                            padding: {
-                                left: 10,
-                                right: 10,
-                                top: 10,
-                                bottom: 10
-                            }
-                        },
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                mode: 'index',
-                                intersect: false
-                            }
-                        },
                         scales: {
+                            x: {
+                                type: 'time',
+                                time: {
+                                    unit: 'day',
+                                    tooltipFormat: 'MMM d, h:mm a'
+                                },
+                                grid: { display: false },
+                                ticks: { color: '#6B7280' }
+                            },
                             y: {
                                 beginAtZero: true,
                                 grid: { 
@@ -426,13 +426,23 @@
                                     padding: 5,
                                     maxTicksLimit: 5
                                 }
-                            },
-                            x: {
-                                grid: { display: false },
-                                ticks: { 
-                                    color: '#6B7280',
-                                    maxRotation: 0,
-                                    autoSkip: true
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                                callbacks: {
+                                    title: (items) => {
+                                        const date = new Date(items[0].raw.x);
+                                        return date.toLocaleString('en-US', {
+                                            month: 'short',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        });
+                                    }
                                 }
                             }
                         }
@@ -483,7 +493,7 @@
             static getBestTradingDay(trades) {
                 const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
                 const dayCounts = trades.reduce((acc, trade) => {
-                    const date = new Date(trade.date);
+                    const date = new Date(trade.timestamp);
                     const dayIndex = date.getDay();
                     acc[dayIndex] = (acc[dayIndex] || 0) + 1;
                     return acc;
@@ -506,7 +516,6 @@
             }
         }
 
-        // Save Trade Function
         function saveTrade() {
             const profit = parseFloat(document.getElementById('profit').value) || 0;
             const loss = parseFloat(document.getElementById('loss').value) || 0;
@@ -523,12 +532,7 @@
                 profit: netPL,
                 emotions: selectedEmotions,
                 notes: document.getElementById('notes').value,
-                date: new Date().toLocaleString('en-US', {
-                    month: 'short',
-                    day: 'numeric', 
-                    hour: '2-digit',
-                    minute: '2-digit'
-                })
+                timestamp: Date.now()
             });
 
             // Reset Form
@@ -541,7 +545,6 @@
             document.querySelector('.direction-btn[data-direction="Long"]').click();
         }
 
-        // Initialize on Load
         document.addEventListener('DOMContentLoaded', () => {
             initializeUI();
             TradeJournal.updateUI();
