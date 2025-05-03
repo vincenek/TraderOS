@@ -90,6 +90,11 @@
             transition: all 0.2s;
         }
 
+        .direction-btn.active {
+            border-color: var(--accent);
+            background: rgba(0,195,255,0.1);
+        }
+
         .pl-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -114,6 +119,24 @@
             margin: 1.5rem 0;
         }
 
+        .emotion-btn {
+            padding: 1rem;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            background: none;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .emotion-btn.active {
+            border-color: var(--accent);
+            background: rgba(0,195,255,0.1);
+        }
+
         button.cta {
             background: var(--accent);
             color: var(--base);
@@ -125,6 +148,11 @@
             width: 100%;
             transition: all 0.2s;
             margin-top: 1rem;
+        }
+
+        button.cta:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
         }
 
         #performanceChart {
@@ -226,23 +254,27 @@
         let selectedEmotions = [];
 
         // Initialize UI
-        document.querySelectorAll('.direction-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.direction-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentDirection = btn.dataset.direction;
+        function initializeUI() {
+            // Direction buttons
+            document.querySelectorAll('.direction-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.direction-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentDirection = btn.dataset.direction;
+                });
             });
-        });
 
-        document.querySelectorAll('.emotion-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                btn.classList.toggle('active');
-                const emotion = btn.dataset.emotion;
-                selectedEmotions = selectedEmotions.includes(emotion) 
-                    ? selectedEmotions.filter(e => e !== emotion)
-                    : [...selectedEmotions, emotion];
+            // Emotion buttons
+            document.querySelectorAll('.emotion-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    btn.classList.toggle('active');
+                    const emotion = btn.dataset.emotion;
+                    selectedEmotions = selectedEmotions.includes(emotion) 
+                        ? selectedEmotions.filter(e => e !== emotion)
+                        : [...selectedEmotions, emotion];
+                });
             });
-        });
+        }
 
         // Trade Class
         class TradeJournal {
@@ -264,25 +296,28 @@
             }
 
             static renderJournal(trades) {
-                const html = trades.map(trade => `
-                    <div class="trade-entry">
-                        <div style="flex: 1;">
-                            <div style="font-weight: 700; font-size: 1.1rem;">${trade.pair}</div>
-                            <div style="font-size: 0.9rem; color: #6B7280; margin-top: 0.5rem;">
-                                ${trade.direction} • ${trade.date}
+                const html = trades.map(trade => {
+                    const profitColor = trade.profit > 0 ? '#00FF88' : '#FF0066';
+                    return `
+                        <div class="trade-entry">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 700; font-size: 1.1rem;">${trade.pair}</div>
+                                <div style="font-size: 0.9rem; color: #6B7280; margin-top: 0.5rem;">
+                                    ${trade.direction} • ${trade.date}
+                                </div>
+                                ${trade.notes ? `<div style="margin-top: 1rem; font-size: 0.9rem; line-height: 1.5;">${trade.notes}</div>` : ''}
                             </div>
-                            ${trade.notes ? `<div style="margin-top: 1rem; font-size: 0.9rem; line-height: 1.5;">${trade.notes}</div>` : ''}
+                            <div style="text-align: right; min-width: 120px;">
+                                <div style="font-weight: 700; font-size: 1.2rem; color: ${profitColor}">
+                                    ${trade.profit > 0 ? '+' : ''}${trade.profit.toFixed(1)} pips
+                                </div>
+                                <div style="font-size: 0.9rem; color: #6B7280; margin-top: 0.5rem;">
+                                    ${trade.emotions.join(', ') || 'No emotions logged'}
+                                </div>
+                            </div>
                         </div>
-                        <div style="text-align: right; min-width: 120px;">
-                            <div style="font-weight: 700; font-size: 1.2rem; color: ${trade.profit > 0 ? var(--profit) : var(--loss)}">
-                                ${trade.profit > 0 ? '+' : ''}${trade.profit.toFixed(1)} pips
-                            </div>
-                            <div style="font-size: 0.9rem; color: #6B7280; margin-top: 0.5rem;">
-                                ${trade.emotions.join(', ')}
-                            </div>
-                        </div>
-                    </div>
-                `).reverse().join('');
+                    `;
+                }).reverse().join('');
                 document.getElementById('tradeJournal').innerHTML = html;
             }
 
@@ -357,14 +392,17 @@
             });
 
             // Reset form
+            document.getElementById('pair').value = '';
             document.getElementById('profit').value = '';
             document.getElementById('loss').value = '';
             document.getElementById('notes').value = '';
             selectedEmotions = [];
             document.querySelectorAll('.emotion-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.direction-btn[data-direction="Long"]').click();
         }
 
         // Initial Load
+        initializeUI();
         TradeJournal.updateUI();
     </script>
 </body>
