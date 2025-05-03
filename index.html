@@ -17,15 +17,17 @@
 
         * {
             box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
         body {
             font-family: 'Inter', system-ui;
             background: var(--base);
             color: var(--text);
-            margin: 0;
             line-height: 1.6;
             touch-action: pan-y;
+            -webkit-font-smoothing: antialiased;
         }
 
         .header {
@@ -45,6 +47,7 @@
             height: 50px;
             width: auto;
             border-radius: 8px;
+            border: 2px solid rgba(255,255,255,0.1);
         }
 
         .brand {
@@ -73,20 +76,6 @@
             overflow: hidden;
         }
 
-        /* Added chart container */
-        .chart-container {
-            position: relative;
-            height: 250px;
-            width: 100%;
-        }
-
-        #performanceChart {
-            background: rgba(0,0,0,0.2);
-            border-radius: 16px;
-            padding: 10px;
-        }
-
-        /* [Keep all other existing styles exactly the same] */
         .direction-toggle {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -130,6 +119,11 @@
             -webkit-appearance: none;
         }
 
+        .pl-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
         .emotion-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -170,6 +164,20 @@
             -webkit-tap-highlight-color: transparent;
         }
 
+        button.cta:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        #performanceChart {
+            background: rgba(0,0,0,0.2);
+            border-radius: 16px;
+            padding: 1rem;
+            margin: 1rem 0;
+            height: 250px;
+            width: 100%;
+        }
+
         .trade-entry {
             background: var(--surface);
             border-radius: 12px;
@@ -178,6 +186,25 @@
             display: flex;
             flex-direction: column;
             gap: 1rem;
+        }
+
+        .ai-insight {
+            background: rgba(0,195,255,0.1);
+            border-radius: 12px;
+            padding: 1rem;
+            margin: 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .insight-icon {
+            font-size: 1.5rem;
+            background: var(--surface);
+            padding: 0.5rem;
+            border-radius: 8px;
+            min-width: 40px;
+            text-align: center;
         }
 
         @media (min-width: 768px) {
@@ -214,7 +241,7 @@
     </header>
 
     <div class="main-container">
-        <!-- Trade Entry -->
+        <!-- Trade Entry Card -->
         <div class="trade-card">
             <h2 style="margin: 0 0 1.5rem; font-size: 1.5rem;">TRADE EXECUTION</h2>
             <div class="direction-toggle">
@@ -241,18 +268,27 @@
             <button class="cta" onclick="saveTrade()">EXECUTE TRADE</button>
         </div>
 
-        <!-- Trade Journal -->
+        <!-- AI Insights Card -->
+        <div class="trade-card">
+            <h2 style="margin: 0 0 1.5rem; font-size: 1.5rem;">AI INSIGHTS</h2>
+            <div id="aiInsights">
+                <div class="ai-insight">
+                    <div class="insight-icon">🤖</div>
+                    <div class="insight-text">Start trading to unlock personalized insights</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trade Journal Card -->
         <div class="trade-card">
             <h2 style="margin: 0 0 1.5rem; font-size: 1.5rem;">TRADE JOURNAL</h2>
             <div id="tradeJournal"></div>
         </div>
 
-        <!-- Equity Curve (Fixed Section) -->
+        <!-- Equity Curve Card -->
         <div class="trade-card">
             <h2 style="margin: 0 0 1.5rem; font-size: 1.5rem;">EQUITY CURVE</h2>
-            <div class="chart-container">
-                <canvas id="performanceChart"></canvas>
-            </div>
+            <canvas id="performanceChart"></canvas>
         </div>
     </div>
 
@@ -262,7 +298,9 @@
         let currentDirection = 'Long';
         let selectedEmotions = [];
 
+        // UI Initialization
         function initializeUI() {
+            // Direction buttons
             document.querySelectorAll('.direction-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -272,6 +310,7 @@
                 });
             });
 
+            // Emotion buttons
             document.querySelectorAll('.emotion-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -284,6 +323,7 @@
             });
         }
 
+        // Trade Journal Class
         class TradeJournal {
             static save(trade) {
                 const trades = JSON.parse(localStorage.getItem(DB_NAME)) || [];
@@ -300,6 +340,7 @@
                 const trades = this.load();
                 this.renderJournal(trades);
                 this.renderChart(trades);
+                this.generateInsights(trades);
             }
 
             static renderJournal(trades) {
@@ -398,15 +439,81 @@
                     }
                 });
             }
+
+            static generateInsights(trades) {
+                const insightsContainer = document.getElementById('aiInsights');
+                
+                if(trades.length < 3) {
+                    insightsContainer.innerHTML = `
+                        <div class="ai-insight">
+                            <div class="insight-icon">📊</div>
+                            <div class="insight-text">Complete 3+ trades to unlock AI insights</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const winRate = ((trades.filter(t => t.profit > 0).length / trades.length) * 100).toFixed(1);
+                const commonPair = this.getMostCommonPair(trades);
+                const bestDay = this.getBestTradingDay(trades);
+                const emotionPattern = this.getEmotionPattern(trades);
+
+                insightsContainer.innerHTML = `
+                    <div class="ai-insight">
+                        <div class="insight-icon">📈</div>
+                        <div class="insight-text">
+                            <strong>Win Rate:</strong> ${winRate}%<br>
+                            <strong>Most Traded:</strong> ${commonPair}<br>
+                            <strong>Best Day:</strong> ${bestDay}<br>
+                            <strong>Top Emotion:</strong> ${emotionPattern}
+                        </div>
+                    </div>
+                `;
+            }
+
+            static getMostCommonPair(trades) {
+                const pairs = trades.map(t => t.pair);
+                const counts = pairs.reduce((acc, pair) => {
+                    acc[pair] = (acc[pair] || 0) + 1;
+                    return acc;
+                }, {});
+                return Object.entries(counts).sort((a,b) => b[1] - a[1])[0][0];
+            }
+
+            static getBestTradingDay(trades) {
+                const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                const dayCounts = trades.reduce((acc, trade) => {
+                    const date = new Date(trade.date);
+                    const dayIndex = date.getDay();
+                    acc[dayIndex] = (acc[dayIndex] || 0) + 1;
+                    return acc;
+                }, Array(7).fill(0));
+                const maxIndex = dayCounts.indexOf(Math.max(...dayCounts));
+                return days[maxIndex];
+            }
+
+            static getEmotionPattern(trades) {
+                const emotions = trades.flatMap(t => t.emotions);
+                if(emotions.length === 0) return 'N/A';
+                
+                const emotionCounts = emotions.reduce((acc, emotion) => {
+                    acc[emotion] = (acc[emotion] || 0) + 1;
+                    return acc;
+                }, {});
+                
+                const sortedEmotions = Object.entries(emotionCounts).sort((a,b) => b[1] - a[1]);
+                return `${sortedEmotions[0][0]} (${sortedEmotions[0][1]}x)`;
+            }
         }
 
+        // Save Trade Function
         function saveTrade() {
             const profit = parseFloat(document.getElementById('profit').value) || 0;
             const loss = parseFloat(document.getElementById('loss').value) || 0;
             const netPL = profit - loss;
 
             if(!document.getElementById('pair').value) {
-                alert('Instrument required');
+                alert('Please enter an instrument');
                 return;
             }
 
@@ -424,6 +531,7 @@
                 })
             });
 
+            // Reset Form
             document.getElementById('pair').value = '';
             document.getElementById('profit').value = '';
             document.getElementById('loss').value = '';
@@ -433,6 +541,7 @@
             document.querySelector('.direction-btn[data-direction="Long"]').click();
         }
 
+        // Initialize on Load
         document.addEventListener('DOMContentLoaded', () => {
             initializeUI();
             TradeJournal.updateUI();
