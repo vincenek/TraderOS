@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TraderOS Pro | Institutional Trading Journal</title>
+    <title>TRADEROS | Institutional Trading Journal</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -25,36 +25,33 @@
 
         .header {
             background: var(--surface);
-            padding: 1rem 2rem;
+            padding: 1rem;
             border-bottom: 1px solid rgba(255,255,255,0.1);
             position: fixed;
             width: 100%;
             top: 0;
             z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .logo {
-            height: 60px;
+            height: 80px;
             width: auto;
         }
 
         .main-container {
             max-width: 1400px;
             margin: 100px auto 2rem;
-            padding: 0 2rem;
-        }
-
-        .grid-container {
-            display: grid;
-            grid-template-columns: 1fr 400px;
-            gap: 2rem;
+            padding: 0 1rem;
         }
 
         .trade-card {
             background: var(--surface);
             border-radius: 16px;
-            padding: 2rem;
-            margin-bottom: 2rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
             box-shadow: 0 8px 32px rgba(0,0,0,0.3);
         }
 
@@ -66,7 +63,7 @@
         }
 
         .direction-btn {
-            padding: 1.5rem;
+            padding: 1.2rem;
             border: 2px solid rgba(255,255,255,0.1);
             border-radius: 12px;
             cursor: pointer;
@@ -74,18 +71,14 @@
             background: none;
             color: var(--text);
             font-weight: 600;
-        }
-
-        .direction-btn.active {
-            border-color: var(--accent);
-            background: rgba(0,195,255,0.1);
+            font-size: 0.9rem;
         }
 
         .pl-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1rem;
-            margin: 2rem 0;
+            margin: 1.5rem 0;
         }
 
         .pl-input {
@@ -94,43 +87,20 @@
             border-radius: 12px;
             background: none;
             color: var(--text);
-            font-size: 1.1rem;
-        }
-
-        .pl-input:focus {
-            border-color: var(--accent);
-            outline: none;
+            font-size: 1rem;
         }
 
         .emotion-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 1rem;
-            margin: 2rem 0;
-        }
-
-        .emotion-btn {
-            padding: 1rem;
-            border: 2px solid rgba(255,255,255,0.1);
-            border-radius: 8px;
-            cursor: pointer;
-            background: none;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-
-        .emotion-btn.active {
-            border-color: var(--accent);
-            background: rgba(0,195,255,0.1);
+            margin: 1.5rem 0;
         }
 
         button.cta {
             background: var(--accent);
             color: var(--base);
-            padding: 1.5rem;
+            padding: 1.2rem;
             border: none;
             border-radius: 12px;
             font-weight: 700;
@@ -139,88 +109,88 @@
             transition: all 0.2s;
         }
 
-        button.cta:hover {
-            opacity: 0.9;
-            transform: translateY(-2px);
-        }
-
         #performanceChart {
             background: rgba(0,0,0,0.2);
             border-radius: 16px;
-            padding: 2rem;
-            margin-top: 2rem;
+            padding: 1rem;
+            margin-top: 1rem;
         }
 
         .trade-entry {
             background: var(--surface);
             border-radius: 12px;
-            padding: 1.5rem;
+            padding: 1rem;
             margin: 1rem 0;
-            display: grid;
-            grid-template-columns: 100px 1fr auto;
-            align-items: center;
-            gap: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
         }
 
-        .pnl-badge {
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-weight: 700;
+        @media (min-width: 768px) {
+            .main-container {
+                padding: 0 2rem;
+            }
+            .logo {
+                height: 100px;
+            }
+            .direction-btn {
+                padding: 1.5rem;
+                font-size: 1rem;
+            }
+            .emotion-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            .trade-entry {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
         }
     </style>
 </head>
 <body>
     <header class="header">
-        <img src="https://i.postimg.cc/30RjDVfz/IMG-0540.jpg" class="logo" alt="TraderOS Pro Logo">
+        <img src="https://i.postimg.cc/30RjDVfz/IMG-0540.jpg" class="logo" alt="TRADEROS Logo">
     </header>
 
     <div class="main-container">
-        <div class="grid-container">
-            <!-- Left Column -->
-            <div>
-                <!-- Trade Entry -->
-                <div class="trade-card">
-                    <h2 style="font-size: 1.5rem; margin-bottom: 1rem;">Trade Entry</h2>
-                    
-                    <div class="direction-toggle">
-                        <button class="direction-btn active" data-direction="Long">LONG</button>
-                        <button class="direction-btn" data-direction="Short">SHORT</button>
-                    </div>
-
-                    <input type="text" id="pair" class="pl-input" placeholder="Instrument (e.g. EUR/USD)" required>
-
-                    <div class="pl-container">
-                        <input type="number" id="profit" class="pl-input" placeholder="Profit (Pips)" step="0.01">
-                        <input type="number" id="loss" class="pl-input" placeholder="Loss (Pips)" step="0.01">
-                    </div>
-
-                    <div class="emotion-grid">
-                        <button class="emotion-btn" data-emotion="confident"><span>😌</span> Confident</button>
-                        <button class="emotion-btn" data-emotion="fearful"><span>😨</span> Fearful</button>
-                        <button class="emotion-btn" data-emotion="disciplined"><span>🧘</span> Disciplined</button>
-                        <button class="emotion-btn" data-emotion="rushed"><span>⏱️</span> Rushed</button>
-                    </div>
-
-                    <textarea id="notes" class="pl-input" rows="3" placeholder="Trade rationale, market context, or lessons learned..."></textarea>
-
-                    <button class="cta" onclick="saveTrade()">Commit Trade</button>
-                </div>
-
-                <!-- Performance Chart -->
-                <div class="trade-card">
-                    <h2 style="font-size: 1.5rem; margin-bottom: 1rem;">Equity Curve</h2>
-                    <canvas id="performanceChart"></canvas>
-                </div>
+        <!-- Trade Entry -->
+        <div class="trade-card">
+            <h2 style="margin: 0 0 1rem;">TRADE EXECUTION</h2>
+            <div class="direction-toggle">
+                <button class="direction-btn active" data-direction="Long">LONG</button>
+                <button class="direction-btn" data-direction="Short">SHORT</button>
             </div>
 
-            <!-- Right Column -->
-            <div>
-                <!-- Trade Journal -->
-                <div class="trade-card">
-                    <h2 style="font-size: 1.5rem; margin-bottom: 1rem;">Trade Journal</h2>
-                    <div id="tradeJournal"></div>
-                </div>
+            <input type="text" id="pair" class="pl-input" placeholder="Instrument (e.g. EUR/USD)" required>
+
+            <div class="pl-container">
+                <input type="number" id="profit" class="pl-input" placeholder="Profit (Pips)" step="0.01">
+                <input type="number" id="loss" class="pl-input" placeholder="Loss (Pips)" step="0.01">
             </div>
+
+            <div class="emotion-grid">
+                <button class="emotion-btn" data-emotion="confident">😌 Confident</button>
+                <button class="emotion-btn" data-emotion="fearful">😨 Fearful</button>
+                <button class="emotion-btn" data-emotion="disciplined">🧘 Disciplined</button>
+                <button class="emotion-btn" data-emotion="rushed">⏱️ Rushed</button>
+            </div>
+
+            <textarea id="notes" class="pl-input" rows="3" placeholder="Market analysis & trade rationale..."></textarea>
+
+            <button class="cta" onclick="saveTrade()">EXECUTE TRADE</button>
+        </div>
+
+        <!-- Trade Journal -->
+        <div class="trade-card">
+            <h2 style="margin: 0 0 1rem;">TRADE JOURNAL</h2>
+            <div id="tradeJournal"></div>
+        </div>
+
+        <!-- Equity Curve -->
+        <div class="trade-card">
+            <h2 style="margin: 0 0 1rem;">EQUITY CURVE</h2>
+            <canvas id="performanceChart"></canvas>
         </div>
     </div>
 
@@ -272,15 +242,19 @@
                 const html = trades.map(trade => `
                     <div class="trade-entry">
                         <div>
-                            <div style="font-weight: 700;">${trade.pair}</div>
-                            <div style="color: #6B7280;">${trade.date}</div>
+                            <div style="font-weight: 700; font-size: 1.1rem;">${trade.pair}</div>
+                            <div style="font-size: 0.9rem; color: #6B7280;">
+                                ${trade.direction} • ${trade.date}
+                            </div>
+                            ${trade.notes ? `<div style="margin-top: 0.5rem; font-size: 0.9rem;">${trade.notes}</div>` : ''}
                         </div>
-                        <div>
-                            <div>${trade.direction} • ${trade.emotions.join(', ')}</div>
-                            ${trade.notes ? `<div style="color: #6B7280; margin-top: 0.5rem;">${trade.notes}</div>` : ''}
-                        </div>
-                        <div class="pnl-badge" style="background: ${trade.profit > 0 ? 'rgba(0,255,136,0.15)' : 'rgba(255,0,102,0.15)'}; color: ${trade.profit > 0 ? '#00FF88' : '#FF0066'}">
-                            ${trade.profit > 0 ? '+' : ''}${trade.profit.toFixed(1)} pips
+                        <div style="text-align: right;">
+                            <div style="font-weight: 700; color: ${trade.profit > 0 ? var(--profit) : var(--loss)}">
+                                ${trade.profit > 0 ? '+' : ''}${trade.profit.toFixed(1)} pips
+                            </div>
+                            <div style="font-size: 0.9rem; color: #6B7280;">
+                                ${trade.emotions.join(', ')}
+                            </div>
                         </div>
                     </div>
                 `).reverse().join('');
@@ -307,11 +281,13 @@
                             borderColor: '#00C3FF',
                             tension: 0.4,
                             fill: true,
-                            backgroundColor: 'rgba(0,195,255,0.05)'
+                            backgroundColor: 'rgba(0,195,255,0.05)',
+                            borderWidth: 2
                         }]
                     },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false,
                         plugins: { legend: { display: false } },
                         scales: {
                             y: {
