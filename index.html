@@ -3,16 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TRADEROS | Institutional Trading Journal</title>
+    <title>TRADEROS | Professional Trading Journal</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
- :root {
+        :root {
             --base: #0A0C16;
             --surface: #15182B;
             --accent: #00C3FF;
             --profit: #00FF88;
             --loss: #FF0066;
             --text: #E0E0FF;
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
@@ -25,7 +29,7 @@
 
         .header {
             background: var(--surface);
-            padding: 1rem 2rem;
+            padding: 1rem;
             border-bottom: 1px solid rgba(255,255,255,0.1);
             position: fixed;
             width: 100%;
@@ -33,7 +37,7 @@
             z-index: 100;
             display: flex;
             align-items: center;
-            gap: 1.5rem;
+            gap: 1rem;
         }
 
         .logo {
@@ -52,56 +56,50 @@
             color: transparent;
         }
 
-  .main-container {
-            max-width: 100%;
+        .main-container {
+            margin: 100px 0 2rem;
             padding: 0 1rem;
         }
 
         .trade-card {
-            width: calc(100% - 3rem);
-            margin: 1rem 0;
+            background: var(--surface);
+            border-radius: 16px;
             padding: 1.5rem;
-        }
-
-        @media (min-width: 768px) {
-            .main-container {
-                max-width: 1400px;
-                padding: 0 3rem;
-            }
-            .trade-card {
-                width: auto;
-                padding: 2rem;
-            }
+            margin: 1rem auto;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
         }
 
         .direction-toggle {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1rem;
-            margin: 2rem 0;
+            margin: 1.5rem 0;
         }
 
         .direction-btn {
-            padding: 1.5rem;
+            padding: 1.2rem;
             border: 2px solid rgba(255,255,255,0.1);
             border-radius: 12px;
             cursor: pointer;
-            transition: all 0.2s;
             background: none;
             color: var(--text);
             font-weight: 600;
             font-size: 1rem;
+            transition: all 0.2s;
         }
 
         .pl-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin: 2rem 0;
+            gap: 1rem;
+            margin: 1.5rem 0;
         }
 
         .pl-input {
-            padding: 1.2rem;
+            width: 100%;
+            padding: 1rem;
             border: 2px solid rgba(255,255,255,0.1);
             border-radius: 12px;
             background: none;
@@ -113,7 +111,7 @@
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 1rem;
-            margin: 2rem 0;
+            margin: 1.5rem 0;
         }
 
         button.cta {
@@ -132,9 +130,9 @@
         #performanceChart {
             background: rgba(0,0,0,0.2);
             border-radius: 16px;
-            padding: 1.5rem;
+            padding: 1rem;
             margin: 2rem 0;
-            height: 400px;
+            height: 300px;
         }
 
         .trade-entry {
@@ -158,7 +156,10 @@
                 font-size: 2.2rem;
             }
             .main-container {
-                padding: 0 3rem;
+                padding: 0 2rem;
+            }
+            .trade-card {
+                padding: 2rem;
             }
             .emotion-grid {
                 grid-template-columns: repeat(4, 1fr);
