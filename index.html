@@ -3,116 +3,197 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TraderOS Ultimate</title>
+    <title>TraderOS - Professional Trading Journal</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --dark: #1a1d28;
-            --accent: #00c3ff;
-            --secondary: #2d3247;
+            --dark: #0D0F18;
+            --accent: #00C3FF;
+            --secondary: #1A1D28;
+            --profit: #00FF88;
+            --loss: #FF0066;
         }
+
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Inter', system-ui, sans-serif;
             background: var(--dark);
             color: white;
             margin: 0;
-            padding: 20px;
-            max-width: 800px;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
             margin: 0 auto;
         }
+
+        header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .logo {
+            height: 50px;
+            width: auto;
+        }
+
         .trade-card {
             background: var(--secondary);
-            border-radius: 10px;
-            padding: 15px;
-            margin: 10px 0;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 1rem 0;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.2);
         }
-        button {
-            background: var(--accent);
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        button:hover { opacity: 0.8; }
-        .emotion-grid {
+
+        .grid-2 {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin: 10px 0;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin: 1.5rem 0;
         }
-        .emotion-btn {
-            background: #ffffff15;
-            border: 1px solid #ffffff30;
-            padding: 8px;
-            border-radius: 5px;
+
+        input, select, textarea {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 0.75rem;
+            color: white;
+            width: 100%;
+            transition: all 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--accent);
+            outline: none;
+        }
+
+        .pill-toggle {
+            display: flex;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .pill-toggle button {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 0.5rem 1.5rem;
+            border-radius: 20px;
             cursor: pointer;
+            transition: all 0.2s;
         }
-        .emotion-btn.active {
+
+        .pill-toggle button.active {
             background: var(--accent);
             border-color: var(--accent);
+            color: var(--dark);
+            font-weight: 600;
         }
-        canvas { background: #00000020; }
+
+        button.primary {
+            background: var(--accent);
+            color: var(--dark);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        button.primary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .profit { color: var(--profit); }
+        .loss { color: var(--loss); }
+
+        #performanceChart {
+            margin: 2rem 0;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+
+        .trade-note {
+            color: rgba(255,255,255,0.7);
+            font-style: italic;
+            margin-top: 1rem;
+            padding-left: 1rem;
+            border-left: 2px solid var(--accent);
+        }
     </style>
 </head>
 <body>
-    <h1>📈 TraderOS Ultimate</h1>
-    
-    <!-- Controls -->
-    <div class="trade-card">
-        <button onclick="exportData()">📤 Export</button>
-        <input type="file" id="importFile" style="display:none">
-        <button onclick="document.getElementById('importFile').click()">📥 Import</button>
+    <div class="container">
+        <header>
+            <img src="https://i.postimg.cc/30RjDVfz/IMG-0540.jpg" class="logo" alt="TraderOS Logo">
+            <h1 style="font-weight: 600; letter-spacing: -0.03em">TRADER OS</h1>
+        </header>
+
+        <!-- Trade Log Form -->
+        <div class="trade-card">
+            <h2 style="font-size: 1.5rem; margin-bottom: 1.5rem;">New Trade Entry</h2>
+            <form id="tradeForm">
+                <div class="grid-2">
+                    <div>
+                        <input type="text" id="pair" placeholder="Currency Pair (e.g., EUR/USD)" required>
+                    </div>
+                    <div>
+                        <select id="direction" required>
+                            <option value="">Select Direction</option>
+                            <option>Long</option>
+                            <option>Short</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="pill-toggle">
+                    <button type="button" class="active" data-type="profit">Profit</button>
+                    <button type="button" data-type="loss">Loss</button>
+                </div>
+
+                <div class="grid-2">
+                    <input type="number" id="profitAmount" placeholder="Amount gained" step="0.01" required>
+                    <input type="number" id="lossAmount" placeholder="Amount lost" step="0.01" disabled>
+                </div>
+
+                <div style="margin: 1.5rem 0">
+                    <textarea id="notes" rows="3" placeholder="Trade notes (optional)"></textarea>
+                </div>
+
+                <button type="submit" class="primary">Save Trade Entry</button>
+            </form>
+        </div>
+
+        <!-- Dashboard -->
+        <div class="trade-card">
+            <h2 style="font-size: 1.5rem; margin-bottom: 1.5rem;">Performance Dashboard</h2>
+            <canvas id="performanceChart"></canvas>
+            <div id="aiInsights"></div>
+        </div>
+
+        <!-- Trade History -->
+        <div id="tradesList"></div>
     </div>
-
-    <!-- Trade Log Form -->
-    <div class="trade-card">
-        <h2>➕ Log New Trade</h2>
-        <form id="tradeForm">
-            <input type="text" id="pair" placeholder="Currency Pair (e.g., EUR/USD)" required>
-            <select id="direction" style="margin: 10px 0">
-                <option>Long</option>
-                <option>Short</option>
-            </select>
-            
-            <div style="margin: 15px 0">
-                <label>Profit/Loss ($):</label>
-                <input type="number" id="profit" step="0.01" required>
-            </div>
-
-            <h4>Pre-Trade Emotions:</h4>
-            <div class="emotion-grid" id="emotionGrid">
-                <button type="button" class="emotion-btn">😌 Confident</button>
-                <button type="button" class="emotion-btn">😰 Anxious</button>
-                <button type="button" class="emotion-btn">😠 Revenge</button>
-                <button type="button" class="emotion-btn">😐 Neutral</button>
-                <button type="button" class="emotion-btn">🤔 Uncertain</button>
-                <button type="button" class="emotion-btn">🎯 Focused</button>
-            </div>
-
-            <button type="submit">💾 Save Trade</button>
-        </form>
-    </div>
-
-    <!-- Insights & Charts -->
-    <div class="trade-card">
-        <h2>📊 Performance Dashboard</h2>
-        <canvas id="performanceChart"></canvas>
-        <div id="aiInsights" style="margin-top: 15px"></div>
-    </div>
-
-    <!-- Trade History -->
-    <div id="tradesList"></div>
 
     <script>
-        // Local Storage Database
-        const DB_NAME = 'traderOSDB';
+        const DB_NAME = 'traderOSPro';
         let chartInstance = null;
+        let currentTradeType = 'profit';
 
         // Initialize
-        document.querySelectorAll('.emotion-btn').forEach(btn => {
+        document.querySelectorAll('.pill-toggle button').forEach(btn => {
             btn.addEventListener('click', () => {
-                btn.classList.toggle('active');
+                document.querySelectorAll('.pill-toggle button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentTradeType = btn.dataset.type;
+                
+                document.getElementById('profitAmount').disabled = currentTradeType !== 'profit';
+                document.getElementById('lossAmount').disabled = currentTradeType === 'profit';
             });
         });
 
@@ -120,20 +201,29 @@
         document.getElementById('tradeForm').addEventListener('submit', (e) => {
             e.preventDefault();
             
-            const emotions = Array.from(document.querySelectorAll('.emotion-btn.active'))
-                            .map(btn => btn.textContent.trim());
-            
+            const amount = currentTradeType === 'profit' 
+                ? parseFloat(document.getElementById('profitAmount').value)
+                : -parseFloat(document.getElementById('lossAmount').value);
+
             saveTrade({
                 pair: document.getElementById('pair').value.toUpperCase(),
                 direction: document.getElementById('direction').value,
-                profit: parseFloat(document.getElementById('profit').value),
-                emotions: emotions,
-                date: new Date().toLocaleString()
+                type: currentTradeType,
+                amount: amount,
+                notes: document.getElementById('notes').value.trim(),
+                date: new Date().toLocaleString('en-US', {
+                    weekday: 'short', 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    day: 'numeric',
+                    month: 'short'
+                })
             });
-            
+
             e.target.reset();
-            document.querySelectorAll('.emotion-btn').forEach(btn => 
-                btn.classList.remove('active'));
+            document.getElementById('profitAmount').disabled = false;
+            document.getElementById('lossAmount').disabled = true;
+            document.querySelector('.pill-toggle button').click();
         });
 
         function saveTrade(trade) {
@@ -145,26 +235,29 @@
 
         // Analytics
         function generateInsights(trades) {
-            if(trades.length === 0) return '';
+            if(trades.length === 0) return '<p>No trades recorded yet</p>';
             
-            const profits = trades.map(t => t.profit);
-            const totalProfit = profits.reduce((a,b) => a + b, 0);
-            const winRate = (profits.filter(p => p > 0).length / trades.length * 100).toFixed(1);
-            
-            const emotionCounts = trades.flatMap(t => t.emotions).reduce((acc, e) => {
-                acc[e] = (acc[e] || 0) + 1;
-                return acc;
-            }, {});
-            
-            const topEmotion = Object.entries(emotionCounts).sort((a,b) => b[1] - a[1])[0] || ['None', 0];
+            const profits = trades.map(t => t.amount);
+            const total = profits.reduce((a,b) => a + b, 0);
+            const winRate = (trades.filter(t => t.amount > 0).length / trades.length * 100;
             
             return `
-                <h3>🧠 AI Insights</h3>
-                • Total Profit: $${totalProfit.toFixed(2)}<br>
-                • Win Rate: ${winRate}%<br>
-                • Most Common Emotion: ${topEmotion[0]} (${topEmotion[1]}x)<br>
-                • Avg. Profit: $${(totalProfit/trades.length).toFixed(2)}<br>
-                • Best Trade: $${Math.max(...profits).toFixed(2)}
+                <div class="grid-2">
+                    <div class="trade-card">
+                        <h3>📈 Profit</h3>
+                        <p class="profit">$${total > 0 ? total.toFixed(2) : '0.00'}</p>
+                    </div>
+                    <div class="trade-card">
+                        <h3>📉 Loss</h3>
+                        <p class="loss">$${Math.abs(total < 0 ? total : 0).toFixed(2)}</p>
+                    </div>
+                </div>
+                <div class="trade-card" style="margin-top: 1.5rem">
+                    <h3>📊 Statistics</h3>
+                    <p>Total Trades: ${trades.length}</p>
+                    <p>Win Rate: ${winRate.toFixed(1)}%</p>
+                    <p>Avg. Profit: $${(total/trades.length).toFixed(2)}</p>
+                </div>
             `;
         }
 
@@ -179,65 +272,56 @@
                 data: {
                     labels: trades.map((t,i) => `Trade ${i+1}`),
                     datasets: [{
-                        label: 'Profit/Loss ($)',
-                        data: trades.map(t => t.profit),
+                        label: 'Profit/Loss',
+                        data: trades.map(t => t.amount),
                         backgroundColor: trades.map(t => 
-                            t.profit > 0 ? '#00ff8877' : '#ff006677')
+                            t.amount > 0 ? 'rgba(0, 255, 136, 0.8)' : 'rgba(255, 0, 102, 0.8)'),
+                        borderColor: trades.map(t => 
+                            t.amount > 0 ? 'rgba(0, 255, 136, 1)' : 'rgba(255, 0, 102, 1)'),
+                        borderWidth: 1
                     }]
                 },
                 options: {
                     responsive: true,
                     plugins: {
-                        legend: { display: false }
+                        legend: { display: false },
+                    },
+                    scales: {
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            ticks: { color: 'rgba(255,255,255,0.7)' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: 'rgba(255,255,255,0.7)' }
+                        }
                     }
                 }
             });
         }
 
-        // Data Management
-        function exportData() {
-            const data = localStorage.getItem(DB_NAME);
-            const blob = new Blob([data], {type: 'application/json'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'traderos-backup.json';
-            a.click();
-        }
-
-        document.getElementById('importFile').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                try {
-                    const data = JSON.parse(event.target.result);
-                    localStorage.setItem(DB_NAME, JSON.stringify(data));
-                    updateDashboard();
-                } catch {
-                    alert('Invalid backup file!');
-                }
-            };
-            reader.readAsText(file);
-        });
-
         // UI Update
         function updateDashboard() {
             const trades = JSON.parse(localStorage.getItem(DB_NAME)) || [];
             
-            // Update Trade List
             document.getElementById('tradesList').innerHTML = trades
                 .map(t => `
                     <div class="trade-card">
-                        <b>${t.pair}</b> ${t.direction}<br>
-                        ${t.profit > 0 ? '🟢' : '🔴'} $${t.profit.toFixed(2)}<br>
-                        <small>${t.date} • ${t.emotions.join(', ')}</small>
+                        <div style="display: flex; justify-content: space-between; align-items: center">
+                            <div>
+                                <h3 style="margin: 0">${t.pair} • ${t.direction}</h3>
+                                <small>${t.date}</small>
+                            </div>
+                            <span class="${t.type === 'profit' ? 'profit' : 'loss'}" 
+                                  style="font-size: 1.2rem; font-weight: 600">
+                                $${Math.abs(t.amount).toFixed(2)}
+                            </span>
+                        </div>
+                        ${t.notes ? `<div class="trade-note">${t.notes}</div>` : ''}
                     </div>
-                `).join('');
+                `).reverse().join('');
             
-            // Update Insights
             document.getElementById('aiInsights').innerHTML = generateInsights(trades);
-            
-            // Update Chart
             if(trades.length > 0) updateChart(trades);
         }
 
