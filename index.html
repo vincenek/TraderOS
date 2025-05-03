@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TRADEROS | Professional Trading Journal</title>
+    <title>TRADEROS | AI-Powered Trading Journal</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -173,6 +173,30 @@
             gap: 1rem;
         }
 
+        .coming-soon {
+            background: rgba(0,195,255,0.1);
+            border: 2px dashed var(--accent);
+            padding: 1.5rem;
+            border-radius: 16px;
+            margin: 2rem auto;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        .ai-insight {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            margin: 1rem 0;
+        }
+
+        .insight-icon {
+            font-size: 1.5rem;
+        }
+
         @media (min-width: 768px) {
             .header {
                 padding: 1rem 3rem;
@@ -234,6 +258,18 @@
             <button class="cta" onclick="saveTrade()">EXECUTE TRADE</button>
         </div>
 
+        <!-- AI Insights -->
+        <div class="trade-card">
+            <h2 style="margin: 0 0 1.5rem; font-size: 1.5rem;">AI INSIGHTS</h2>
+            <div id="aiInsights">
+                <div class="ai-insight">
+                    <div class="insight-icon">📈</div>
+                    <div class="insight-text">Analyzing trades...<br>
+                    <strong>Initializing AI patterns:</strong> Collect more data</div>
+                </div>
+            </div>
+        </div>
+
         <!-- Trade Journal -->
         <div class="trade-card">
             <h2 style="margin: 0 0 1.5rem; font-size: 1.5rem;">TRADE JOURNAL</h2>
@@ -245,6 +281,16 @@
             <h2 style="margin: 0 0 1.5rem; font-size: 1.5rem;">EQUITY CURVE</h2>
             <canvas id="performanceChart"></canvas>
         </div>
+
+        <!-- Coming Soon -->
+        <div class="coming-soon">
+            <h3>🚀 Coming Soon</h3>
+            <div class="roadmap">
+                <div class="roadmap-item">🔒 Broker Integrations</div>
+                <div class="roadmap-item">🤖 AI Weekly Reports</div>
+                <div class="roadmap-item">🌐 Multi-Device Sync</div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -255,7 +301,6 @@
 
         // Initialize UI
         function initializeUI() {
-            // Direction buttons
             document.querySelectorAll('.direction-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     document.querySelectorAll('.direction-btn').forEach(b => b.classList.remove('active'));
@@ -264,7 +309,6 @@
                 });
             });
 
-            // Emotion buttons
             document.querySelectorAll('.emotion-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     btn.classList.toggle('active');
@@ -276,7 +320,6 @@
             });
         }
 
-        // Trade Class
         class TradeJournal {
             static save(trade) {
                 const trades = JSON.parse(localStorage.getItem(DB_NAME)) || [];
@@ -293,6 +336,7 @@
                 const trades = this.load();
                 this.renderJournal(trades);
                 this.renderChart(trades);
+                this.generateInsights(trades);
             }
 
             static renderJournal(trades) {
@@ -326,11 +370,12 @@
                 if(chartInstance) chartInstance.destroy();
 
                 const cumulative = [];
-                trades.reduce((acc, trade) => {
-                    const total = acc + trade.profit;
-                    cumulative.push(total);
-                    return total;
-                }, 0);
+                let runningTotal = 0;
+                
+                trades.forEach(trade => {
+                    runningTotal += trade.profit;
+                    cumulative.push(runningTotal);
+                });
 
                 chartInstance = new Chart(ctx, {
                     type: 'line',
@@ -344,13 +389,19 @@
                             fill: true,
                             backgroundColor: 'rgba(0,195,255,0.05)',
                             borderWidth: 3,
-                            pointRadius: 0
+                            pointRadius: 2
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false
+                            }
+                        },
                         scales: {
                             y: {
                                 grid: { color: 'rgba(255,255,255,0.1)' },
@@ -364,9 +415,27 @@
                     }
                 });
             }
+
+            static generateInsights(trades) {
+                if(trades.length < 3) return;
+                
+                const winRate = (trades.filter(t => t.profit > 0).length / trades.length * 100;
+                const bestPair = [...new Set(trades.map(t => t.pair))].reduce((a,b) => 
+                    trades.filter(t => t.pair === a).length > trades.filter(t => t.pair === b).length ? a : b
+                );
+
+                document.getElementById('aiInsights').innerHTML = `
+                    <div class="ai-insight">
+                        <div class="insight-icon">📊</div>
+                        <div class="insight-text">
+                            <strong>Current Stats:</strong><br>
+                            ${winRate.toFixed(1)}% Win Rate | Favorite Pair: ${bestPair}
+                        </div>
+                    </div>
+                `;
+            }
         }
 
-        // Save Trade
         function saveTrade() {
             const profit = parseFloat(document.getElementById('profit').value) || 0;
             const loss = parseFloat(document.getElementById('loss').value) || 0;
