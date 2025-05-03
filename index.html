@@ -73,6 +73,20 @@
             overflow: hidden;
         }
 
+        /* Added chart container */
+        .chart-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
+        }
+
+        #performanceChart {
+            background: rgba(0,0,0,0.2);
+            border-radius: 16px;
+            padding: 10px;
+        }
+
+        /* [Keep all other existing styles exactly the same] */
         .direction-toggle {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -156,15 +170,6 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        #performanceChart {
-            background: rgba(0,0,0,0.2);
-            border-radius: 16px;
-            padding: 1rem;
-            margin: 1rem 0;
-            height: 250px;
-            width: 100%;
-        }
-
         .trade-entry {
             background: var(--surface);
             border-radius: 12px;
@@ -242,10 +247,12 @@
             <div id="tradeJournal"></div>
         </div>
 
-        <!-- Equity Curve -->
+        <!-- Equity Curve (Fixed Section) -->
         <div class="trade-card">
             <h2 style="margin: 0 0 1.5rem; font-size: 1.5rem;">EQUITY CURVE</h2>
-            <canvas id="performanceChart"></canvas>
+            <div class="chart-container">
+                <canvas id="performanceChart"></canvas>
+            </div>
         </div>
     </div>
 
@@ -345,25 +352,47 @@
                             fill: true,
                             backgroundColor: 'rgba(0,195,255,0.05)',
                             borderWidth: 2,
-                            pointRadius: 2
+                            pointRadius: 3
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        layout: {
+                            padding: {
+                                left: 10,
+                                right: 10,
+                                top: 10,
+                                bottom: 10
+                            }
+                        },
                         plugins: {
                             legend: { display: false },
-                            tooltip: { mode: 'index' }
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false
+                            }
                         },
                         scales: {
                             y: {
                                 beginAtZero: true,
-                                grid: { color: 'rgba(255,255,255,0.1)' },
-                                ticks: { color: '#6B7280', padding: 5 }
+                                grid: { 
+                                    color: 'rgba(255,255,255,0.1)',
+                                    drawTicks: false
+                                },
+                                ticks: { 
+                                    color: '#6B7280',
+                                    padding: 5,
+                                    maxTicksLimit: 5
+                                }
                             },
                             x: {
                                 grid: { display: false },
-                                ticks: { color: '#6B7280', maxRotation: 0 }
+                                ticks: { 
+                                    color: '#6B7280',
+                                    maxRotation: 0,
+                                    autoSkip: true
+                                }
                             }
                         }
                     }
