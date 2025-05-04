@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TRADEROS | AI-Powered Trading Journal</title>
+    <title>TRADEROS | Advanced Trading Journal</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -76,97 +76,67 @@
             overflow: hidden;
         }
 
-        .direction-toggle {
+        .section-title {
+            font-size: 1.2rem;
+            margin: 1.5rem 0 1rem;
+            color: var(--accent);
+        }
+
+        .toggle-group {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin: 1.5rem 0;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.5rem;
+            margin: 1rem 0;
         }
 
-        .direction-btn {
-            padding: 1.2rem;
-            border: 2px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
-            cursor: pointer;
-            background: none;
-            color: var(--text);
-            font-weight: 600;
-            font-size: 1rem;
-            transition: all 0.2s;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .direction-btn.active {
-            border-color: var(--accent);
-            background: rgba(0,195,255,0.1);
-        }
-
-        .pl-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin: 1.5rem 0;
-        }
-
-        .pl-input {
-            width: 100%;
-            padding: 1rem;
-            border: 2px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
-            background: none;
-            color: var(--text);
-            font-size: 1rem;
-            -webkit-appearance: none;
-        }
-
-        .pl-input:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-
-        .emotion-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-            margin: 1.5rem 0;
-        }
-
-        .emotion-btn {
-            padding: 1rem;
+        .toggle-btn {
+            padding: 0.8rem;
             border: 2px solid rgba(255,255,255,0.1);
             border-radius: 8px;
             cursor: pointer;
             background: none;
+            color: var(--text);
+            font-weight: 500;
             transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            -webkit-tap-highlight-color: transparent;
+            text-align: center;
         }
 
-        .emotion-btn.active {
+        .toggle-btn.active {
             border-color: var(--accent);
             background: rgba(0,195,255,0.1);
         }
 
-        button.cta {
-            background: var(--accent);
-            color: var(--base);
-            padding: 1.5rem;
-            border: none;
-            border-radius: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            width: 100%;
-            transition: all 0.2s;
-            margin-top: 1rem;
-            -webkit-tap-highlight-color: transparent;
+        .input-group {
+            margin: 1rem 0;
         }
 
-        button.cta:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
+        .form-input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            background: none;
+            color: var(--text);
+            font-size: 0.9rem;
+            margin: 0.5rem 0;
+        }
+
+        .confidence-slider {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            margin: 1rem 0;
+        }
+
+        .confidence-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
         }
 
         #performanceChart {
@@ -174,37 +144,70 @@
             border-radius: 16px;
             padding: 1rem;
             margin: 1rem 0;
-            height: 250px;
+            height: 300px;
             width: 100%;
         }
 
         .trade-entry {
-            background: var(--surface);
+            background: rgba(255,255,255,0.05);
             border-radius: 12px;
             padding: 1.5rem;
             margin: 1rem 0;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
         }
 
-        .ai-insight {
-            background: rgba(0,195,255,0.1);
-            border-radius: 12px;
-            padding: 1rem;
-            margin: 1rem 0;
+        .entry-header {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 1rem;
+            margin-bottom: 1rem;
         }
 
-        .insight-icon {
-            font-size: 1.5rem;
-            background: var(--surface);
-            padding: 0.5rem;
+        .entry-pair {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .entry-direction {
+            font-size: 0.9rem;
+            padding: 0.3rem 0.8rem;
+            border-radius: 4px;
+        }
+
+        .entry-direction.long {
+            background: rgba(0,255,136,0.1);
+            color: var(--profit);
+        }
+
+        .entry-direction.short {
+            background: rgba(255,0,102,0.1);
+            color: var(--loss);
+        }
+
+        .entry-section {
+            margin: 1rem 0;
+            padding: 1rem;
+            background: rgba(255,255,255,0.02);
             border-radius: 8px;
-            min-width: 40px;
-            text-align: center;
+        }
+
+        .entry-section-title {
+            font-size: 0.9rem;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .pl-display {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+        }
+
+        .pl-positive {
+            color: var(--profit);
+        }
+
+        .pl-negative {
+            color: var(--loss);
         }
 
         @media (min-width: 768px) {
@@ -223,14 +226,6 @@
             .trade-card {
                 padding: 2rem;
             }
-            .emotion-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
-            .trade-entry {
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-            }
         }
     </style>
 </head>
@@ -241,82 +236,125 @@
     </header>
 
     <div class="main-container">
-        <!-- Trade Entry Card -->
+        <!-- Trade Entry Form -->
         <div class="trade-card">
-            <h2 style="margin: 0 0 1.5rem; font-size: 1.5rem;">TRADE EXECUTION</h2>
-            <div class="direction-toggle">
-                <button class="direction-btn active" data-direction="Long">LONG</button>
-                <button class="direction-btn" data-direction="Short">SHORT</button>
+            <h2>TRADE EXECUTION</h2>
+            
+            <!-- Trade Setup -->
+            <div class="section-title">Trade Setup</div>
+            <input type="text" id="symbol" class="form-input" placeholder="Trading Pair/Symbol" required>
+            
+            <div class="toggle-group">
+                <button class="toggle-btn active" data-direction="Buy">BUY</button>
+                <button class="toggle-btn" data-direction="Sell">SELL</button>
+            </div>
+            
+            <div class="toggle-group">
+                <button class="toggle-btn" data-reason="technical">Technical</button>
+                <button class="toggle-btn" data-reason="fundamental">Fundamental</button>
+                <button class="toggle-btn" data-reason="instinct">Instinct</button>
             </div>
 
-            <input type="text" id="pair" class="pl-input" placeholder="Instrument (e.g. EUR/USD)" required>
-
-            <div class="pl-container">
-                <input type="number" id="profit" class="pl-input" placeholder="Profit (Pips)" step="0.01">
-                <input type="number" id="loss" class="pl-input" placeholder="Loss (Pips)" step="0.01">
+            <!-- Mindset Check -->
+            <div class="section-title">Mindset Check (Pre-Trade)</div>
+            <input type="range" id="confidence" class="confidence-slider" min="1" max="10" value="5">
+            <div class="toggle-group">
+                <button class="toggle-btn" data-mood="Calm">Calm</button>
+                <button class="toggle-btn" data-mood="Anxious">Anxious</button>
+                <button class="toggle-btn" data-mood="Revengeful">Revengeful</button>
+                <button class="toggle-btn" data-mood="Confident">Confident</button>
             </div>
+            
+            <select id="lastTradeResult" class="form-input">
+                <option value="Win">Last Trade: Win</option>
+                <option value="Loss">Last Trade: Loss</option>
+                <option value="Neutral">Last Trade: Neutral</option>
+            </select>
+            
+            <input type="text" id="influences" class="form-input" placeholder="Current influences">
 
-            <div class="emotion-grid">
-                <button class="emotion-btn" data-emotion="confident">😌 Confident</button>
-                <button class="emotion-btn" data-emotion="fearful">😨 Fearful</button>
-                <button class="emotion-btn" data-emotion="disciplined">🧘 Disciplined</button>
-                <button class="emotion-btn" data-emotion="rushed">⏱️ Rushed</button>
+            <!-- Trade Execution -->
+            <div class="section-title">Trade Outcome</div>
+            <div class="toggle-group">
+                <button class="toggle-btn" data-result="Win">Win</button>
+                <button class="toggle-btn" data-result="Loss">Loss</button>
             </div>
-
-            <textarea id="notes" class="pl-input" rows="4" placeholder="Market analysis & trade rationale..."></textarea>
-
-            <button class="cta" onclick="saveTrade()">EXECUTE TRADE</button>
-        </div>
-
-        <!-- AI Insights Card -->
-        <div class="trade-card">
-            <h2 style="margin: 0 0 1.5rem; font-size: 1.5rem;">AI INSIGHTS</h2>
-            <div id="aiInsights">
-                <div class="ai-insight">
-                    <div class="insight-icon">🤖</div>
-                    <div class="insight-text">Start trading to unlock personalized insights</div>
+            
+            <div class="input-group">
+                <input type="number" id="pips" class="form-input" placeholder="Pips Gained/Lost" step="0.1" required>
+                <div class="toggle-group">
+                    <button class="toggle-btn" data-goodtrade="Y">Good Trade (Y)</button>
+                    <button class="toggle-btn" data-goodtrade="N">Good Trade (N)</button>
                 </div>
             </div>
+
+            <!-- Post-Trade Reflection -->
+            <div class="section-title">Post-Trade Analysis</div>
+            <div class="toggle-group">
+                <button class="toggle-btn" data-emotionchange="Y">Emotion Shift (Y)</button>
+                <button class="toggle-btn" data-emotionchange="N">Emotion Shift (N)</button>
+                <button class="toggle-btn" data-planfollowed="Y">Plan Followed (Y)</button>
+                <button class="toggle-btn" data-planfollowed="N">Plan Followed (N)</button>
+            </div>
+            
+            <input type="text" id="lesson" class="form-input" placeholder="Key Lesson">
+            <input type="text" id="improvement" class="form-input" placeholder="Area for Improvement">
+            
+            <div class="toggle-group">
+                <button class="toggle-btn" data-retake="Y">Would Retake (Y)</button>
+                <button class="toggle-btn" data-retake="N">Would Retake (N)</button>
+            </div>
+
+            <button class="toggle-btn" style="background: var(--accent); color: var(--base); margin-top: 1.5rem;" onclick="saveTrade()">SAVE TRADE JOURNAL</button>
         </div>
 
-        <!-- Trade Journal Card -->
+        <!-- Equity Curve -->
         <div class="trade-card">
-            <h2 style="margin: 0 0 1.5rem; font-size: 1.5rem;">TRADE JOURNAL</h2>
-            <div id="tradeJournal"></div>
-        </div>
-
-        <!-- Equity Curve Card -->
-        <div class="trade-card">
-            <h2 style="margin: 0 0 1.5rem; font-size: 1.5rem;">EQUITY CURVE</h2>
+            <h2>EQUITY CURVE</h2>
             <canvas id="performanceChart"></canvas>
+        </div>
+
+        <!-- Trade Journal -->
+        <div class="trade-card">
+            <h2>TRADE HISTORY</h2>
+            <div id="tradeJournal"></div>
         </div>
     </div>
 
     <script>
         const DB_NAME = 'traderOSPro';
         let chartInstance = null;
-        let currentDirection = 'Long';
-        let selectedEmotions = [];
+        let tradeState = {
+            direction: 'Buy',
+            reason: '',
+            mood: '',
+            result: '',
+            goodTrade: '',
+            emotionChange: '',
+            planFollowed: '',
+            retake: ''
+        };
 
-        // UI Initialization
+        // Initialize UI Controls
         function initializeUI() {
-            document.querySelectorAll('.direction-btn').forEach(btn => {
+            document.querySelectorAll('.toggle-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.preventDefault();
-                    document.querySelectorAll('.direction-btn').forEach(b => b.classList.remove('active'));
+                    const group = btn.parentElement;
+                    if(group.classList.contains('toggle-group')) {
+                        group.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+                    }
                     btn.classList.add('active');
-                    currentDirection = btn.dataset.direction;
-                });
-            });
-
-            document.querySelectorAll('.emotion-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    btn.classList.toggle('active');
-                    const emotion = btn.dataset.emotion;
-                    selectedEmotions = selectedEmotions.includes(emotion) 
-                        ? selectedEmotions.filter(e => e !== emotion)
-                        : [...selectedEmotions, emotion];
+                    
+                    // Update trade state
+                    if(btn.dataset.direction) tradeState.direction = btn.dataset.direction;
+                    if(btn.dataset.reason) tradeState.reason = btn.dataset.reason;
+                    if(btn.dataset.mood) tradeState.mood = btn.dataset.mood;
+                    if(btn.dataset.result) tradeState.result = btn.dataset.result;
+                    if(btn.dataset.goodtrade) tradeState.goodTrade = btn.dataset.goodtrade;
+                    if(btn.dataset.emotionchange) tradeState.emotionChange = btn.dataset.emotionchange;
+                    if(btn.dataset.planfollowed) tradeState.planFollowed = btn.dataset.planfollowed;
+                    if(btn.dataset.retake) tradeState.retake = btn.dataset.retake;
                 });
             });
         }
@@ -338,53 +376,53 @@
                 const trades = this.load();
                 this.renderJournal(trades);
                 this.renderChart(trades);
-                this.generateInsights(trades);
             }
 
             static renderJournal(trades) {
-                const html = trades.map(trade => {
-                    const profitColor = trade.profit > 0 ? '#00FF88' : '#FF0066';
-                    const date = new Date(trade.timestamp).toLocaleString('en-US', {
-                        month: 'short',
-                        day: 'numeric', 
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    });
-                    return `
-                        <div class="trade-entry">
-                            <div style="flex: 1;">
-                                <div style="font-weight: 700; font-size: 1.1rem;">${trade.pair}</div>
-                                <div style="font-size: 0.9rem; color: #6B7280; margin-top: 0.5rem;">
-                                    ${trade.direction} • ${date}
-                                </div>
-                                ${trade.notes ? `<div style="margin-top: 1rem; font-size: 0.9rem; line-height: 1.5;">${trade.notes}</div>` : ''}
-                            </div>
-                            <div style="text-align: right; min-width: 120px;">
-                                <div style="font-weight: 700; font-size: 1.2rem; color: ${profitColor}">
-                                    ${trade.profit > 0 ? '+' : ''}${trade.profit.toFixed(1)} pips
-                                </div>
-                                <div style="font-size: 0.9rem; color: #6B7280; margin-top: 0.5rem;">
-                                    ${trade.emotions.join(', ') || 'No emotions logged'}
-                                </div>
-                            </div>
+                const journalContainer = document.getElementById('tradeJournal');
+                journalContainer.innerHTML = trades.map(trade => `
+                    <div class="trade-entry">
+                        <div class="entry-header">
+                            <div class="entry-pair">${trade.symbol}</div>
+                            <div class="entry-direction ${trade.direction.toLowerCase()}">${trade.direction}</div>
                         </div>
-                    `;
-                }).reverse().join('');
-                document.getElementById('tradeJournal').innerHTML = html;
+                        
+                        <div class="entry-section">
+                            <div class="entry-section-title">Setup</div>
+                            <div>Reason: ${trade.reason}</div>
+                            <div>Confidence: ${trade.confidence}/10</div>
+                        </div>
+
+                        <div class="entry-section">
+                            <div class="entry-section-title">Outcome</div>
+                            <div class="pl-display ${trade.result === 'Win' ? 'pl-positive' : 'pl-negative'}">
+                                ${trade.result} (${trade.pips} pips)
+                            </div>
+                            <div>Good Trade: ${trade.goodTrade}</div>
+                        </div>
+
+                        <div class="entry-section">
+                            <div class="entry-section-title">Analysis</div>
+                            <div>Lesson: ${trade.lesson}</div>
+                            <div>Improvement: ${trade.improvement}</div>
+                            <div>Would Retake: ${trade.retake}</div>
+                        </div>
+                    </div>
+                `).reverse().join('');
             }
 
             static renderChart(trades) {
                 const ctx = document.getElementById('performanceChart').getContext('2d');
                 if(chartInstance) chartInstance.destroy();
 
-                const cumulative = [];
-                let runningTotal = 0;
+                const data = [];
+                let cumulative = 0;
                 
                 trades.forEach(trade => {
-                    runningTotal += trade.profit;
-                    cumulative.push({
+                    cumulative += trade.pips * (trade.result === 'Win' ? 1 : -1);
+                    data.push({
                         x: new Date(trade.timestamp),
-                        y: runningTotal
+                        y: cumulative
                     });
                 });
 
@@ -392,14 +430,13 @@
                     type: 'line',
                     data: {
                         datasets: [{
-                            label: 'Cumulative P/L',
-                            data: cumulative,
+                            label: 'Equity Curve',
+                            data: data,
                             borderColor: '#00C3FF',
-                            tension: 0.2,
-                            fill: true,
-                            backgroundColor: 'rgba(0,195,255,0.05)',
+                            tension: 0.4,
+                            fill: false,
                             borderWidth: 2,
-                            pointRadius: 3
+                            pointRadius: 2
                         }]
                     },
                     options: {
@@ -408,141 +445,60 @@
                         scales: {
                             x: {
                                 type: 'time',
-                                time: {
-                                    unit: 'day',
-                                    tooltipFormat: 'MMM d, h:mm a'
-                                },
-                                grid: { display: false },
-                                ticks: { color: '#6B7280' }
+                                time: { unit: 'day' },
+                                grid: { display: false }
                             },
                             y: {
                                 beginAtZero: true,
-                                grid: { 
-                                    color: 'rgba(255,255,255,0.1)',
-                                    drawTicks: false
-                                },
-                                ticks: { 
-                                    color: '#6B7280',
-                                    padding: 5,
-                                    maxTicksLimit: 5
-                                }
+                                grid: { color: 'rgba(255,255,255,0.1)' }
                             }
                         },
                         plugins: {
                             legend: { display: false },
                             tooltip: {
-                                mode: 'index',
-                                intersect: false,
                                 callbacks: {
-                                    title: (items) => {
-                                        const date = new Date(items[0].raw.x);
-                                        return date.toLocaleString('en-US', {
-                                            month: 'short',
-                                            day: 'numeric',
-                                            hour: '2-digit',
-                                            minute: '2-digit'
-                                        });
-                                    }
+                                    title: (items) => new Date(items[0].raw.x).toLocaleDateString(),
+                                    label: (ctx) => `Balance: ${ctx.raw.y.toFixed(1)} pips`
                                 }
                             }
                         }
                     }
                 });
             }
-
-            static generateInsights(trades) {
-                const insightsContainer = document.getElementById('aiInsights');
-                
-                if(trades.length < 3) {
-                    insightsContainer.innerHTML = `
-                        <div class="ai-insight">
-                            <div class="insight-icon">📊</div>
-                            <div class="insight-text">Complete 3+ trades to unlock AI insights</div>
-                        </div>
-                    `;
-                    return;
-                }
-
-                const winRate = ((trades.filter(t => t.profit > 0).length / trades.length) * 100).toFixed(1);
-                const commonPair = this.getMostCommonPair(trades);
-                const bestDay = this.getBestTradingDay(trades);
-                const emotionPattern = this.getEmotionPattern(trades);
-
-                insightsContainer.innerHTML = `
-                    <div class="ai-insight">
-                        <div class="insight-icon">📈</div>
-                        <div class="insight-text">
-                            <strong>Win Rate:</strong> ${winRate}%<br>
-                            <strong>Most Traded:</strong> ${commonPair}<br>
-                            <strong>Best Day:</strong> ${bestDay}<br>
-                            <strong>Top Emotion:</strong> ${emotionPattern}
-                        </div>
-                    </div>
-                `;
-            }
-
-            static getMostCommonPair(trades) {
-                const pairs = trades.map(t => t.pair);
-                const counts = pairs.reduce((acc, pair) => {
-                    acc[pair] = (acc[pair] || 0) + 1;
-                    return acc;
-                }, {});
-                return Object.entries(counts).sort((a,b) => b[1] - a[1])[0][0];
-            }
-
-            static getBestTradingDay(trades) {
-                const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-                const dayCounts = trades.reduce((acc, trade) => {
-                    const date = new Date(trade.timestamp);
-                    const dayIndex = date.getDay();
-                    acc[dayIndex] = (acc[dayIndex] || 0) + 1;
-                    return acc;
-                }, Array(7).fill(0));
-                const maxIndex = dayCounts.indexOf(Math.max(...dayCounts));
-                return days[maxIndex];
-            }
-
-            static getEmotionPattern(trades) {
-                const emotions = trades.flatMap(t => t.emotions);
-                if(emotions.length === 0) return 'N/A';
-                
-                const emotionCounts = emotions.reduce((acc, emotion) => {
-                    acc[emotion] = (acc[emotion] || 0) + 1;
-                    return acc;
-                }, {});
-                
-                const sortedEmotions = Object.entries(emotionCounts).sort((a,b) => b[1] - a[1]);
-                return `${sortedEmotions[0][0]} (${sortedEmotions[0][1]}x)`;
-            }
         }
 
         function saveTrade() {
-            const profit = parseFloat(document.getElementById('profit').value) || 0;
-            const loss = parseFloat(document.getElementById('loss').value) || 0;
-            const netPL = profit - loss;
+            const tradeData = {
+                symbol: document.getElementById('symbol').value.toUpperCase(),
+                direction: tradeState.direction,
+                reason: tradeState.reason,
+                confidence: document.getElementById('confidence').value,
+                mood: tradeState.mood,
+                lastTradeResult: document.getElementById('lastTradeResult').value,
+                influences: document.getElementById('influences').value,
+                result: tradeState.result,
+                pips: parseFloat(document.getElementById('pips').value),
+                goodTrade: tradeState.goodTrade,
+                emotionChange: tradeState.emotionChange,
+                planFollowed: tradeState.planFollowed,
+                lesson: document.getElementById('lesson').value,
+                improvement: document.getElementById('improvement').value,
+                retake: tradeState.retake,
+                timestamp: Date.now()
+            };
 
-            if(!document.getElementById('pair').value) {
-                alert('Please enter an instrument');
+            if(!tradeData.symbol || !tradeData.pips) {
+                alert('Please fill required fields: Symbol and Pips');
                 return;
             }
 
-            TradeJournal.save({
-                pair: document.getElementById('pair').value.toUpperCase(),
-                direction: currentDirection,
-                profit: netPL,
-                emotions: selectedEmotions,
-                notes: document.getElementById('notes').value,
-                timestamp: Date.now()
-            });
-
-            // Reset Form
-            document.getElementById('pair').value = '';
-            document.getElementById('profit').value = '';
-            document.getElementById('loss').value = '';
-            document.getElementById('notes').value = '';
-            selectedEmotions = [];
-            document.querySelectorAll('.emotion-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelector('.direction-btn[data-direction="Long"]').click();
+            TradeJournal.save(tradeData);
+            
+            // Reset form
+            document.querySelectorAll('input:not([type=range])').forEach(input => input.value = '');
+            document.getElementById('confidence').value = 5;
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.toggle-btn[data-direction="Buy"]').classList.add('active');
         }
 
         document.addEventListener('DOMContentLoaded', () => {
