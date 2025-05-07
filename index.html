@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TRADEROS | Advanced Trading Journal</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <style>
         :root {
             --base: #0A0C16;
@@ -336,6 +335,7 @@
             retake: ''
         };
 
+        // Initialize UI Controls
         function initializeUI() {
             document.querySelectorAll('.toggle-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
@@ -346,6 +346,7 @@
                     }
                     btn.classList.add('active');
                     
+                    // Update trade state
                     if(btn.dataset.direction) tradeState.direction = btn.dataset.direction;
                     if(btn.dataset.reason) tradeState.reason = btn.dataset.reason;
                     if(btn.dataset.mood) tradeState.mood = btn.dataset.mood;
@@ -358,6 +359,7 @@
             });
         }
 
+        // Trade Journal Class
         class TradeJournal {
             static save(trade) {
                 const trades = JSON.parse(localStorage.getItem(DB_NAME)) || [];
@@ -413,19 +415,19 @@
                 const ctx = document.getElementById('performanceChart').getContext('2d');
                 if(chartInstance) chartInstance.destroy();
 
-                // Process trade data
+                // Sort trades by timestamp
                 const sortedTrades = [...trades].sort((a, b) => a.timestamp - b.timestamp);
+                
+                const data = [];
                 let cumulative = 0;
-                const data = sortedTrades.map(trade => {
-                    cumulative += trade.result === 'Win' ? trade.pips : -trade.pips;
-                    return {
+                
+                sortedTrades.forEach(trade => {
+                    cumulative += trade.pips * (trade.result === 'Win' ? 1 : -1);
+                    data.push({
                         x: new Date(trade.timestamp),
                         y: cumulative
-                    };
+                    });
                 });
-
-                // Initialize with zero if empty
-                if(data.length === 0) data.push({x: Date.now(), y: 0});
 
                 chartInstance = new Chart(ctx, {
                     type: 'line',
@@ -434,12 +436,10 @@
                             label: 'Equity Curve',
                             data: data,
                             borderColor: '#00C3FF',
-                            backgroundColor: 'rgba(0, 195, 255, 0.1)',
                             tension: 0.4,
-                            fill: true,
+                            fill: false,
                             borderWidth: 2,
-                            pointRadius: 3,
-                            pointBackgroundColor: '#00C3FF'
+                            pointRadius: 2
                         }]
                     },
                     options: {
@@ -448,31 +448,28 @@
                         scales: {
                             x: {
                                 type: 'time',
-                                time: {
+                                time: { 
                                     unit: 'day',
-                                    tooltipFormat: 'MMM d, yyyy - HH:mm'
+                                    tooltipFormat: 'MMM d, yyyy'
                                 },
-                                bounds: 'data',
-                                grid: { display: false },
-                                ticks: { color: '#6B7280' }
+                                grid: { display: false }
                             },
                             y: {
                                 beginAtZero: true,
                                 grid: { color: 'rgba(255,255,255,0.1)' },
                                 ticks: {
-                                    color: '#6B7280',
-                                    callback: value => `${value} pips`
+                                    callback: function(value) {
+                                        return value + ' pips';
+                                    }
                                 }
                             }
                         },
                         plugins: {
                             legend: { display: false },
                             tooltip: {
-                                mode: 'nearest',
-                                intersect: false,
                                 callbacks: {
-                                    title: ([ctx]) => new Date(ctx.raw.x).toLocaleString(),
-                                    label: ctx => `Balance: ${ctx.raw.y.toFixed(1)} pips`
+                                    title: (items) => new Date(items[0].raw.x).toLocaleDateString(),
+                                    label: (ctx) => `Balance: ${ctx.raw.y.toFixed(1)} pips`
                                 }
                             }
                         }
@@ -506,7 +503,7 @@
                 return;
             }
 
-            // Clear form
+            // Clear form immediately after validation
             document.getElementById('symbol').value = '';
             document.getElementById('pips').value = '';
             document.getElementById('lesson').value = '';
@@ -515,7 +512,7 @@
             document.getElementById('confidence').value = 5;
             document.getElementById('lastTradeResult').selectedIndex = 0;
 
-            // Reset toggle buttons
+            // Reset all toggle buttons
             document.querySelectorAll('.toggle-group').forEach(group => {
                 group.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
             });
