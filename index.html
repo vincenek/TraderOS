@@ -413,6 +413,7 @@
                 const ctx = document.getElementById('performanceChart').getContext('2d');
                 if(chartInstance) chartInstance.destroy();
 
+                // Process trade data
                 const sortedTrades = [...trades].sort((a, b) => a.timestamp - b.timestamp);
                 let cumulative = 0;
                 const data = sortedTrades.map(trade => {
@@ -423,6 +424,7 @@
                     };
                 });
 
+                // Initialize with zero if empty
                 if(data.length === 0) data.push({x: Date.now(), y: 0});
 
                 chartInstance = new Chart(ctx, {
@@ -451,12 +453,11 @@
                                     tooltipFormat: 'MMM d, yyyy - HH:mm'
                                 },
                                 bounds: 'data',
-                                distribution: 'series',
                                 grid: { display: false },
                                 ticks: { color: '#6B7280' }
                             },
                             y: {
-                                beginAtZero: false,
+                                beginAtZero: true,
                                 grid: { color: 'rgba(255,255,255,0.1)' },
                                 ticks: {
                                     color: '#6B7280',
