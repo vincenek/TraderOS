@@ -416,31 +416,23 @@
                 const ctx = document.getElementById('performanceChart').getContext('2d');
                 if(chartInstance) chartInstance.destroy();
 
-                // Sort trades chronologically
+                // Sort trades and calculate cumulative pips
                 const sortedTrades = [...trades].sort((a, b) => a.timestamp - b.timestamp);
-                
-                const dataPoints = [];
-                let cumulativePips = 0;
-                
-                sortedTrades.forEach(trade => {
-                    cumulativePips += trade.result === 'Win' ? trade.pips : -trade.pips;
-                    dataPoints.push({
-                        x: trade.timestamp,
-                        y: cumulativePips
-                    });
+                let cumulative = 0;
+                const data = sortedTrades.map(trade => {
+                    cumulative += trade.result === 'Win' ? trade.pips : -trade.pips;
+                    return { x: trade.timestamp, y: cumulative };
                 });
 
-                // Add starting point at 0 if no trades
-                if(dataPoints.length === 0) {
-                    dataPoints.push({x: Date.now(), y: 0});
-                }
+                // Add starting point at 0 if empty
+                if(data.length === 0) data.push({x: Date.now(), y: 0});
 
                 chartInstance = new Chart(ctx, {
                     type: 'line',
                     data: {
                         datasets: [{
                             label: 'Equity Curve',
-                            data: dataPoints,
+                            data: data,
                             borderColor: '#00C3FF',
                             backgroundColor: 'rgba(0, 195, 255, 0.1)',
                             tension: 0.4,
@@ -458,19 +450,17 @@
                                 type: 'time',
                                 time: {
                                     unit: 'day',
-                                    tooltipFormat: 'PPpp'
+                                    tooltipFormat: 'MMM d, yyyy - HH:mm'
                                 },
                                 grid: { display: false },
                                 ticks: { color: '#6B7280' }
                             },
                             y: {
-                                beginAtZero: true,
+                                beginAtZero: false,
                                 grid: { color: 'rgba(255,255,255,0.1)' },
                                 ticks: {
                                     color: '#6B7280',
-                                    callback: function(value) {
-                                        return value + ' pips';
-                                    }
+                                    callback: value => `${value} pips`
                                 }
                             }
                         },
@@ -480,15 +470,8 @@
                                 mode: 'nearest',
                                 intersect: false,
                                 callbacks: {
-                                    title: (context) => 
-                                        new Date(context[0].raw.x).toLocaleDateString('en-US', {
-                                            month: 'short',
-                                            day: 'numeric',
-                                            hour: '2-digit',
-                                            minute: '2-digit'
-                                        }),
-                                    label: (context) => 
-                                        `Balance: ${context.raw.y.toFixed(1)} pips`
+                                    title: ([ctx]) => new Date(ctx.raw.x).toLocaleString(),
+                                    label: ctx => `Balance: ${ctx.raw.y.toFixed(1)} pips`
                                 }
                             }
                         }
@@ -522,7 +505,7 @@
                 return;
             }
 
-            // Clear form
+            // Clear form immediately
             document.getElementById('symbol').value = '';
             document.getElementById('pips').value = '';
             document.getElementById('lesson').value = '';
