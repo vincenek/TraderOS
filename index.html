@@ -415,10 +415,13 @@
                 const ctx = document.getElementById('performanceChart').getContext('2d');
                 if(chartInstance) chartInstance.destroy();
 
+                // Sort trades by timestamp
+                const sortedTrades = [...trades].sort((a, b) => a.timestamp - b.timestamp);
+                
                 const data = [];
                 let cumulative = 0;
                 
-                trades.forEach(trade => {
+                sortedTrades.forEach(trade => {
                     cumulative += trade.pips * (trade.result === 'Win' ? 1 : -1);
                     data.push({
                         x: new Date(trade.timestamp),
@@ -445,12 +448,20 @@
                         scales: {
                             x: {
                                 type: 'time',
-                                time: { unit: 'day' },
+                                time: { 
+                                    unit: 'day',
+                                    tooltipFormat: 'MMM d, yyyy'
+                                },
                                 grid: { display: false }
                             },
                             y: {
                                 beginAtZero: true,
-                                grid: { color: 'rgba(255,255,255,0.1)' }
+                                grid: { color: 'rgba(255,255,255,0.1)' },
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + ' pips';
+                                    }
+                                }
                             }
                         },
                         plugins: {
@@ -492,13 +503,34 @@
                 return;
             }
 
-            TradeJournal.save(tradeData);
-            
-            // Reset form
-            document.querySelectorAll('input:not([type=range])').forEach(input => input.value = '');
+            // Clear form immediately after validation
+            document.getElementById('symbol').value = '';
+            document.getElementById('pips').value = '';
+            document.getElementById('lesson').value = '';
+            document.getElementById('improvement').value = '';
+            document.getElementById('influences').value = '';
             document.getElementById('confidence').value = 5;
-            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('lastTradeResult').selectedIndex = 0;
+
+            // Reset all toggle buttons
+            document.querySelectorAll('.toggle-group').forEach(group => {
+                group.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            });
+            
+            // Reset default states
             document.querySelector('.toggle-btn[data-direction="Buy"]').classList.add('active');
+            tradeState = {
+                direction: 'Buy',
+                reason: '',
+                mood: '',
+                result: '',
+                goodTrade: '',
+                emotionChange: '',
+                planFollowed: '',
+                retake: ''
+            };
+
+            TradeJournal.save(tradeData);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
