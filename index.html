@@ -336,7 +336,6 @@
             retake: ''
         };
 
-        // Initialize UI Controls
         function initializeUI() {
             document.querySelectorAll('.toggle-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
@@ -347,7 +346,6 @@
                     }
                     btn.classList.add('active');
                     
-                    // Update trade state
                     if(btn.dataset.direction) tradeState.direction = btn.dataset.direction;
                     if(btn.dataset.reason) tradeState.reason = btn.dataset.reason;
                     if(btn.dataset.mood) tradeState.mood = btn.dataset.mood;
@@ -360,7 +358,6 @@
             });
         }
 
-        // Trade Journal Class
         class TradeJournal {
             static save(trade) {
                 const trades = JSON.parse(localStorage.getItem(DB_NAME)) || [];
@@ -416,7 +413,6 @@
                 const ctx = document.getElementById('performanceChart').getContext('2d');
                 if(chartInstance) chartInstance.destroy();
 
-                // Sort and process trades
                 const sortedTrades = [...trades].sort((a, b) => a.timestamp - b.timestamp);
                 let cumulative = 0;
                 const data = sortedTrades.map(trade => {
@@ -427,7 +423,6 @@
                     };
                 });
 
-                // Add initial zero point if empty
                 if(data.length === 0) data.push({x: Date.now(), y: 0});
 
                 chartInstance = new Chart(ctx, {
@@ -519,7 +514,7 @@
             document.getElementById('confidence').value = 5;
             document.getElementById('lastTradeResult').selectedIndex = 0;
 
-            // Reset all toggle buttons
+            // Reset toggle buttons
             document.querySelectorAll('.toggle-group').forEach(group => {
                 group.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
             });
