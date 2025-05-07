@@ -416,15 +416,20 @@
                 const ctx = document.getElementById('performanceChart').getContext('2d');
                 if(chartInstance) chartInstance.destroy();
 
-                // Sort trades and calculate cumulative pips
+                // Sort trades chronologically
                 const sortedTrades = [...trades].sort((a, b) => a.timestamp - b.timestamp);
+                
+                // Calculate cumulative pips
                 let cumulative = 0;
                 const data = sortedTrades.map(trade => {
                     cumulative += trade.result === 'Win' ? trade.pips : -trade.pips;
-                    return { x: trade.timestamp, y: cumulative };
+                    return {
+                        x: new Date(trade.timestamp),
+                        y: cumulative
+                    };
                 });
 
-                // Add starting point at 0 if empty
+                // Add starting point at 0 if no trades
                 if(data.length === 0) data.push({x: Date.now(), y: 0});
 
                 chartInstance = new Chart(ctx, {
@@ -505,7 +510,7 @@
                 return;
             }
 
-            // Clear form immediately
+            // Clear form
             document.getElementById('symbol').value = '';
             document.getElementById('pips').value = '';
             document.getElementById('lesson').value = '';
