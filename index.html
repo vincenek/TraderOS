@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TRADEROS | Advanced Trading Journal</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <style>
         :root {
             --base: #0A0C16;
@@ -415,31 +416,38 @@
                 const ctx = document.getElementById('performanceChart').getContext('2d');
                 if(chartInstance) chartInstance.destroy();
 
-                // Sort trades by timestamp
+                // Sort trades chronologically
                 const sortedTrades = [...trades].sort((a, b) => a.timestamp - b.timestamp);
                 
-                const data = [];
-                let cumulative = 0;
+                const dataPoints = [];
+                let cumulativePips = 0;
                 
                 sortedTrades.forEach(trade => {
-                    cumulative += trade.pips * (trade.result === 'Win' ? 1 : -1);
-                    data.push({
-                        x: new Date(trade.timestamp),
-                        y: cumulative
+                    cumulativePips += trade.result === 'Win' ? trade.pips : -trade.pips;
+                    dataPoints.push({
+                        x: trade.timestamp,
+                        y: cumulativePips
                     });
                 });
+
+                // Add starting point at 0 if no trades
+                if(dataPoints.length === 0) {
+                    dataPoints.push({x: Date.now(), y: 0});
+                }
 
                 chartInstance = new Chart(ctx, {
                     type: 'line',
                     data: {
                         datasets: [{
                             label: 'Equity Curve',
-                            data: data,
+                            data: dataPoints,
                             borderColor: '#00C3FF',
+                            backgroundColor: 'rgba(0, 195, 255, 0.1)',
                             tension: 0.4,
-                            fill: false,
+                            fill: true,
                             borderWidth: 2,
-                            pointRadius: 2
+                            pointRadius: 3,
+                            pointBackgroundColor: '#00C3FF'
                         }]
                     },
                     options: {
@@ -448,16 +456,18 @@
                         scales: {
                             x: {
                                 type: 'time',
-                                time: { 
+                                time: {
                                     unit: 'day',
-                                    tooltipFormat: 'MMM d, yyyy'
+                                    tooltipFormat: 'PPpp'
                                 },
-                                grid: { display: false }
+                                grid: { display: false },
+                                ticks: { color: '#6B7280' }
                             },
                             y: {
                                 beginAtZero: true,
                                 grid: { color: 'rgba(255,255,255,0.1)' },
                                 ticks: {
+                                    color: '#6B7280',
                                     callback: function(value) {
                                         return value + ' pips';
                                     }
@@ -467,9 +477,18 @@
                         plugins: {
                             legend: { display: false },
                             tooltip: {
+                                mode: 'nearest',
+                                intersect: false,
                                 callbacks: {
-                                    title: (items) => new Date(items[0].raw.x).toLocaleDateString(),
-                                    label: (ctx) => `Balance: ${ctx.raw.y.toFixed(1)} pips`
+                                    title: (context) => 
+                                        new Date(context[0].raw.x).toLocaleDateString('en-US', {
+                                            month: 'short',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        }),
+                                    label: (context) => 
+                                        `Balance: ${context.raw.y.toFixed(1)} pips`
                                 }
                             }
                         }
@@ -503,7 +522,7 @@
                 return;
             }
 
-            // Clear form immediately after validation
+            // Clear form
             document.getElementById('symbol').value = '';
             document.getElementById('pips').value = '';
             document.getElementById('lesson').value = '';
