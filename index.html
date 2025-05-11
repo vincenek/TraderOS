@@ -441,8 +441,8 @@
                             backgroundColor: 'rgba(0, 195, 255, 0.1)',
                             tension: 0.4,
                             fill: true,
-                            borderWidth: 2,
-                            pointRadius: 3,
+                            borderWidth: 3,
+                            pointRadius: 4,
                             pointBackgroundColor: '#00C3FF'
                         }]
                     },
@@ -461,7 +461,10 @@
                                     color: 'rgba(255,255,255,0.1)'
                                 },
                                 ticks: {
-                                    color: '#E0E0FF'
+                                    color: '#E0E0FF',
+                                    maxRotation: 0,
+                                    autoSkip: true,
+                                    maxTicksLimit: 6
                                 }
                             },
                             y: {
