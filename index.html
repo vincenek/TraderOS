@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TRADEROS | Advanced Trading Journal</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0"></script>
     <style>
         :root {
             --base: #0A0C16;
@@ -436,10 +438,12 @@
                             label: 'Equity Curve',
                             data: data,
                             borderColor: '#00C3FF',
+                            backgroundColor: 'rgba(0, 195, 255, 0.1)',
                             tension: 0.4,
-                            fill: false,
+                            fill: true,
                             borderWidth: 2,
-                            pointRadius: 2
+                            pointRadius: 3,
+                            pointBackgroundColor: '#00C3FF'
                         }]
                     },
                     options: {
@@ -452,12 +456,21 @@
                                     unit: 'day',
                                     tooltipFormat: 'MMM d, yyyy'
                                 },
-                                grid: { display: false }
+                                grid: { 
+                                    display: false,
+                                    color: 'rgba(255,255,255,0.1)'
+                                },
+                                ticks: {
+                                    color: '#E0E0FF'
+                                }
                             },
                             y: {
                                 beginAtZero: true,
-                                grid: { color: 'rgba(255,255,255,0.1)' },
+                                grid: { 
+                                    color: 'rgba(255,255,255,0.1)'
+                                },
                                 ticks: {
+                                    color: '#E0E0FF',
                                     callback: function(value) {
                                         return value + ' pips';
                                     }
@@ -467,6 +480,11 @@
                         plugins: {
                             legend: { display: false },
                             tooltip: {
+                                backgroundColor: 'rgba(21, 24, 43, 0.9)',
+                                titleColor: '#00C3FF',
+                                bodyColor: '#E0E0FF',
+                                borderColor: 'rgba(255,255,255,0.1)',
+                                borderWidth: 1,
                                 callbacks: {
                                     title: (items) => new Date(items[0].raw.x).toLocaleDateString(),
                                     label: (ctx) => `Balance: ${ctx.raw.y.toFixed(1)} pips`
