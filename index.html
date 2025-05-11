@@ -439,32 +439,39 @@
                             data: data,
                             borderColor: '#00C3FF',
                             backgroundColor: 'rgba(0, 195, 255, 0.1)',
-                            tension: 0.4,
+                            tension: 0.5,
                             fill: true,
                             borderWidth: 3,
                             pointRadius: 4,
-                            pointBackgroundColor: '#00C3FF'
+                            pointBackgroundColor: '#00C3FF',
+                            spanGaps: true
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        animation: {
+                            duration: 1000,
+                            easing: 'easeOutQuart'
+                        },
                         scales: {
                             x: {
                                 type: 'time',
                                 time: { 
                                     unit: 'day',
-                                    tooltipFormat: 'MMM d, yyyy'
+                                    tooltipFormat: 'MMM d, yyyy',
+                                    displayFormats: {
+                                        day: 'MMM d'
+                                    }
                                 },
                                 grid: { 
-                                    display: false,
-                                    color: 'rgba(255,255,255,0.1)'
+                                    display: false
                                 },
                                 ticks: {
                                     color: '#E0E0FF',
                                     maxRotation: 0,
                                     autoSkip: true,
-                                    maxTicksLimit: 6
+                                    maxTicksLimit: 8
                                 }
                             },
                             y: {
