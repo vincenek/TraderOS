@@ -1,12 +1,10 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TRADEROS | Advanced Trading Journal</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0"></script>
     <style>
         :root {
             --base: #0A0C16;
@@ -424,15 +422,12 @@
                 let cumulative = 0;
                 
                 sortedTrades.forEach(trade => {
-                    cumulative += trade.result === 'Win' ? trade.pips : -trade.pips;
+                    cumulative += trade.pips * (trade.result === 'Win' ? 1 : -1);
                     data.push({
-                        x: trade.timestamp,
+                        x: new Date(trade.timestamp),
                         y: cumulative
                     });
                 });
-
-                // If no trades, show empty chart
-                if(data.length === 0) data.push({x: Date.now(), y: 0});
 
                 chartInstance = new Chart(ctx, {
                     type: 'line',
@@ -441,57 +436,37 @@
                             label: 'Equity Curve',
                             data: data,
                             borderColor: '#00C3FF',
-                            backgroundColor: 'rgba(0, 195, 255, 0.1)',
                             tension: 0.4,
-                            fill: true,
-                            borderWidth: 3,
-                            pointRadius: 4,
-                            pointBackgroundColor: '#00C3FF',
-                            spanGaps: true
+                            fill: false,
+                            borderWidth: 2,
+                            pointRadius: 2
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        animation: {
-                            duration: 800,
-                            easing: 'easeOutCubic'
-                        },
                         scales: {
                             x: {
                                 type: 'time',
-                                time: {
+                                time: { 
                                     unit: 'day',
-                                    tooltipFormat: 'MMM d, yyyy',
-                                    displayFormats: {
-                                        day: 'MMM d'
-                                    }
+                                    tooltipFormat: 'MMM d, yyyy'
                                 },
-                                grid: { display: false },
-                                ticks: {
-                                    color: '#E0E0FF',
-                                    maxRotation: 0,
-                                    autoSkip: true,
-                                    maxTicksLimit: 7
-                                }
+                                grid: { display: false }
                             },
                             y: {
                                 beginAtZero: true,
                                 grid: { color: 'rgba(255,255,255,0.1)' },
                                 ticks: {
-                                    color: '#E0E0FF',
-                                    callback: (value) => `${value} pips`
+                                    callback: function(value) {
+                                        return value + ' pips';
+                                    }
                                 }
                             }
                         },
                         plugins: {
                             legend: { display: false },
                             tooltip: {
-                                backgroundColor: 'rgba(21, 24, 43, 0.95)',
-                                titleColor: '#00C3FF',
-                                bodyColor: '#E0E0FF',
-                                borderColor: 'rgba(255,255,255,0.2)',
-                                borderWidth: 1,
                                 callbacks: {
                                     title: (items) => new Date(items[0].raw.x).toLocaleDateString(),
                                     label: (ctx) => `Balance: ${ctx.raw.y.toFixed(1)} pips`
@@ -528,7 +503,7 @@
                 return;
             }
 
-            // Clear form
+            // Clear form immediately after validation
             document.getElementById('symbol').value = '';
             document.getElementById('pips').value = '';
             document.getElementById('lesson').value = '';
@@ -537,13 +512,13 @@
             document.getElementById('confidence').value = 5;
             document.getElementById('lastTradeResult').selectedIndex = 0;
 
-            // Reset toggle buttons
+            // Reset all toggle buttons
             document.querySelectorAll('.toggle-group').forEach(group => {
                 group.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
             });
-            document.querySelector('.toggle-btn[data-direction="Buy"]').classList.add('active');
             
-            // Reset state
+            // Reset default states
+            document.querySelector('.toggle-btn[data-direction="Buy"]').classList.add('active');
             tradeState = {
                 direction: 'Buy',
                 reason: '',
