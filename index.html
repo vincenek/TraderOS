@@ -33,39 +33,40 @@
             background: linear-gradient(135deg, #0f172a, #1e293b);
             color: var(--light);
             min-height: 100vh;
-            padding: 15px;
+            padding: 10px;
             font-size: 14px;
+            overflow-x: hidden;
         }
         
         .container {
             max-width: 1400px;
             margin: 0 auto;
+            padding: 5px;
         }
         
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 0;
+            padding: 10px 0;
             border-bottom: 1px solid var(--border);
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             flex-wrap: wrap;
         }
         
         .logo {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
+            gap: 8px;
         }
         
         .logo i {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             color: var(--primary);
         }
         
         .logo h1 {
-            font-size: 1.6rem;
+            font-size: 1.4rem;
             font-weight: 700;
             background: linear-gradient(to right, var(--primary), #8b5cf6);
             -webkit-background-clip: text;
@@ -74,28 +75,29 @@
         
         .stats-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 10px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
         }
         
         .stat-card {
             background: var(--card-bg);
             border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 12px;
+            border-radius: 8px;
+            padding: 10px;
             backdrop-filter: blur(10px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            min-height: 80px;
         }
         
         .stat-card h3 {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: var(--gray);
-            margin-bottom: 8px;
+            margin-bottom: 5px;
         }
         
         .stat-value {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 700;
         }
         
@@ -108,40 +110,44 @@
         }
         
         .main-content {
-            display: grid;
-            grid-template-columns: 1fr;
+            display: flex;
+            flex-direction: column;
             gap: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         
         .card {
             background: var(--card-bg);
             border: 1px solid var(--border);
             border-radius: 10px;
-            padding: 15px;
+            padding: 12px;
             backdrop-filter: blur(10px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            width: 100%;
         }
         
         .card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
             border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 10px;
         }
         
         .card-title {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: 600;
+            flex: 1;
         }
         
         .btn {
             background: var(--primary);
             color: white;
             border: none;
-            padding: 8px 15px;
+            padding: 8px 12px;
             border-radius: 6px;
             font-weight: 600;
             cursor: pointer;
@@ -149,7 +155,8 @@
             display: inline-flex;
             align-items: center;
             gap: 5px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            white-space: nowrap;
         }
         
         .btn:hover {
@@ -186,21 +193,22 @@
         table {
             width: 100%;
             border-collapse: collapse;
+            font-size: 0.8rem;
         }
         
         th {
             text-align: left;
-            padding: 10px;
+            padding: 8px 5px;
             font-weight: 600;
             color: var(--gray);
             border-bottom: 1px solid var(--border);
-            font-size: 0.85rem;
+            font-size: 0.75rem;
         }
         
         td {
-            padding: 10px;
+            padding: 8px 5px;
             border-bottom: 1px solid var(--border);
-            font-size: 0.85rem;
+            font-size: 0.8rem;
         }
         
         tr:last-child td {
@@ -231,9 +239,9 @@
         
         .tag {
             display: inline-block;
-            padding: 4px 10px;
+            padding: 3px 8px;
             border-radius: 20px;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 500;
         }
         
@@ -258,20 +266,20 @@
         }
         
         .chart-container {
-            height: 250px;
-            margin-top: 15px;
+            height: 200px;
+            margin-top: 12px;
         }
         
         .emotion-tag {
             display: flex;
             align-items: center;
-            gap: 5px;
-            font-size: 0.85rem;
+            gap: 3px;
+            font-size: 0.8rem;
         }
         
         .action-icons {
             display: flex;
-            gap: 8px;
+            gap: 5px;
         }
         
         .action-icons i {
@@ -296,7 +304,7 @@
             background: rgba(0, 0, 0, 0.7);
             z-index: 1000;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             padding: 15px;
             overflow-y: auto;
         }
@@ -307,14 +315,16 @@
             border-radius: 10px;
             width: 100%;
             max-width: 600px;
-            padding: 20px;
+            padding: 15px;
             position: relative;
+            margin-top: 20px;
+            margin-bottom: 20px;
         }
         
         .close-modal {
             position: absolute;
-            top: 15px;
-            right: 15px;
+            top: 10px;
+            right: 10px;
             font-size: 1.5rem;
             cursor: pointer;
             color: var(--gray);
@@ -323,19 +333,19 @@
         .form-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 12px;
-            margin-bottom: 15px;
+            gap: 10px;
+            margin-bottom: 12px;
         }
         
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
         
         .form-group label {
             display: block;
-            margin-bottom: 6px;
+            margin-bottom: 5px;
             font-weight: 500;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
         
         .form-control {
@@ -359,52 +369,52 @@
         
         .btn-group {
             display: flex;
-            gap: 10px;
-            margin-top: 15px;
+            gap: 8px;
+            margin-top: 12px;
             flex-wrap: wrap;
         }
         
         footer {
             text-align: center;
-            padding: 15px;
+            padding: 12px;
             color: var(--gray);
             border-top: 1px solid var(--border);
-            margin-top: 20px;
-            font-size: 0.85rem;
+            margin-top: 15px;
+            font-size: 0.8rem;
         }
         
         .empty-state {
             text-align: center;
-            padding: 30px 15px;
+            padding: 20px 10px;
             color: var(--gray);
         }
         
         .empty-state i {
-            font-size: 3rem;
-            margin-bottom: 15px;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
             opacity: 0.3;
         }
         
         .empty-state h3 {
-            font-size: 1.2rem;
-            margin-bottom: 10px;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
         }
         
         .tabs {
             display: flex;
-            gap: 8px;
-            margin-bottom: 15px;
+            gap: 6px;
+            margin-bottom: 12px;
             flex-wrap: wrap;
         }
         
         .tab {
-            padding: 6px 15px;
+            padding: 5px 12px;
             background: rgba(30, 41, 59, 0.5);
             border: 1px solid var(--border);
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.3s ease;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
         }
         
         .tab.active {
@@ -418,14 +428,14 @@
         
         .setup-image {
             width: 100%;
-            height: 180px;
+            height: 150px;
             background: rgba(30, 41, 59, 0.5);
             border-radius: 6px;
             display: flex;
             justify-content: center;
             align-items: center;
             color: var(--gray);
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             overflow: hidden;
         }
         
@@ -433,157 +443,6 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-        }
-        
-        /* Mobile-specific adjustments */
-        @media (max-width: 767px) {
-            header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .logo {
-                margin-bottom: 15px;
-            }
-            
-            .desktop-add-btn {
-                width: 100%;
-                margin-top: 10px;
-            }
-            
-            .desktop-add-btn .btn {
-                width: 100%;
-                justify-content: center;
-            }
-            
-            .stats-container {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .card-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-            
-            .tabs {
-                width: 100%;
-                justify-content: center;
-            }
-            
-            .main-content > div:last-child {
-                margin-top: 20px;
-            }
-            
-            th, td {
-                font-size: 0.75rem;
-                padding: 8px 6px;
-            }
-            
-            .action-icons {
-                flex-direction: column;
-                gap: 5px;
-            }
-            
-            .modal-content {
-                padding: 15px;
-                max-width: 95%;
-            }
-            
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        @media (min-width: 576px) {
-            .stats-container {
-                grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-                gap: 15px;
-            }
-            
-            .stat-card {
-                padding: 15px;
-            }
-            
-            .stat-value {
-                font-size: 1.8rem;
-            }
-            
-            .card {
-                padding: 20px;
-            }
-            
-            .form-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-            
-            th, td {
-                font-size: 0.9rem;
-            }
-        }
-        
-        @media (min-width: 768px) {
-            .main-content {
-                grid-template-columns: 1fr 350px;
-            }
-            
-            .stats-container {
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            }
-            
-            .stat-value {
-                font-size: 2rem;
-            }
-            
-            .logo h1 {
-                font-size: 2rem;
-            }
-            
-            .logo i {
-                font-size: 2.5rem;
-            }
-        }
-        
-        @media (min-width: 992px) {
-            .stats-container {
-                grid-template-columns: repeat(4, 1fr);
-            }
-            
-            .main-content {
-                grid-template-columns: 1fr 400px;
-            }
-        }
-        
-        /* Scrollable table for small screens */
-        .table-wrapper {
-            overflow-x: auto;
-            margin-bottom: 15px;
-            border-radius: 8px;
-        }
-        
-        /* Add trade button in fixed position for mobile */
-        .floating-add-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: var(--primary);
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.5rem;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            cursor: pointer;
-            z-index: 500;
-            border: none;
-        }
-        
-        .floating-add-btn:hover {
-            background: #1d4ed8;
-            transform: translateY(-3px);
         }
         
         /* Export loading indicator */
@@ -609,7 +468,7 @@
             width: 50px;
             height: 50px;
             animation: spin 1s linear infinite;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         
         @keyframes spin {
@@ -625,16 +484,170 @@
             transform: translateX(-50%);
             background: var(--success);
             color: white;
-            padding: 12px 25px;
+            padding: 10px 20px;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             z-index: 2000;
             opacity: 0;
             transition: opacity 0.3s ease;
+            font-size: 0.9rem;
+            max-width: 90%;
+            text-align: center;
         }
         
         .toast.show {
             opacity: 1;
+        }
+        
+        /* Floating add button for mobile */
+        .floating-add-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            z-index: 500;
+            border: none;
+        }
+        
+        .floating-add-btn:hover {
+            background: #1d4ed8;
+            transform: translateY(-3px);
+        }
+        
+        /* Mobile-specific adjustments */
+        @media (min-width: 576px) {
+            .stats-container {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 10px;
+            }
+            
+            .stat-card {
+                padding: 12px;
+            }
+            
+            .stat-value {
+                font-size: 1.6rem;
+            }
+            
+            .card {
+                padding: 15px;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            th, td {
+                font-size: 0.85rem;
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .main-content {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+            }
+            
+            .stats-container {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            .stat-value {
+                font-size: 1.8rem;
+            }
+            
+            .logo h1 {
+                font-size: 1.8rem;
+            }
+            
+            .logo i {
+                font-size: 2rem;
+            }
+        }
+        
+        @media (min-width: 992px) {
+            .main-content {
+                grid-template-columns: 2fr 1fr;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+        }
+        
+        /* Scrollable table for small screens */
+        .table-wrapper {
+            overflow-x: auto;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Add trade form adjustments */
+        .form-group input, .form-group select, .form-group textarea {
+            font-size: 0.9rem;
+            padding: 12px;
+        }
+        
+        .form-group textarea {
+            min-height: 80px;
+        }
+        
+        /* Responsive table headers */
+        .responsive-label {
+            display: none;
+            font-weight: bold;
+            margin-right: 5px;
+            font-size: 0.75rem;
+        }
+        
+        @media (max-width: 575px) {
+            .table-wrapper table {
+                display: block;
+            }
+            
+            .table-wrapper thead {
+                display: none;
+            }
+            
+            .table-wrapper tr {
+                display: block;
+                margin-bottom: 10px;
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 8px;
+            }
+            
+            .table-wrapper td {
+                display: flex;
+                align-items: center;
+                padding: 8px;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+            }
+            
+            .table-wrapper td:last-child {
+                border-bottom: none;
+            }
+            
+            .responsive-label {
+                display: inline-block;
+                width: 80px;
+            }
+            
+            .action-icons {
+                justify-content: flex-end;
+            }
         }
     </style>
 </head>
@@ -647,7 +660,7 @@
             </div>
             <div class="desktop-add-btn">
                 <button class="btn" id="addTradeBtn">
-                    <i class="fas fa-plus"></i> Add New Trade
+                    <i class="fas fa-plus"></i> <span class="desktop-text">Add Trade</span>
                 </button>
             </div>
         </header>
@@ -677,9 +690,9 @@
                     <div class="card-header">
                         <h2 class="card-title">Trade History</h2>
                         <div class="tabs">
-                            <div class="tab active" data-filter="all">All Trades</div>
-                            <div class="tab" data-filter="winners">Winners</div>
-                            <div class="tab" data-filter="losers">Losers</div>
+                            <div class="tab active" data-filter="all">All</div>
+                            <div class="tab" data-filter="winners">Wins</div>
+                            <div class="tab" data-filter="losers">Losses</div>
                         </div>
                     </div>
                     
@@ -718,7 +731,7 @@
                         <h2 class="card-title">Performance Analytics</h2>
                         <div>
                             <button class="btn btn-outline" id="exportBtn">
-                                <i class="fas fa-download"></i> Export PDF
+                                <i class="fas fa-download"></i> <span class="desktop-text">Export PDF</span>
                             </button>
                         </div>
                     </div>
@@ -727,12 +740,12 @@
                         <canvas id="performanceChart"></canvas>
                     </div>
                     
-                    <div class="chart-container" style="height: 220px; margin-top: 20px;">
+                    <div class="chart-container" style="height: 180px; margin-top: 15px;">
                         <canvas id="setupChart"></canvas>
                     </div>
                 </div>
                 
-                <div class="card" style="margin-top: 20px;">
+                <div class="card" style="margin-top: 15px;">
                     <div class="card-header">
                         <h2 class="card-title">Recent Trade Details</h2>
                     </div>
@@ -749,7 +762,7 @@
         </div>
         
         <footer>
-            <p>FX Trading Journal v1.0 | Professional Trade Analysis & Performance Tracking</p>
+            <p>FX Trading Journal v1.0 | Professional Trade Analysis</p>
         </footer>
     </div>
     
@@ -771,7 +784,7 @@
     <div class="modal" id="addTradeModal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
-            <h2 style="margin-bottom: 20px;">Add New Trade</h2>
+            <h2 style="margin-bottom: 15px;">Add New Trade</h2>
             
             <div class="form-grid">
                 <div class="form-group">
@@ -864,11 +877,6 @@
                         <option>Revenge Trading</option>
                         <option>Overtrading</option>
                     </select>
-                </div>
-                
-                <div class="form-group form-full">
-                    <label>Screenshot/Chart</label>
-                    <input type="file" class="form-control" id="screenshot">
                 </div>
                 
                 <div class="form-group form-full">
@@ -1221,21 +1229,39 @@
                     plPips = ((trade.entryPrice - trade.exitPrice) * pipValue).toFixed(1);
                 }
                 
-                tr.innerHTML = `
-                    <td>${trade.pair}</td>
-                    <td class="${trade.direction === 'Long' ? 'trade-long' : 'trade-short'}">${trade.direction === 'Long' ? 'L' : 'S'}</td>
-                    <td>${trade.entryPrice}</td>
-                    <td>${trade.exitPrice}</td>
-                    <td class="${parseFloat(plPips) > 0 ? 'trade-profit' : 'trade-loss'}">${parseFloat(plPips) > 0 ? '+' : ''}${plPips}</td>
-                    <td>${trade.riskPercent}%</td>
-                    <td><span class="tag tag-${getTagClass(trade.setupType)}">${trade.setupType.substring(0, 3)}</span></td>
-                    <td><div class="emotion-tag"><i class="${getEmotionIcon(trade.emotion)}"></i> ${trade.emotion.substring(0, 4)}</div></td>
+                const mobileHtml = `
+                    <td>
+                        <div><span class="responsive-label">Pair:</span>${trade.pair}</div>
+                        <div><span class="responsive-label">Dir:</span><span class="${trade.direction === 'Long' ? 'trade-long' : 'trade-short'}">${trade.direction === 'Long' ? 'L' : 'S'}</span></div>
+                        <div><span class="responsive-label">Entry:</span>${trade.entryPrice}</div>
+                        <div><span class="responsive-label">Exit:</span>${trade.exitPrice}</div>
+                        <div><span class="responsive-label">P/L:</span><span class="${parseFloat(plPips) > 0 ? 'trade-profit' : 'trade-loss'}">${parseFloat(plPips) > 0 ? '+' : ''}${plPips}</span></div>
+                        <div><span class="responsive-label">Risk:</span>${trade.riskPercent}%</div>
+                        <div><span class="responsive-label">Setup:</span><span class="tag tag-${getTagClass(trade.setupType)}">${trade.setupType}</span></div>
+                        <div><span class="responsive-label">Emotion:</span><div class="emotion-tag"><i class="${getEmotionIcon(trade.emotion)}"></i> ${trade.emotion}</div></div>
+                    </td>
                     <td class="action-icons">
                         <i class="fas fa-eye" title="View" onclick="viewTrade('${trade.id}')"></i>
                         <i class="fas fa-trash" title="Delete" onclick="deleteTrade('${trade.id}')"></i>
                     </td>
                 `;
                 
+                const desktopHtml = `
+                    <td>${trade.pair}</td>
+                    <td class="${trade.direction === 'Long' ? 'trade-long' : 'trade-short'}">${trade.direction === 'Long' ? 'L' : 'S'}</td>
+                    <td>${trade.entryPrice}</td>
+                    <td>${trade.exitPrice}</td>
+                    <td class="${parseFloat(plPips) > 0 ? 'trade-profit' : 'trade-loss'}">${parseFloat(plPips) > 0 ? '+' : ''}${plPips}</td>
+                    <td>${trade.riskPercent}%</td>
+                    <td><span class="tag tag-${getTagClass(trade.setupType)}">${trade.setupType}</span></td>
+                    <td><div class="emotion-tag"><i class="${getEmotionIcon(trade.emotion)}"></i> ${trade.emotion}</div></td>
+                    <td class="action-icons">
+                        <i class="fas fa-eye" title="View" onclick="viewTrade('${trade.id}')"></i>
+                        <i class="fas fa-trash" title="Delete" onclick="deleteTrade('${trade.id}')"></i>
+                    </td>
+                `;
+                
+                tr.innerHTML = window.innerWidth < 576 ? mobileHtml : desktopHtml;
                 tradesTableBody.appendChild(tr);
             });
         }
@@ -1439,17 +1465,67 @@
                 doc.text(`Loss Rate: ${lossRateEl.textContent}`, 100, 50);
                 doc.text(`Avg. Risk:Reward: ${avgRREl.textContent}`, 140, 50);
                 
-                // Add charts
-                const perfImage = await getChartAsImage(performanceChart);
-                const setupImage = await getChartAsImage(setupChart);
+                // Create temporary container for charts
+                const tempContainer = document.createElement('div');
+                tempContainer.style.position = 'absolute';
+                tempContainer.style.left = '-9999px';
+                tempContainer.style.width = '600px';
+                tempContainer.style.backgroundColor = '#1e293b';
+                tempContainer.style.padding = '10px';
+                tempContainer.style.borderRadius = '10px';
                 
-                doc.addImage(perfImage, 'PNG', 15, 60, 180, 70);
-                doc.addImage(setupImage, 'PNG', 15, 140, 180, 70);
+                const perfCanvas = document.createElement('canvas');
+                perfCanvas.width = 600;
+                perfCanvas.height = 300;
+                tempContainer.appendChild(perfCanvas);
+                
+                const setupCanvas = document.createElement('canvas');
+                setupCanvas.width = 600;
+                setupCanvas.height = 250;
+                setupCanvas.style.marginTop = '20px';
+                tempContainer.appendChild(setupCanvas);
+                
+                document.body.appendChild(tempContainer);
+                
+                // Render charts to temporary canvas
+                const perfCtx = perfCanvas.getContext('2d');
+                const setupCtx = setupCanvas.getContext('2d');
+                
+                const tempPerfChart = new Chart(perfCtx, {
+                    type: 'line',
+                    data: JSON.parse(JSON.stringify(performanceChart.data)),
+                    options: {
+                        responsive: false,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+                
+                const tempSetupChart = new Chart(setupCtx, {
+                    type: 'bar',
+                    data: JSON.parse(JSON.stringify(setupChart.data)),
+                    options: {
+                        responsive: false,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+                
+                // Wait for charts to render
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                // Convert to images
+                const perfImage = perfCanvas.toDataURL('image/png');
+                const setupImage = setupCanvas.toDataURL('image/png');
+                
+                // Add images to PDF
+                doc.addImage(perfImage, 'PNG', 10, 60, 190, 90);
+                doc.addImage(setupImage, 'PNG', 10, 160, 190, 70);
                 
                 // Add trade history
                 doc.addPage();
-                doc.setFontSize(14);
-                doc.text('Trade History', 20, 20);
+                doc.setFontSize(16);
+                doc.text('Trade History', 105, 15, null, null, 'center');
                 
                 // Create table data
                 const tableData = [];
@@ -1484,12 +1560,14 @@
                     startY: 25,
                     theme: 'grid',
                     headStyles: { fillColor: [37, 99, 235] },
-                    styles: { fontSize: 8 }
+                    styles: { fontSize: 8, cellPadding: 2 }
                 });
                 
                 // Save and download
                 doc.save('trading-journal-report.pdf');
                 
+                // Clean up
+                document.body.removeChild(tempContainer);
                 exportLoader.style.display = 'none';
                 showToast('PDF exported successfully!');
             } catch (error) {
@@ -1497,23 +1575,6 @@
                 exportLoader.style.display = 'none';
                 showToast('Error exporting PDF!', 'danger');
             }
-        }
-        
-        // Helper to convert chart to image
-        function getChartAsImage(chart) {
-            return new Promise(resolve => {
-                // Create a temporary canvas
-                const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = chart.canvas.width;
-                tempCanvas.height = chart.canvas.height;
-                
-                const tempCtx = tempCanvas.getContext('2d');
-                tempCtx.fillStyle = '#1e293b';
-                tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-                tempCtx.drawImage(chart.canvas, 0, 0);
-                
-                resolve(tempCanvas.toDataURL('image/png'));
-            });
         }
         
         // Initialize the app
@@ -1549,6 +1610,9 @@
             // Update stats and render
             updateStats();
             renderTradesTable();
+            
+            // Handle window resize for responsive table
+            window.addEventListener('resize', renderTradesTable);
         }
         
         // Start the app
