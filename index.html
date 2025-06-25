@@ -436,6 +436,65 @@
         }
         
         /* Mobile-specific adjustments */
+        @media (max-width: 767px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .logo {
+                margin-bottom: 15px;
+            }
+            
+            .desktop-add-btn {
+                width: 100%;
+                margin-top: 10px;
+            }
+            
+            .desktop-add-btn .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .card-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .tabs {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .main-content > div:last-child {
+                margin-top: 20px;
+            }
+            
+            th, td {
+                font-size: 0.75rem;
+                padding: 8px 6px;
+            }
+            
+            .action-icons {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .modal-content {
+                padding: 15px;
+                max-width: 95%;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
         @media (min-width: 576px) {
             .stats-container {
                 grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -883,6 +942,7 @@
                 trades = JSON.parse(storedTrades);
                 renderTradesTable();
                 updateStats();
+                updateCharts();
             }
         }
         
@@ -893,10 +953,10 @@
             performanceChart = new Chart(perfCtx, {
                 type: 'line',
                 data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    labels: [],
                     datasets: [{
-                        label: 'Profit/Loss (Pips)',
-                        data: [0, 0, 0, 0, 0, 0],
+                        label: 'Cumulative P/L (Pips)',
+                        data: [],
                         borderColor: '#10b981',
                         backgroundColor: 'rgba(16, 185, 129, 0.1)',
                         borderWidth: 3,
@@ -938,23 +998,27 @@
             setupChart = new Chart(setupCtx, {
                 type: 'bar',
                 data: {
-                    labels: ['Breakout', 'Pullback', 'Reversal', 'News', 'Range'],
+                    labels: ['Breakout', 'Pullback', 'Reversal', 'News', 'Range', 'Divergence', 'Other'],
                     datasets: [{
                         label: 'Win Rate %',
-                        data: [0, 0, 0, 0, 0],
+                        data: [0, 0, 0, 0, 0, 0, 0],
                         backgroundColor: [
                             'rgba(37, 99, 235, 0.7)',
                             'rgba(16, 185, 129, 0.7)',
                             'rgba(245, 158, 11, 0.7)',
                             'rgba(239, 68, 68, 0.7)',
-                            'rgba(139, 92, 246, 0.7)'
+                            'rgba(139, 92, 246, 0.7)',
+                            'rgba(14, 165, 233, 0.7)',
+                            'rgba(236, 72, 153, 0.7)'
                         ],
                         borderColor: [
                             'rgba(37, 99, 235, 1)',
                             'rgba(16, 185, 129, 1)',
                             'rgba(245, 158, 11, 1)',
                             'rgba(239, 68, 68, 1)',
-                            'rgba(139, 92, 246, 1)'
+                            'rgba(139, 92, 246, 1)',
+                            'rgba(14, 165, 233, 1)',
+                            'rgba(236, 72, 153, 1)'
                         ],
                         borderWidth: 1
                     }]
@@ -991,6 +1055,71 @@
             });
         }
         
+        // Update charts with real data
+        function updateCharts() {
+            if (trades.length === 0) return;
+            
+            // Sort trades by date
+            const sortedTrades = [...trades].sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            // Calculate cumulative P/L
+            let cumulativePips = 0;
+            const cumulativeData = [];
+            const dates = [];
+            
+            sortedTrades.forEach(trade => {
+                // Calculate P/L in pips
+                const pipValue = trade.pair.includes('JPY') ? 100 : 10000;
+                let plPips;
+                if (trade.direction === 'Long') {
+                    plPips = (trade.exitPrice - trade.entryPrice) * pipValue;
+                } else {
+                    plPips = (trade.entryPrice - trade.exitPrice) * pipValue;
+                }
+                
+                cumulativePips += plPips;
+                cumulativeData.push(cumulativePips);
+                
+                // Format date for chart
+                const date = new Date(trade.date);
+                dates.push(`${date.getDate()}/${date.getMonth() + 1}`);
+            });
+            
+            // Update performance chart
+            performanceChart.data.labels = dates;
+            performanceChart.data.datasets[0].data = cumulativeData;
+            performanceChart.update();
+            
+            // Update setup chart
+            const setupTypes = ['Breakout', 'Pullback', 'Reversal', 'News Trade', 'Range Trade', 'Divergence', 'Other'];
+            const setupData = [];
+            
+            setupTypes.forEach(setup => {
+                const setupTrades = trades.filter(trade => trade.setupType === setup);
+                if (setupTrades.length === 0) {
+                    setupData.push(0);
+                    return;
+                }
+                
+                const wins = setupTrades.filter(trade => {
+                    const pipValue = trade.pair.includes('JPY') ? 100 : 10000;
+                    let plPips;
+                    if (trade.direction === 'Long') {
+                        plPips = (trade.exitPrice - trade.entryPrice) * pipValue;
+                    } else {
+                        plPips = (trade.entryPrice - trade.exitPrice) * pipValue;
+                    }
+                    return plPips > 0;
+                }).length;
+                
+                const winRate = (wins / setupTrades.length) * 100;
+                setupData.push(winRate);
+            });
+            
+            setupChart.data.datasets[0].data = setupData;
+            setupChart.update();
+        }
+        
         // Update stats
         function updateStats() {
             const totalTrades = trades.length;
@@ -1007,7 +1136,17 @@
             emptyState.style.display = 'none';
             
             // Calculate wins and losses
-            const wins = trades.filter(trade => trade.profit > 0).length;
+            const wins = trades.filter(trade => {
+                const pipValue = trade.pair.includes('JPY') ? 100 : 10000;
+                let plPips;
+                if (trade.direction === 'Long') {
+                    plPips = (trade.exitPrice - trade.entryPrice) * pipValue;
+                } else {
+                    plPips = (trade.entryPrice - trade.exitPrice) * pipValue;
+                }
+                return plPips > 0;
+            }).length;
+            
             const losses = totalTrades - wins;
             const winRate = Math.round((wins / totalTrades) * 100);
             const lossRate = 100 - winRate;
@@ -1040,9 +1179,27 @@
             let filteredTrades = trades;
             
             if (currentFilter === 'winners') {
-                filteredTrades = trades.filter(trade => trade.profit > 0);
+                filteredTrades = trades.filter(trade => {
+                    const pipValue = trade.pair.includes('JPY') ? 100 : 10000;
+                    let plPips;
+                    if (trade.direction === 'Long') {
+                        plPips = (trade.exitPrice - trade.entryPrice) * pipValue;
+                    } else {
+                        plPips = (trade.entryPrice - trade.exitPrice) * pipValue;
+                    }
+                    return plPips > 0;
+                });
             } else if (currentFilter === 'losers') {
-                filteredTrades = trades.filter(trade => trade.profit <= 0);
+                filteredTrades = trades.filter(trade => {
+                    const pipValue = trade.pair.includes('JPY') ? 100 : 10000;
+                    let plPips;
+                    if (trade.direction === 'Long') {
+                        plPips = (trade.exitPrice - trade.entryPrice) * pipValue;
+                    } else {
+                        plPips = (trade.entryPrice - trade.exitPrice) * pipValue;
+                    }
+                    return plPips <= 0;
+                });
             }
             
             if (filteredTrades.length === 0) {
@@ -1165,6 +1322,7 @@
             const trade = trades.find(t => t.id === id);
             if (trade) {
                 trade.reviewed = true;
+                saveTrades();
                 showToast('Trade marked as reviewed!');
             }
         }
@@ -1176,6 +1334,7 @@
                 saveTrades();
                 renderTradesTable();
                 updateStats();
+                updateCharts();
                 // Reset trade details view if deleted trade was being viewed
                 recentTradeDetails.innerHTML = `
                     <div class="empty-state">
@@ -1224,7 +1383,6 @@
                 emotion,
                 tradeNotes,
                 lessons,
-                profit: exitPrice - entryPrice,
                 date: new Date().toISOString().split('T')[0] // Store date for filtering
             };
             
@@ -1232,6 +1390,7 @@
             saveTrades();
             renderTradesTable();
             updateStats();
+            updateCharts();
             modal.style.display = 'none';
             
             // Reset form
@@ -1248,6 +1407,8 @@
             document.getElementById('emotion').value = 'Confident';
             document.getElementById('tradeNotes').value = '';
             document.getElementById('lessons').value = '';
+            
+            showToast('Trade added successfully!');
         }
         
         // Export to PDF
@@ -1278,53 +1439,12 @@
                 doc.text(`Loss Rate: ${lossRateEl.textContent}`, 100, 50);
                 doc.text(`Avg. Risk:Reward: ${avgRREl.textContent}`, 140, 50);
                 
-                // Create temporary container for charts
-                const tempContainer = document.createElement('div');
-                tempContainer.style.position = 'absolute';
-                tempContainer.style.left = '-9999px';
-                tempContainer.style.top = '0';
-                tempContainer.innerHTML = `
-                    <div style="width: 180mm; margin: 20px auto;">
-                        <canvas id="tempPerfChart" width="700" height="300"></canvas>
-                        <canvas id="tempSetupChart" width="700" height="250" style="margin-top: 20px;"></canvas>
-                    </div>
-                `;
-                document.body.appendChild(tempContainer);
+                // Add charts
+                const perfImage = await getChartAsImage(performanceChart);
+                const setupImage = await getChartAsImage(setupChart);
                 
-                // Render charts to temporary container
-                const perfCtx = document.getElementById('tempPerfChart').getContext('2d');
-                const setupCtx = document.getElementById('tempSetupChart').getContext('2d');
-                
-                const tempPerfChart = new Chart(perfCtx, {
-                    type: 'line',
-                    data: performanceChart.data,
-                    options: {
-                        responsive: false,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } }
-                    }
-                });
-                
-                const tempSetupChart = new Chart(setupCtx, {
-                    type: 'bar',
-                    data: setupChart.data,
-                    options: {
-                        responsive: false,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } }
-                    }
-                });
-                
-                // Wait for charts to render
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
-                // Capture charts as images
-                const perfImg = await html2canvas(document.getElementById('tempPerfChart'));
-                const setupImg = await html2canvas(document.getElementById('tempSetupChart'));
-                
-                // Add images to PDF
-                doc.addImage(perfImg, 'PNG', 15, 60, 180, 70);
-                doc.addImage(setupImg, 'PNG', 15, 140, 180, 70);
+                doc.addImage(perfImage, 'PNG', 15, 60, 180, 70);
+                doc.addImage(setupImage, 'PNG', 15, 140, 180, 70);
                 
                 // Add trade history
                 doc.addPage();
@@ -1333,7 +1453,7 @@
                 
                 // Create table data
                 const tableData = [];
-                const headers = ['Pair', 'Dir', 'Entry', 'Exit', 'P/L', 'Setup', 'Emotion'];
+                const headers = ['Pair', 'Dir', 'Entry', 'Exit', 'P/L', 'Risk', 'Setup', 'Emotion'];
                 
                 trades.forEach(trade => {
                     // Calculate P/L in pips
@@ -1351,8 +1471,9 @@
                         trade.entryPrice,
                         trade.exitPrice,
                         `${parseFloat(plPips) > 0 ? '+' : ''}${plPips}`,
-                        trade.setupType.substring(0, 10),
-                        trade.emotion.substring(0, 10)
+                        `${trade.riskPercent}%`,
+                        trade.setupType,
+                        trade.emotion
                     ]);
                 });
                 
@@ -1369,15 +1490,30 @@
                 // Save and download
                 doc.save('trading-journal-report.pdf');
                 
-                // Clean up
-                document.body.removeChild(tempContainer);
                 exportLoader.style.display = 'none';
                 showToast('PDF exported successfully!');
             } catch (error) {
                 console.error('Error exporting PDF:', error);
                 exportLoader.style.display = 'none';
-                alert('Error exporting PDF: ' + error.message);
+                showToast('Error exporting PDF!', 'danger');
             }
+        }
+        
+        // Helper to convert chart to image
+        function getChartAsImage(chart) {
+            return new Promise(resolve => {
+                // Create a temporary canvas
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = chart.canvas.width;
+                tempCanvas.height = chart.canvas.height;
+                
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.fillStyle = '#1e293b';
+                tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                tempCtx.drawImage(chart.canvas, 0, 0);
+                
+                resolve(tempCanvas.toDataURL('image/png'));
+            });
         }
         
         // Initialize the app
