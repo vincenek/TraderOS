@@ -4,11 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FXOS Trading Journal</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- iOS Support -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📈</text></svg>">
+    <meta name="apple-mobile-web-app-status-bar" content="#0f172a">
+    <meta name="theme-color" content="#2563eb">
+    
+    <!-- Existing styles and scripts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
     <style>
+        /* Existing styles */
         :root {
             --primary: #2563eb;
             --secondary: #0f172a;
@@ -649,6 +661,53 @@
                 justify-content: flex-end;
             }
         }
+        
+        /* PWA Install Button */
+        .pwa-install-container {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .pwa-install-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--success);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            border: none;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+            
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+            }
+            
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+        
+        .pwa-install-btn:hover {
+            background: #0da271;
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body>
@@ -770,6 +829,13 @@
     <button class="floating-add-btn" id="mobileAddBtn">
         <i class="fas fa-plus"></i>
     </button>
+    
+    <!-- PWA Install Button -->
+    <div class="pwa-install-container" id="pwaInstallContainer">
+        <button class="pwa-install-btn" id="pwaInstallBtn">
+            <i class="fas fa-download"></i>
+        </button>
+    </div>
     
     <!-- Toast notification -->
     <div class="toast" id="toast"></div>
@@ -906,6 +972,7 @@
         let trades = [];
         let currentFilter = 'all';
         let performanceChart, setupChart;
+        let deferredPrompt; // For PWA installation
         
         // DOM Elements
         const addTradeBtn = document.getElementById('addTradeBtn');
@@ -925,6 +992,8 @@
         const exportLoader = document.getElementById('exportLoader');
         const tabs = document.querySelectorAll('.tab');
         const toast = document.getElementById('toast');
+        const pwaInstallBtn = document.getElementById('pwaInstallBtn');
+        const pwaInstallContainer = document.getElementById('pwaInstallContainer');
         
         // Show toast notification
         function showToast(message, type = 'success') {
@@ -1577,6 +1646,45 @@
             }
         }
         
+        // PWA Installation Handling
+        function handlePWAInstall() {
+            // Listen for beforeinstallprompt event
+            window.addEventListener('beforeinstallprompt', (e) => {
+                // Prevent the mini-infobar from appearing on mobile
+                e.preventDefault();
+                // Stash the event so it can be triggered later
+                deferredPrompt = e;
+                // Show the install button
+                pwaInstallContainer.style.display = 'block';
+            });
+            
+            // Handle install button click
+            pwaInstallBtn.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    // Show the install prompt
+                    deferredPrompt.prompt();
+                    // Wait for the user to respond to the prompt
+                    const { outcome } = await deferredPrompt.userChoice;
+                    // Optionally, send analytics event with outcome of user choice
+                    console.log(`User response to the install prompt: ${outcome}`);
+                    // Hide the install button
+                    pwaInstallContainer.style.display = 'none';
+                    // Clear the deferredPrompt variable
+                    deferredPrompt = null;
+                }
+            });
+            
+            // Listen for app installed event
+            window.addEventListener('appinstalled', () => {
+                // Hide the install button
+                pwaInstallContainer.style.display = 'none';
+                // Clear the deferredPrompt variable
+                deferredPrompt = null;
+                // Show success message
+                showToast('App installed successfully!');
+            });
+        }
+        
         // Initialize the app
         function initApp() {
             initCharts();
@@ -1607,6 +1715,20 @@
             // Export functionality
             exportBtn.addEventListener('click', exportToPDF);
             
+            // PWA installation handling
+            handlePWAInstall();
+            
+            // Register Service Worker
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker registered with scope:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.error('Service Worker registration failed:', error);
+                    });
+            }
+            
             // Update stats and render
             updateStats();
             renderTradesTable();
@@ -1617,6 +1739,107 @@
         
         // Start the app
         document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+    
+    <!-- Inline Service Worker -->
+    <script>
+        // Register the service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js', { scope: '/' })
+                .then(function(registration) {
+                    console.log('Service Worker registered with scope:', registration.scope);
+                })
+                .catch(function(error) {
+                    console.log('Service Worker registration failed:', error);
+                });
+        }
+    </script>
+    
+    <!-- Manifest content as inline JSON -->
+    <script type="application/manifest+json">
+        {
+            "name": "FX Trading Journal",
+            "short_name": "TradingJournal",
+            "start_url": ".",
+            "display": "standalone",
+            "background_color": "#0f172a",
+            "theme_color": "#2563eb",
+            "description": "Professional FX Trading Journal to track your trades and performance.",
+            "icons": [
+                {
+                    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjZmZmIiBkPSJNMTYwIDE2MEgyODhWMjg4SDE2MFYxNjB6TTE2MCAzMjBIMjg4VjQ4MEgxNjBWMzIwek0zMjAgMTYwSDQ0OFYyODhIMzIwVjE2MHpNMzIwIDMzNkg0NDhWNDgwSDMyMFYzMzZ6Ii8+PC9zdmc+",
+                    "sizes": "192x192",
+                    "type": "image/svg+xml"
+                },
+                {
+                    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjZmZmIiBkPSJNMTYwIDE2MEgyODhWMjg4SDE2MFYxNjB6TTE2MCAzMjBIMjg4VjQ4MEgxNjBWMzIwek0zMjAgMTYwSDQ0OFYyODhIMzIwVjE2MHpNMzIwIDMzNkg0NDhWNDgwSDMyMFYzMzZ6Ii8+PC9zdmc+",
+                    "sizes": "512x512",
+                    "type": "image/svg+xml"
+                }
+            ]
+        }
+    </script>
+    
+    <!-- Inline Service Worker Script -->
+    <script id="service-worker">
+        // Service worker content as a string
+        const swContent = `
+            const CACHE_NAME = 'trading-journal-v1';
+            const urlsToCache = [
+                './',
+                'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
+                'https://cdn.jsdelivr.net/npm/chart.js',
+                'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+                'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
+            ];
+            
+            self.addEventListener('install', event => {
+                event.waitUntil(
+                    caches.open(CACHE_NAME)
+                        .then(cache => {
+                            return cache.addAll(urlsToCache);
+                        })
+                );
+            });
+            
+            self.addEventListener('activate', event => {
+                event.waitUntil(
+                    caches.keys().then(cacheNames => {
+                        return Promise.all(
+                            cacheNames.map(cacheName => {
+                                if (cacheName !== CACHE_NAME) {
+                                    return caches.delete(cacheName);
+                                }
+                            })
+                        );
+                    })
+                );
+            });
+            
+            self.addEventListener('fetch', event => {
+                event.respondWith(
+                    caches.match(event.request)
+                        .then(response => {
+                            return response || fetch(event.request);
+                        })
+                );
+            });
+        `;
+        
+        // Create a blob from the service worker content
+        const blob = new Blob([swContent], { type: 'application/javascript' });
+        const swUrl = URL.createObjectURL(blob);
+        
+        // Register the service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register(swUrl)
+                .then(registration => {
+                    console.log('Service Worker registered with scope:', registration.scope);
+                })
+                .catch(error => {
+                    console.error('Service Worker registration failed:', error);
+                });
+        }
     </script>
 </body>
 </html>
