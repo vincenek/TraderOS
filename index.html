@@ -5,18 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FXOS Trading Journal</title>
     
-    <!-- PWA Manifest and Metadata -->
-    <meta name="theme-color" content="#2563eb">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiBmaWxsPSIjMjU2M2ViIj48cGF0aCBkPSJNMTg0IDBjMzAuOSAwIDU2IDI1LjEgNTYgNTZ2Ni40YzAgMTMuMy0xMC43IDI0LTI0IDI0Yy0zLjQgMC02LjYtLjctOS42LTJjLTcuNCAxMC45LTE5LjIgMTgtMzIuNCAxOHMtMjUtNy4xLTMyLjQtMThjLTMgLjktNi4yIDEuNC05LjYgMS40Yy0xMy4zIDAtMjQtMTAuNy0yNC0yNFY1NmMwLTMwLjkgMjUuMS01NiA1Ni01NnptNTYgMTIwYzAtMTMuMyAxMC43LTI0IDI0LTI0YzMuNCAwIDYuNi43IDkuNiAyYzcuNC0xMC45IDE5LjItMTggMzIuNC0xOHMyNSA3LjEgMzIuNCAxOGMzLS45IDYuMi0xLjQgOS42LTEuNGMxMy4zIDAgMjQgMTAuNyAyNCAyNHY2LjRjMCAzMC45LTI1LjEgNTYtNTYgNTZjLTMwLjkgMC01Ni0yNS4xLTU2LTU2di02LjRjMC0xMy4zIDEwLjctMjQgMjQtMjRjMTMuMyAwIDI0IDEwLjcgMjQgMjR2MjRjMCAzNS4zLTI4LjcgNjQtNjQgNjRIMjI0djY0aDMyYzE3LjcgMCAzMiAxNC4zIDMyIDMydjMyYzAgMTcuNy0xNC4zIDMyLTMyIDMySDE5MmMtMTcuNyAwLTMyLTE0LjMtMzItMzJWMzg0YzAtMTcuNyAxNC4zLTMyIDMyLTMyaDMyVjI4OEgxOTJjLTM1LjMgMC02NC0yOC43LTY0LTY0di0yNGMwLTEzLjMgMTAuNy0yNCAyNC0yNHMyNCAxMC43IDI0IDI0djYuNGMwIDMwLjkgMjUuMSA1NiA1NiA1NmMzMC45IDAgNTYtMjUuMSA1Ni01NnYtNi40YzAtMTMuMy0xMC43LTI0LTI0LTI0Yy0zLjQgMC02LjYuNy05LjYgMmMtNy40LTEwLjktMTkuMi0xOC0zMi40LTE4cy0yNSA3LjEtMzIuNCAxOGMtMy0uOS02LjItMS40LTkuNi0xLjRjLTEzLjMgMC0yNCAxMC43LTI0IDI0djYuNGMwIDMwLjktMjUuMSA1Ni01NiA1NmMtMzAuOSAwLTU2LTI1LjEtNTYtNTZ2LTYuNGMwLTEzLjMgMTAuNy0yNCAyNC0yNGMxMy4zIDAgMjQgMTAuNyAyNCAyNHYyNGMwIDM1LjMgMjguNyA2NCA2NCA2NGg2NHY2NEgxMjhjLTE3LjcgMC0zMiAxNC4zLTMyIDMydjMyYzAgMTcuNyAxNC4zIDMyIDMyIDMyaDY0YzE3LjcgMCAzMi0xNC4zIDMyLTMyVjQ4MGMwLTE3LjctMTQuMy0zMi0zMi0zMkg5NlYzNTJoNjRjMzUuMyAwIDY0LTI4LjcgNjQtNjR2LTI0YzAtMTMuMy0xMC43LTI0LTI0LTI0cy0yNCAxMC43LTI0IDI0djYuNGMwIDMwLjktMjUuMSA1Ni01NiA1NmMtMzAuOSAwLTU2LTI1LjEtNTYtNTZ2LTYuNGMwLTEzLjMgMTAuNy0yNCAyNC0yNGMzLjQgMCA2LjYuNyA5LjYgMmM3LjQtMTAuOSAxOS4yLTE4IDMyLjQtMThzMjUgNy4xIDMyLjQgMThjMy0uOSA2LjItMS40IDkuNi0xLjRjMTMuMyAwIDI0IDEwLjcgMjQgMjR2Ni40YzAgMzAuOSAyNS4xIDU2IDU2IDU2czU2LTI1LjEgNTYtNTZ2LTYuNGMwLTEzLjMtMTAuNy0yNC0yNC0yNHMtMjQgMTAuNy0yNCAyNHYyNGMwIDM1LjMtMjguNyA2NC02NCA2NEgxNjBjLTM1LjMgMC02NC0yOC43LTY0LTY0di0yNGMwLTEzLjMgMTAuNy0yNCAyNC0yNGMxMy4zIDAgMjQgMTAuNyAyNCAyNHY2LjRjMCAzMC45IDI1LjEgNTYgNTYgNTZjMzAuOSAwIDU2LTI1LjEgNTYtNTZ2LTYuNGMwLTEzLjMtMTAuNy0yNC0yNC0yNGMtMy40IDAtNi42LjctOS42IDJjLTcuNC0xMC45LTE5LjItMTgtMzIuNC0xOHMtMjUgNy4xLTMyLjQgMThjLTMtLjktNi4yLTEuNC05LjYtMS40Yy0xMy4zIDAtMjQgMTAuNy0yNCAyNHY2LjRjMCAzMC45LTI1LjEgNTYtNTYgNTZjLTMwLjkgMC01Ni0yNS4xLTU2LTU2VjEyMGMwLTEzLjMgMTAuNy0yNCAyNC0yNGMxMy4zIDAgMjQgMTAuNyAyNCAyNHYyNGMwIDM1LjMgMjguNyA2NCA2NCA2NGg2NHY2NEgxMjhjLTE3LjcgMC0zMiAxNC4zLTMyIDMydjMyYzAgMTcuNyAxNC4zIDMyIDMyIDMyaDY0YzE3LjcgMCAzMi0xNC4zIDMyLTMyVjM1MmMwLTE3LjctMTQuMy0zMi0zMi0zMkg5NlYyNTZoNjRjMzUuMyAwIDY0LTI4LjcgNjQtNjR2LTI0YzAtMTMuMy0xMC43LTI0LTI0LTI0cy0yNCAxMC43LTI0IDI0djYuNGMwIDMwLjktMjUuMSA1Ni01NiA1NmMtMzAuOSAwLTU2LTI1LjEtNTYtNTZ2LTYuNGMwLTEzLjMgMTAuNy0yNCAyNC0yNGMzLjQgMCA2LjYuNyA5LjYgMmM3LjQtMTAuOSAxOS4yLTE4IDMyLjQtMThzMjUgNy4xIDMyLjQgMThjMy0uOSA2LjItMS40IDkuNi0xLjRjMTMuMyAwIDI0IDEwLjcgMjQgMjR2Ni40YzAgMzAuOSAyNS4xIDU2IDU2IDU2czU2LTI1LjEgNTYtNTZ2LTYuNGMwLTEzLjMtMTAuNy0yNC0yNC0yNHMtMjQgMTAuNy0yNCAyNHYyNGMwIDM1LjMtMjguNyA2NC02NCA2NEgxNjBjLTM1LjMgMC02NC0yOC43LTY0LTY0di0yNGMwLTEzLjMgMTAuNy0yNCAyNC0yNGMxMy4zIDAgMjQgMTAuNyAyNCAyNHY2LjRjMCAzMC45IDI1LjEgNTYgNTYgNTZjMzAuOSAwIDU2LTI1LjEgNTYtNTZ2LTYuNGMwLTEzLjMtMTAuNy0yNC0yNC0yNGMtMy40IDAtNi42LjctOS42IDJjLTcuNC0xMC45LTE5LjItMTgtMzIuNC0xOHMtMjUgNy4xLTMyLjQgMThjLTMtLjktNi4yLTEuNC05LjYtMS40Yy0xMy4zIDAtMjQgMTAuNy0yNCAyNHY2LjRjMCAzMC45LTI1LjEgNTYtNTYgNTZjLTMwLjkgMC01Ni0yNS4xLTU2LTU2VjU2QzAgMjUuMSAyNS4xIDAgNTYgMGgxMjhjMzAuOSAwIDU2IDI1LjEgNTYgNTZ2Ni40YzAgMTMuMy0xMC43IDI0LTI0IDI0Yy0zLjQgMC02LjYtLjctOS42LTJjLTcuNCAxMC45LTE5LjIgMTgtMzIuNCAxOHMtMjUtNy4xLTMyLjQtMThjLTMgLjktNi4yIDEuNC05LjYgMS40Yy0xMy4zIDAtMjQtMTAuNy0yNC0yNFY1NmMwLTMwLjkgMjUuMS01NiA1Ni01NmgxMjh6Ii8+PC9zdmc+">
-    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkZYIFRyYWRpbmcgSm91cm5hbCIsCiAgInNob3J0X25hbWUiOiAiVFJBRF9KT1VSTkFMIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJ0aGVtZV9jb2xvciI6ICIjMjU2M2ViIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjMGYxNzJhIiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCNGJXeHVjejBpYUhSMGNEb3ZMM2QzZHk1M015NXZjbWN2TWpBd01DOXpkbWNpSUhacFpYZENiM2c5SWpBZ01DQXpOVEFnTlRBd0lqNDhjM1I1YkdVK0lEeHdZWFJvSUdacGJHdzlJblZ5YkNnalptbHNkR1Z5TVM0d0xqQXVNQ0F4TURBdU1UWWlQZzBLUDNOMlp6ND0iLAogICAgICAic2l6ZXMiOiAiMTkyeDE5MiIsCiAgICAgICJ0eXBlIjogImltYWdlL3N2Zyt4bWwiCiAgICB9LAogICAgewogICAgICAic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjRiV3h1Y3owaWFIUjBjRG92TDNkM2R5NTNNeTV2Y21jdk1qQXdNQzl6ZG1jaUlIWnBaWGRDYjNnOUlqQWdNQ0F6TlRBZ05UQXdJajQ4YzNSNWJHVSvJRHh3WVhSb0lHWnBiR3c5SW5WeWJDZ2pabWxzZEdWeU1TNHdMakF1TUNBeE1EQXVNVFlpUGcwS1AzTjJaejQ9IiwKICAgICAgInNpemVzIjogIjUxMng1MTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9zdmcreG1sIgogICAgfQogIF0KfQ==">
-    <link rel="manifest" href="manifest.json">
-    
+    <!-- Manifest -->
+<link rel="manifest" href="manifest.json">
+
+<!-- iOS Support -->
+<link rel="apple-touch-icon" href="icons/icon-192x192.png">
+<meta name="apple-mobile-web-app-status-bar" content="#2563eb">
+
+<!-- Theme Color -->
+<meta name="theme-color" content="#2563eb">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
     <style>
         /* Existing styles */
         :root {
@@ -534,6 +541,280 @@
             transform: translateY(-3px);
         }
         
+        /* PWA Install Button */
+        .pwa-install-container {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .pwa-install-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--success);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            border: none;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+            
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+            }
+            
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+        
+        .pwa-install-btn:hover {
+            background: #0da271;
+            transform: scale(1.05);
+        }
+        
+        /* Install Prompt */
+        .install-prompt {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 16px;
+            padding: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 1000;
+            transform: translateY(150%);
+            transition: transform 0.5s ease;
+        }
+        
+        .install-prompt.show {
+            transform: translateY(0);
+        }
+        
+        .install-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+        
+        .install-text {
+            flex: 1;
+        }
+        
+        .install-close {
+            background: transparent;
+            border: none;
+            font-size: 20px;
+            color: var(--gray);
+            cursor: pointer;
+        }
+        
+        /* Offline Indicator */
+        .offline-indicator {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: var(--warning);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 100;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+        
+        .offline-indicator.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Auth Modals */
+        .auth-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .auth-container {
+            background: var(--dark);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            width: 100%;
+            max-width: 400px;
+            padding: 25px;
+            position: relative;
+        }
+        
+        .auth-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .auth-header h2 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+        
+        .auth-header p {
+            color: var(--gray);
+        }
+        
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        
+        .auth-tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .auth-tab:first-child {
+            border-radius: 6px 0 0 6px;
+        }
+        
+        .auth-tab:last-child {
+            border-radius: 0 6px 6px 0;
+        }
+        
+        .auth-tab.active {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .auth-form {
+            display: none;
+        }
+        
+        .auth-form.active {
+            display: block;
+        }
+        
+        .auth-form-group {
+            margin-bottom: 15px;
+        }
+        
+        .auth-form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .auth-form-control {
+            width: 100%;
+            padding: 12px;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--light);
+            font-size: 1rem;
+        }
+        
+        .auth-form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .auth-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .auth-error {
+            color: var(--danger);
+            text-align: center;
+            margin-top: 15px;
+            min-height: 20px;
+        }
+        
+        .auth-footer {
+            text-align: center;
+            margin-top: 20px;
+            color: var(--gray);
+        }
+        
+        .auth-footer a {
+            color: var(--primary);
+            cursor: pointer;
+        }
+        
+        /* User info */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .logout-btn {
+            background: transparent;
+            border: none;
+            color: var(--gray);
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .logout-btn:hover {
+            color: var(--light);
+        }
+        
         /* Mobile-specific adjustments */
         @media (min-width: 576px) {
             .stats-container {
@@ -658,243 +939,210 @@
             .action-icons {
                 justify-content: flex-end;
             }
-        }
-        
-        /* PWA Install Button */
-        .pwa-install-container {
-            position: fixed;
-            bottom: 90px;
-            right: 20px;
-            z-index: 1000;
-            display: none;
-        }
-        
-        .pwa-install-btn {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: var(--success);
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.5rem;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            cursor: pointer;
-            border: none;
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0% {
-                transform: scale(0.95);
-                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-            }
             
-            70% {
-                transform: scale(1);
-                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+            .auth-container {
+                width: 95%;
             }
-            
-            100% {
-                transform: scale(0.95);
-                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
-            }
-        }
-        
-        .pwa-install-btn:hover {
-            background: #0da271;
-            transform: scale(1.05);
-        }
-        
-        /* Install Prompt */
-        .install-prompt {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: white;
-            border-radius: 16px;
-            padding: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            z-index: 1000;
-            transform: translateY(150%);
-            transition: transform 0.5s ease;
-        }
-        
-        .install-prompt.show {
-            transform: translateY(0);
-        }
-        
-        .install-icon {
-            width: 40px;
-            height: 40px;
-            background: var(--primary);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 20px;
-        }
-        
-        .install-text {
-            flex: 1;
-        }
-        
-        .install-close {
-            background: transparent;
-            border: none;
-            font-size: 20px;
-            color: var(--gray);
-            cursor: pointer;
-        }
-        
-        /* Offline Indicator */
-        .offline-indicator {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            background: var(--warning);
-            color: white;
-            padding: 10px 15px;
-            border-radius: 30px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            z-index: 100;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.3s ease;
-        }
-        
-        .offline-indicator.show {
-            opacity: 1;
-            transform: translateY(0);
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div class="logo">
-                <i class="fas fa-chart-line"></i>
-                <h1>FX Trading Journal</h1>
+    <!-- Auth Modals -->
+    <div class="auth-modal" id="authModal">
+        <div class="auth-container">
+            <div class="auth-header">
+                <div class="logo">
+                    <i class="fas fa-chart-line"></i>
+                    <h1>FX Trading Journal</h1>
+                </div>
+                <p>Track, analyze, and improve your trading performance</p>
             </div>
-            <div class="desktop-add-btn">
-                <button class="btn" id="addTradeBtn">
-                    <i class="fas fa-plus"></i> <span class="desktop-text">Add Trade</span>
-                </button>
+            
+            <div class="auth-tabs">
+                <div class="auth-tab active" data-tab="signin">Sign In</div>
+                <div class="auth-tab" data-tab="signup">Sign Up</div>
             </div>
-        </header>
-        
-        <div class="stats-container">
-            <div class="stat-card">
-                <h3>Total Trades</h3>
-                <div class="stat-value" id="totalTrades">0</div>
+            
+            <div class="auth-form active" id="signinForm">
+                <div class="auth-form-group">
+                    <label>Email</label>
+                    <input type="email" class="auth-form-control" id="loginEmail" placeholder="your@email.com">
+                </div>
+                
+                <div class="auth-form-group">
+                    <label>Password</label>
+                    <input type="password" class="auth-form-control" id="loginPassword" placeholder="••••••••">
+                </div>
+                
+                <button class="auth-btn" id="signInBtn">Sign In</button>
+                
+                <div class="auth-error" id="loginError"></div>
+                
+                <div class="auth-footer">
+                    <p>Forgot your password? <a id="resetPasswordLink">Reset it</a></p>
+                </div>
             </div>
-            <div class="stat-card win-rate">
-                <h3>Win Rate</h3>
-                <div class="stat-value" id="winRate">0%</div>
-            </div>
-            <div class="stat-card">
-                <h3>Avg. R:R</h3>
-                <div class="stat-value" id="avgRR">0.0</div>
-            </div>
-            <div class="stat-card loss-rate">
-                <h3>Loss Rate</h3>
-                <div class="stat-value" id="lossRate">0%</div>
+            
+            <div class="auth-form" id="signupForm">
+                <div class="auth-form-group">
+                    <label>Name</label>
+                    <input type="text" class="auth-form-control" id="signupName" placeholder="Your Name">
+                </div>
+                
+                <div class="auth-form-group">
+                    <label>Email</label>
+                    <input type="email" class="auth-form-control" id="signupEmail" placeholder="your@email.com">
+                </div>
+                
+                <div class="auth-form-group">
+                    <label>Password</label>
+                    <input type="password" class="auth-form-control" id="signupPassword" placeholder="••••••••">
+                </div>
+                
+                <div class="auth-form-group">
+                    <label>Confirm Password</label>
+                    <input type="password" class="auth-form-control" id="signupConfirmPassword" placeholder="••••••••">
+                </div>
+                
+                <button class="auth-btn" id="signUpBtn">Create Account</button>
+                
+                <div class="auth-error" id="signupError"></div>
+                
+                <div class="auth-footer">
+                    <p>Already have an account? <a id="switchToLogin">Sign in</a></p>
+                </div>
             </div>
         </div>
-        
-        <div class="main-content">
-            <div>
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">Trade History</h2>
-                        <div class="tabs">
-                            <div class="tab active" data-filter="all">All</div>
-                            <div class="tab" data-filter="winners">Wins</div>
-                            <div class="tab" data-filter="losers">Losses</div>
+    </div>
+    
+    <!-- Main App Content (hidden until authenticated) -->
+    <div id="appContent" style="display: none;">
+        <div class="container">
+            <header>
+                <div class="logo">
+                    <i class="fas fa-chart-line"></i>
+                    <h1>FX Trading Journal</h1>
+                </div>
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <div>
+                        <div id="userName">User</div>
+                        <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                    </div>
+                    <div class="desktop-add-btn">
+                        <button class="btn" id="addTradeBtn">
+                            <i class="fas fa-plus"></i> <span class="desktop-text">Add Trade</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="stats-container">
+                <div class="stat-card">
+                    <h3>Total Trades</h3>
+                    <div class="stat-value" id="totalTrades">0</div>
+                </div>
+                <div class="stat-card win-rate">
+                    <h3>Win Rate</h3>
+                    <div class="stat-value" id="winRate">0%</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Avg. R:R</h3>
+                    <div class="stat-value" id="avgRR">0.0</div>
+                </div>
+                <div class="stat-card loss-rate">
+                    <h3>Loss Rate</h3>
+                    <div class="stat-value" id="lossRate">0%</div>
+                </div>
+            </div>
+            
+            <div class="main-content">
+                <div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Trade History</h2>
+                            <div class="tabs">
+                                <div class="tab active" data-filter="all">All</div>
+                                <div class="tab" data-filter="winners">Wins</div>
+                                <div class="tab" data-filter="losers">Losses</div>
+                            </div>
+                        </div>
+                        
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Pair</th>
+                                        <th>Dir</th>
+                                        <th>Entry</th>
+                                        <th>Exit</th>
+                                        <th>P/L</th>
+                                        <th>Risk</th>
+                                        <th>Setup</th>
+                                        <th>Emotion</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tradesTableBody">
+                                    <!-- Trade rows will be added dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="empty-state" id="emptyState">
+                            <i class="fas fa-file-alt"></i>
+                            <h3>No Trades Recorded</h3>
+                            <p>Add your first trade to start tracking your performance</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Performance Analytics</h2>
+                            <div>
+                                <button class="btn btn-outline" id="exportBtn">
+                                    <i class="fas fa-download"></i> <span class="desktop-text">Export PDF</span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-container">
+                            <canvas id="performanceChart"></canvas>
+                        </div>
+                        
+                        <div class="chart-container" style="height: 180px; margin-top: 15px;">
+                            <canvas id="setupChart"></canvas>
                         </div>
                     </div>
                     
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Pair</th>
-                                    <th>Dir</th>
-                                    <th>Entry</th>
-                                    <th>Exit</th>
-                                    <th>P/L</th>
-                                    <th>Risk</th>
-                                    <th>Setup</th>
-                                    <th>Emotion</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tradesTableBody">
-                                <!-- Trade rows will be added dynamically -->
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <div class="empty-state" id="emptyState">
-                        <i class="fas fa-file-alt"></i>
-                        <h3>No Trades Recorded</h3>
-                        <p>Add your first trade to start tracking your performance</p>
+                    <div class="card" style="margin-top: 15px;">
+                        <div class="card-header">
+                            <h2 class="card-title">Recent Trade Details</h2>
+                        </div>
+                        
+                        <div id="recentTradeDetails">
+                            <div class="empty-state">
+                                <i class="fas fa-chart-line"></i>
+                                <h3>No Trade Selected</h3>
+                                <p>Select a trade to view details</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <div>
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">Performance Analytics</h2>
-                        <div>
-                            <button class="btn btn-outline" id="exportBtn">
-                                <i class="fas fa-download"></i> <span class="desktop-text">Export PDF</span>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="chart-container">
-                        <canvas id="performanceChart"></canvas>
-                    </div>
-                    
-                    <div class="chart-container" style="height: 180px; margin-top: 15px;">
-                        <canvas id="setupChart"></canvas>
-                    </div>
-                </div>
-                
-                <div class="card" style="margin-top: 15px;">
-                    <div class="card-header">
-                        <h2 class="card-title">Recent Trade Details</h2>
-                    </div>
-                    
-                    <div id="recentTradeDetails">
-                        <div class="empty-state">
-                            <i class="fas fa-chart-line"></i>
-                            <h3>No Trade Selected</h3>
-                            <p>Select a trade to view details</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <footer>
+                <p>FX Trading Journal v1.0 | Professional Trade Analysis</p>
+            </footer>
         </div>
         
-        <footer>
-            <p>FX Trading Journal v1.0 | Professional Trade Analysis</p>
-        </footer>
+        <!-- Floating add button for mobile -->
+        <button class="floating-add-btn" id="mobileAddBtn">
+            <i class="fas fa-plus"></i>
+        </button>
     </div>
-    
-    <!-- Floating add button for mobile -->
-    <button class="floating-add-btn" id="mobileAddBtn">
-        <i class="fas fa-plus"></i>
-    </button>
     
     <!-- PWA Install Button -->
     <div class="pwa-install-container" id="pwaInstallContainer">
@@ -1054,13 +1302,45 @@
     </div>
 
     <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyByv7zwSod9JCnYqUxC3Mb7VrPKihvjOHA",
+            authDomain: "trader-os.firebaseapp.com",
+            projectId: "trader-os",
+            storageBucket: "trader-os.appspot.com",
+            messagingSenderId: "879978387606",
+            appId: "1:879978387606:web:a37e5aa8075032b6294ab7",
+            measurementId: "G-BL4PJWJJCV"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        
         // Initialize variables
         let trades = [];
         let currentFilter = 'all';
         let performanceChart, setupChart;
         let deferredPrompt; // For PWA installation
+        let currentUser = null;
         
         // DOM Elements
+        const authModal = document.getElementById('authModal');
+        const appContent = document.getElementById('appContent');
+        const signInForm = document.getElementById('signinForm');
+        const signUpForm = document.getElementById('signupForm');
+        const signInBtn = document.getElementById('signInBtn');
+        const signUpBtn = document.getElementById('signUpBtn');
+        const authTabs = document.querySelectorAll('.auth-tab');
+        const loginError = document.getElementById('loginError');
+        const signupError = document.getElementById('signupError');
+        const resetPasswordLink = document.getElementById('resetPasswordLink');
+        const switchToLogin = document.getElementById('switchToLogin');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const userAvatar = document.getElementById('userAvatar');
+        const userName = document.getElementById('userName');
+        
         const addTradeBtn = document.getElementById('addTradeBtn');
         const mobileAddBtn = document.getElementById('mobileAddBtn');
         const modal = document.getElementById('addTradeModal');
@@ -1095,21 +1375,38 @@
             }, 3000);
         }
         
-        // Save trades to localStorage
+        // Save trades to Firestore
         function saveTrades() {
-            localStorage.setItem('trades', JSON.stringify(trades));
-            showToast('Trades saved successfully!');
+            if (!currentUser) return;
+            
+            const userRef = db.collection('users').doc(currentUser.uid);
+            userRef.set({
+                trades: trades
+            }, { merge: true })
+            .then(() => {
+                showToast('Trades saved successfully!');
+            })
+            .catch((error) => {
+                console.error("Error saving trades: ", error);
+                showToast('Error saving trades!', 'danger');
+            });
         }
         
-        // Load trades from localStorage
+        // Load trades from Firestore
         function loadTrades() {
-            const storedTrades = localStorage.getItem('trades');
-            if (storedTrades) {
-                trades = JSON.parse(storedTrades);
-                renderTradesTable();
-                updateStats();
-                updateCharts();
-            }
+            if (!currentUser) return;
+            
+            const userRef = db.collection('users').doc(currentUser.uid);
+            userRef.get().then((doc) => {
+                if (doc.exists && doc.data().trades) {
+                    trades = doc.data().trades;
+                    renderTradesTable();
+                    updateStats();
+                    updateCharts();
+                }
+            }).catch((error) => {
+                console.error("Error loading trades: ", error);
+            });
         }
         
         // Initialize charts
@@ -1866,10 +2163,129 @@
             }
         }
         
+        // Authentication functions
+        function signUp() {
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('signupConfirmPassword').value;
+            
+            // Validation
+            if (!name || !email || !password || !confirmPassword) {
+                signupError.textContent = 'Please fill in all fields';
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                signupError.textContent = 'Passwords do not match';
+                return;
+            }
+            
+            if (password.length < 6) {
+                signupError.textContent = 'Password should be at least 6 characters';
+                return;
+            }
+            
+            signupError.textContent = '';
+            
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    
+                    // Save user name to Firestore
+                    db.collection('users').doc(user.uid).set({
+                        name: name,
+                        email: email
+                    })
+                    .then(() => {
+                        showToast('Account created successfully!');
+                        initAppForUser(user);
+                    })
+                    .catch((error) => {
+                        console.error("Error saving user info: ", error);
+                        signupError.textContent = error.message;
+                    });
+                })
+                .catch((error) => {
+                    signupError.textContent = error.message;
+                });
+        }
+        
+        function signIn() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                loginError.textContent = 'Please fill in all fields';
+                return;
+            }
+            
+            loginError.textContent = '';
+            
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    showToast('Signed in successfully!');
+                    initAppForUser(user);
+                })
+                .catch((error) => {
+                    loginError.textContent = error.message;
+                });
+        }
+        
+        function resetPassword() {
+            const email = document.getElementById('loginEmail').value;
+            
+            if (!email) {
+                loginError.textContent = 'Please enter your email';
+                return;
+            }
+            
+            auth.sendPasswordResetEmail(email)
+                .then(() => {
+                    showToast('Password reset email sent!');
+                })
+                .catch((error) => {
+                    loginError.textContent = error.message;
+                });
+        }
+        
+        function signOut() {
+            auth.signOut().then(() => {
+                showToast('Signed out successfully!');
+                authModal.style.display = 'flex';
+                appContent.style.display = 'none';
+                trades = [];
+                renderTradesTable();
+            }).catch((error) => {
+                console.error('Sign out error:', error);
+            });
+        }
+        
+        function initAppForUser(user) {
+            currentUser = user;
+            authModal.style.display = 'none';
+            appContent.style.display = 'block';
+            
+            // Set user info
+            db.collection('users').doc(user.uid).get().then((doc) => {
+                if (doc.exists) {
+                    const userData = doc.data();
+                    userName.textContent = userData.name || user.email;
+                    userAvatar.textContent = userData.name ? userData.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase();
+                } else {
+                    userName.textContent = user.email;
+                    userAvatar.textContent = user.email.charAt(0).toUpperCase();
+                }
+            });
+            
+            // Load user data
+            loadTrades();
+        }
+        
         // Initialize the app
         function initApp() {
             initCharts();
-            loadTrades();
             
             // Modal functionality
             addTradeBtn.addEventListener('click', () => modal.style.display = 'flex');
@@ -1896,18 +2312,51 @@
             // Export functionality
             exportBtn.addEventListener('click', exportToPDF);
             
+            // Auth tab switching
+            authTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabName = tab.dataset.tab;
+                    authTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    signInForm.classList.remove('active');
+                    signUpForm.classList.remove('active');
+                    
+                    if (tabName === 'signin') {
+                        signInForm.classList.add('active');
+                    } else {
+                        signUpForm.classList.add('active');
+                    }
+                });
+            });
+            
+            // Auth buttons
+            signInBtn.addEventListener('click', signIn);
+            signUpBtn.addEventListener('click', signUp);
+            resetPasswordLink.addEventListener('click', resetPassword);
+            switchToLogin.addEventListener('click', () => {
+                authTabs[0].click();
+            });
+            logoutBtn.addEventListener('click', signOut);
+            
             // PWA installation handling
             handlePWAInstall();
             
             // Register Service Worker
             registerServiceWorker();
             
-            // Update stats and render
-            updateStats();
-            renderTradesTable();
-            
             // Handle window resize for responsive table
             window.addEventListener('resize', renderTradesTable);
+            
+            // Auth state observer
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    initAppForUser(user);
+                } else {
+                    authModal.style.display = 'flex';
+                    appContent.style.display = 'none';
+                }
+            });
         }
         
         // Start the app
