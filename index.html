@@ -3,17 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FXOS Trading Journal</title>
+    <title>TrafxOS - Advanced Trading Journal</title>
     
-    <!-- Manifest -->
-<link rel="manifest" href="manifest.json">
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
 
-<!-- iOS Support -->
-<link rel="apple-touch-icon" href="icons/icon-192x192.png">
-<meta name="apple-mobile-web-app-status-bar" content="#2563eb">
+    <!-- iOS Support -->
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <meta name="apple-mobile-web-app-status-bar" content="#2563eb">
 
-<!-- Theme Color -->
-<meta name="theme-color" content="#2563eb">
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#2563eb">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -25,7 +26,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     
     <style>
-        /* Existing styles */
         :root {
             --primary: #2563eb;
             --secondary: #0f172a;
@@ -56,7 +56,7 @@
         }
         
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
             padding: 5px;
         }
@@ -356,6 +356,7 @@
         
         .form-group {
             margin-bottom: 12px;
+            position: relative;
         }
         
         .form-group label {
@@ -462,7 +463,6 @@
             object-fit: cover;
         }
         
-        /* Export loading indicator */
         .export-loader {
             display: none;
             position: fixed;
@@ -493,7 +493,6 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* Toast notification */
         .toast {
             position: fixed;
             bottom: 20px;
@@ -516,7 +515,6 @@
             opacity: 1;
         }
         
-        /* Floating add button for mobile */
         .floating-add-btn {
             position: fixed;
             bottom: 20px;
@@ -539,6 +537,139 @@
         .floating-add-btn:hover {
             background: #1d4ed8;
             transform: translateY(-3px);
+        }
+        
+        .cbs-score {
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            display: inline-block;
+            text-align: center;
+            min-width: 35px;
+        }
+        
+        .cbs-low {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+        
+        .cbs-medium {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+        
+        .cbs-high {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+        
+        .bias-insight {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+        }
+        
+        .bias-warning {
+            background: rgba(239, 68, 68, 0.15);
+            border-left: 4px solid var(--danger);
+        }
+        
+        .bias-positive {
+            background: rgba(16, 185, 129, 0.15);
+            border-left: 4px solid var(--success);
+        }
+        
+        .bias-insight i {
+            font-size: 1.2rem;
+        }
+        
+        .bias-warning i {
+            color: var(--danger);
+        }
+        
+        .bias-positive i {
+            color: var(--success);
+        }
+        
+        .bias-alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 2000;
+            padding: 15px;
+            max-width: 350px;
+            display: none;
+            color: #333;
+        }
+        
+        .bias-alert h3 {
+            margin: 0 0 10px 0;
+            color: #e74c3c;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .bias-alert-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .education-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .education-content {
+            background: var(--dark);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .education-content h2 {
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+        
+        .education-content p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        
+        .education-content h3 {
+            margin: 20px 0 10px 0;
+            color: var(--warning);
+        }
+        
+        .education-content ul {
+            padding-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .education-content li {
+            margin-bottom: 8px;
+            line-height: 1.5;
         }
         
         /* PWA Install Button */
@@ -815,7 +946,7 @@
             color: var(--light);
         }
         
-        /* Mobile-specific adjustments */
+        /* Responsive adjustments */
         @media (min-width: 576px) {
             .stats-container {
                 grid-template-columns: repeat(4, 1fr);
@@ -875,9 +1006,12 @@
             .card {
                 padding: 20px;
             }
+            
+            .stats-container {
+                grid-template-columns: repeat(5, 1fr);
+            }
         }
         
-        /* Scrollable table for small screens */
         .table-wrapper {
             overflow-x: auto;
             margin-bottom: 10px;
@@ -885,7 +1019,6 @@
             -webkit-overflow-scrolling: touch;
         }
         
-        /* Add trade form adjustments */
         .form-group input, .form-group select, .form-group textarea {
             font-size: 0.9rem;
             padding: 12px;
@@ -895,7 +1028,6 @@
             min-height: 80px;
         }
         
-        /* Responsive table headers */
         .responsive-label {
             display: none;
             font-weight: bold;
@@ -940,6 +1072,10 @@
                 justify-content: flex-end;
             }
             
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
             .auth-container {
                 width: 95%;
             }
@@ -947,15 +1083,35 @@
     </style>
 </head>
 <body>
+    <!-- Bias Alert -->
+    <div class="bias-alert" id="biasAlert">
+        <div class="bias-alert-content">
+            <h3><i class="fas fa-exclamation-triangle"></i> Bias Detected</h3>
+            <p id="biasAlertMessage"></p>
+            <div class="bias-alert-actions">
+                <button class="btn btn-outline" id="acknowledgeBias">Acknowledge</button>
+                <button class="btn" id="reviewBias">Review & Learn</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Education Modal -->
+    <div class="education-modal" id="educationModal">
+        <div class="education-content">
+            <span class="close-modal" id="closeEducation">&times;</span>
+            <div id="educationContent"></div>
+        </div>
+    </div>
+
     <!-- Auth Modals -->
     <div class="auth-modal" id="authModal">
         <div class="auth-container">
             <div class="auth-header">
                 <div class="logo">
-                    <i class="fas fa-chart-line"></i>
-                    <h1>FX Trading Journal</h1>
+                    <i class="fas fa-brain"></i>
+                    <h1>TrafxOS</h1>
                 </div>
-                <p>Track, analyze, and improve your trading performance</p>
+                <p>Advanced Trading Journal with Cognitive Bias Detection</p>
             </div>
             
             <div class="auth-tabs">
@@ -1015,13 +1171,13 @@
         </div>
     </div>
     
-    <!-- Main App Content (hidden until authenticated) -->
+    <!-- Main App Content -->
     <div id="appContent" style="display: none;">
         <div class="container">
             <header>
                 <div class="logo">
-                    <i class="fas fa-chart-line"></i>
-                    <h1>FX Trading Journal</h1>
+                    <i class="fas fa-brain"></i>
+                    <h1>TrafxOS - Advanced Trading Journal</h1>
                 </div>
                 <div class="user-info">
                     <div class="user-avatar" id="userAvatar">U</div>
@@ -1036,6 +1192,8 @@
                     </div>
                 </div>
             </header>
+            
+            <div id="biasInsightsContainer"></div>
             
             <div class="stats-container">
                 <div class="stat-card">
@@ -1054,6 +1212,10 @@
                     <h3>Loss Rate</h3>
                     <div class="stat-value" id="lossRate">0%</div>
                 </div>
+                <div class="stat-card">
+                    <h3>Avg. CBS</h3>
+                    <div class="stat-value" id="avgCBS">0</div>
+                </div>
             </div>
             
             <div class="main-content">
@@ -1065,6 +1227,7 @@
                                 <div class="tab active" data-filter="all">All</div>
                                 <div class="tab" data-filter="winners">Wins</div>
                                 <div class="tab" data-filter="losers">Losses</div>
+                                <div class="tab" data-filter="highBias">High Bias</div>
                             </div>
                         </div>
                         
@@ -1072,19 +1235,18 @@
                             <table>
                                 <thead>
                                     <tr>
+                                        <th>Date</th>
                                         <th>Pair</th>
                                         <th>Dir</th>
-                                        <th>Entry</th>
-                                        <th>Exit</th>
                                         <th>P/L</th>
                                         <th>Risk</th>
                                         <th>Setup</th>
                                         <th>Emotion</th>
+                                        <th>CBS</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tradesTableBody">
-                                    <!-- Trade rows will be added dynamically -->
                                 </tbody>
                             </table>
                         </div>
@@ -1103,7 +1265,7 @@
                             <h2 class="card-title">Performance Analytics</h2>
                             <div>
                                 <button class="btn btn-outline" id="exportBtn">
-                                    <i class="fas fa-download"></i> <span class="desktop-text">Export PDF</span>
+                                    <i class="fas fa-download"></i> <span class="desktop-text">Export Data</span>
                                 </button>
                             </div>
                         </div>
@@ -1114,6 +1276,30 @@
                         
                         <div class="chart-container" style="height: 180px; margin-top: 15px;">
                             <canvas id="setupChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="card" style="margin-top: 15px;">
+                        <div class="card-header">
+                            <h2 class="card-title">Cognitive Bias Analytics</h2>
+                        </div>
+                        
+                        <div class="chart-container">
+                            <canvas id="biasFrequencyChart"></canvas>
+                        </div>
+                        
+                        <div class="chart-container" style="height: 180px; margin-top: 15px;">
+                            <canvas id="cbsTrendChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="card" style="margin-top: 15px;">
+                        <div class="card-header">
+                            <h2 class="card-title">Bias Pattern Detection</h2>
+                        </div>
+                        
+                        <div class="chart-container">
+                            <canvas id="biasPatternChart"></canvas>
                         </div>
                     </div>
                     
@@ -1134,11 +1320,10 @@
             </div>
             
             <footer>
-                <p>FX Trading Journal v1.0 | Professional Trade Analysis</p>
+                <p>TrafxOS v2.0 | Advanced Cognitive Bias Detection System</p>
             </footer>
         </div>
         
-        <!-- Floating add button for mobile -->
         <button class="floating-add-btn" id="mobileAddBtn">
             <i class="fas fa-plus"></i>
         </button>
@@ -1157,7 +1342,7 @@
             <i class="fas fa-download"></i>
         </div>
         <div class="install-text">
-            <strong>Install Trading Journal</strong>
+            <strong>Install TrafxOS</strong>
             <p>Add to home screen for quick access</p>
         </div>
         <button class="install-close" id="closePrompt">
@@ -1171,22 +1356,24 @@
         <span>You are currently offline</span>
     </div>
     
-    <!-- Toast notification -->
     <div class="toast" id="toast"></div>
     
-    <!-- Export loading indicator -->
     <div class="export-loader" id="exportLoader">
         <div class="loader-spinner"></div>
-        <p>Generating PDF report...</p>
+        <p>Generating report...</p>
     </div>
     
-    <!-- Add Trade Modal -->
     <div class="modal" id="addTradeModal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
             <h2 style="margin-bottom: 15px;">Add New Trade</h2>
             
             <div class="form-grid">
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" class="form-control" id="tradeDate">
+                </div>
+                
                 <div class="form-group">
                     <label>Currency Pair</label>
                     <select class="form-control" id="currencyPair">
@@ -1212,22 +1399,22 @@
                 
                 <div class="form-group">
                     <label>Entry Price</label>
-                    <input type="number" step="0.0001" class="form-control" id="entryPrice" placeholder="1.12345">
+                    <input type="number" step="0.00001" class="form-control" id="entryPrice" placeholder="1.12345">
                 </div>
                 
                 <div class="form-group">
                     <label>Exit Price</label>
-                    <input type="number" step="0.0001" class="form-control" id="exitPrice" placeholder="1.12890">
+                    <input type="number" step="0.00001" class="form-control" id="exitPrice" placeholder="1.12890">
                 </div>
                 
                 <div class="form-group">
                     <label>Stop Loss</label>
-                    <input type="number" step="0.0001" class="form-control" id="stopLoss" placeholder="1.12000">
+                    <input type="number" step="0.00001" class="form-control" id="stopLoss" placeholder="1.12000">
                 </div>
                 
                 <div class="form-group">
                     <label>Take Profit</label>
-                    <input type="number" step="0.0001" class="form-control" id="takeProfit" placeholder="1.13000">
+                    <input type="number" step="0.00001" class="form-control" id="takeProfit" placeholder="1.13000">
                 </div>
                 
                 <div class="form-group">
@@ -1276,6 +1463,8 @@
                         <option>FOMO</option>
                         <option>Revenge Trading</option>
                         <option>Overtrading</option>
+                        <option>Overconfident</option>
+                        <option>Fearful</option>
                     </select>
                 </div>
                 
@@ -1321,7 +1510,7 @@
         // Initialize variables
         let trades = [];
         let currentFilter = 'all';
-        let performanceChart, setupChart;
+        let performanceChart, setupChart, biasFrequencyChart, cbsTrendChart, biasPatternChart;
         let deferredPrompt; // For PWA installation
         let currentUser = null;
         
@@ -1353,6 +1542,7 @@
         const winRateEl = document.getElementById('winRate');
         const lossRateEl = document.getElementById('lossRate');
         const avgRREl = document.getElementById('avgRR');
+        const avgCBSEl = document.getElementById('avgCBS');
         const recentTradeDetails = document.getElementById('recentTradeDetails');
         const exportBtn = document.getElementById('exportBtn');
         const exportLoader = document.getElementById('exportLoader');
@@ -1363,6 +1553,14 @@
         const installPrompt = document.getElementById('installPrompt');
         const closePrompt = document.getElementById('closePrompt');
         const offlineIndicator = document.getElementById('offlineIndicator');
+        const biasAlert = document.getElementById('biasAlert');
+        const biasAlertMessage = document.getElementById('biasAlertMessage');
+        const acknowledgeBiasBtn = document.getElementById('acknowledgeBias');
+        const reviewBiasBtn = document.getElementById('reviewBias');
+        const educationModal = document.getElementById('educationModal');
+        const educationContent = document.getElementById('educationContent');
+        const closeEducationBtn = document.getElementById('closeEducation');
+        const biasInsightsContainer = document.getElementById('biasInsightsContainer');
         
         // Show toast notification
         function showToast(message, type = 'success') {
@@ -1375,13 +1573,301 @@
             }, 3000);
         }
         
+        // Cognitive Bias Detection Functions
+        function detectBiases(trade, previousTrades) {
+            const biases = {
+                fomo: false,
+                revenge: false,
+                lossAversion: false,
+                confirmation: false,
+                overconfidence: false,
+                herding: false,
+                recency: false,
+                anchoring: false
+            };
+            
+            // FOMO Bias
+            if (trade.emotion === "FOMO" || trade.emotion === "Anxious") {
+                biases.fomo = true;
+            }
+            
+            // Revenge Trading Bias
+            if (previousTrades.length > 0) {
+                const lastTrade = previousTrades[previousTrades.length - 1];
+                const lastTradeDate = new Date(lastTrade.date);
+                const currentTradeDate = new Date(trade.date);
+                const timeDiff = Math.abs(currentTradeDate - lastTradeDate) / (1000 * 60);
+                
+                const pipValue = lastTrade.pair.includes('JPY') ? 0.01 : 0.0001;
+                let lastTradePL;
+                if (lastTrade.direction === 'Long') {
+                    lastTradePL = (lastTrade.exitPrice - lastTrade.entryPrice) / pipValue;
+                } else {
+                    lastTradePL = (lastTrade.entryPrice - lastTrade.exitPrice) / pipValue;
+                }
+                
+                if (lastTradePL < 0 && timeDiff < 60) {
+                    biases.revenge = true;
+                }
+            }
+            
+            // Loss Aversion Bias
+            if (trade.stopLoss && trade.takeProfit) {
+                const pipValue = trade.pair.includes('JPY') ? 0.01 : 0.0001;
+                let tradePL;
+                if (trade.direction === 'Long') {
+                    tradePL = (trade.exitPrice - trade.entryPrice) / pipValue;
+                } else {
+                    tradePL = (trade.entryPrice - trade.exitPrice) / pipValue;
+                }
+                
+                const risk = Math.abs(trade.entryPrice - trade.stopLoss) / pipValue;
+                const reward = Math.abs(trade.takeProfit - trade.entryPrice) / pipValue;
+                
+                if (tradePL > 0 && tradePL < reward * 0.7) {
+                    biases.lossAversion = true;
+                }
+                
+                if (tradePL < 0 && Math.abs(tradePL) > risk * 1.1) {
+                    biases.lossAversion = true;
+                }
+            }
+            
+            // Confirmation Bias
+            if (previousTrades.length > 0) {
+                const sameSetupTrades = previousTrades.filter(t => t.setupType === trade.setupType);
+                if (sameSetupTrades.length >= 3) {
+                    const lastThree = sameSetupTrades.slice(-3);
+                    const allLosses = lastThree.every(t => {
+                        const pipValue = t.pair.includes('JPY') ? 0.01 : 0.0001;
+                        let pl;
+                        if (t.direction === 'Long') {
+                            pl = (t.exitPrice - t.entryPrice) / pipValue;
+                        } else {
+                            pl = (t.entryPrice - t.exitPrice) / pipValue;
+                        }
+                        return pl < 0;
+                    });
+                    
+                    if (allLosses) {
+                        biases.confirmation = true;
+                    }
+                }
+            }
+            
+            // Overconfidence Bias
+            if (previousTrades.length >= 3) {
+                const recentTrades = previousTrades.slice(-3);
+                const recentWins = recentTrades.filter(t => {
+                    const pipValue = t.pair.includes('JPY') ? 0.01 : 0.0001;
+                    let pl;
+                    if (t.direction === 'Long') {
+                        pl = (t.exitPrice - t.entryPrice) / pipValue;
+                    } else {
+                        pl = (t.entryPrice - t.exitPrice) / pipValue;
+                    }
+                    return pl > 0;
+                });
+                
+                if (recentWins.length >= 2 && trade.riskPercent > recentTrades.reduce((sum, t) => sum + t.riskPercent, 0) / recentTrades.length) {
+                    biases.overconfidence = true;
+                }
+            }
+            
+            // Herding Bias
+            if (previousTrades.length >= 5) {
+                const recentTrades = previousTrades.slice(-5);
+                const sameDirectionTrades = recentTrades.filter(t => t.direction === trade.direction);
+                
+                if (sameDirectionTrades.length / recentTrades.length >= 0.8) {
+                    biases.herding = true;
+                }
+            }
+            
+            // Recency Bias
+            if (previousTrades.length > 0) {
+                const lastTrade = previousTrades[previousTrades.length - 1];
+                if (lastTrade.setupType === trade.setupType) {
+                    biases.recency = true;
+                }
+            }
+            
+            // Anchoring Bias
+            const priceDecimal = trade.entryPrice.toString().split('.')[1] || '';
+            if (priceDecimal.length >= 2) {
+                const lastTwoDigits = parseInt(priceDecimal.slice(-2));
+                if (lastTwoDigits >= 95 || lastTwoDigits <= 5) {
+                    biases.anchoring = true;
+                }
+            }
+            
+            return biases;
+        }
+        
+        // Calculate Cognitive Bias Score (0-100)
+        function calculateCBS(biases) {
+            let score = 0;
+            if (biases.fomo) score += 15;
+            if (biases.revenge) score += 20;
+            if (biases.lossAversion) score += 20;
+            if (biases.confirmation) score += 15;
+            if (biases.overconfidence) score += 10;
+            if (biases.herding) score += 8;
+            if (biases.recency) score += 7;
+            if (biases.anchoring) score += 5;
+            
+            return Math.min(score, 100);
+        }
+        
+        // Get CBS class for styling
+        function getCBSClass(score) {
+            if (score <= 30) return 'cbs-low';
+            if (score <= 70) return 'cbs-medium';
+            return 'cbs-high';
+        }
+        
+        // Show bias alert
+        function showBiasAlert(biases) {
+            const biasMessages = [];
+            
+            if (biases.fomo) biasMessages.push("FOMO (Fear Of Missing Out) detected - trading based on emotion rather than strategy.");
+            if (biases.revenge) biasMessages.push("Revenge trading detected - trying to recover losses quickly.");
+            if (biases.lossAversion) biasMessages.push("Loss aversion detected - exiting winners early or letting losers run.");
+            if (biases.confirmation) biasMessages.push("Confirmation bias detected - repeating losing strategies.");
+            if (biases.overconfidence) biasMessages.push("Overconfidence detected - increasing risk after wins.");
+            if (biases.herding) biasMessages.push("Herding bias detected - following the crowd without independent analysis.");
+            if (biases.recency) biasMessages.push("Recency bias detected - overweighting recent events.");
+            if (biases.anchoring) biasMessages.push("Anchoring bias detected - focusing on round numbers.");
+            
+            if (biasMessages.length > 0) {
+                biasAlertMessage.innerHTML = biasMessages.join('<br><br>');
+                biasAlert.style.display = 'block';
+                
+                acknowledgeBiasBtn.onclick = () => {
+                    biasAlert.style.display = 'none';
+                };
+                
+                reviewBiasBtn.onclick = () => {
+                    biasAlert.style.display = 'none';
+                    showBiasEducation(biases);
+                };
+            }
+        }
+        
+        // Show bias education
+        function showBiasEducation(biases) {
+            let content = '<h2>Cognitive Bias Education</h2>';
+            
+            if (biases.fomo) {
+                content += `
+                    <h3>FOMO (Fear Of Missing Out)</h3>
+                    <p>FOMO occurs when traders enter positions due to the fear of missing out on potential profits, rather than based on their trading plan.</p>
+                    <h3>How to overcome FOMO:</h3>
+                    <ul>
+                        <li>Stick to your trading plan and strategy</li>
+                        <li>Remember that there will always be other trading opportunities</li>
+                        <li>Avoid chasing prices after big moves</li>
+                        <li>Practice patience and discipline</li>
+                    </ul>
+                `;
+            }
+            
+            if (biases.revenge) {
+                content += `
+                    <h3>Revenge Trading</h3>
+                    <p>Revenge trading happens when traders try to immediately recover losses by taking impulsive trades without proper analysis.</p>
+                    <h3>How to overcome revenge trading:</h3>
+                    <ul>
+                        <li>Take a break after a losing trade</li>
+                        <li>Review what went wrong before entering a new trade</li>
+                        <li>Stick to your risk management rules</li>
+                        <li>Accept that losses are part of trading</li>
+                    </ul>
+                `;
+            }
+            
+            educationContent.innerHTML = content;
+            educationModal.style.display = 'flex';
+        }
+        
+        // Update bias insights based on recent trades
+        function updateBiasInsights() {
+            biasInsightsContainer.innerHTML = '';
+            
+            if (trades.length < 3) return;
+            
+            const lastThreeTrades = trades.slice(-3);
+            const lastFiveTrades = trades.slice(-5);
+            
+            const avgLastThreeCBS = lastThreeTrades.reduce((sum, trade) => sum + trade.cbs, 0) / lastThreeTrades.length;
+            const avgLastFiveCBS = lastFiveTrades.reduce((sum, trade) => sum + trade.cbs, 0) / lastFiveTrades.length;
+            
+            if (avgLastThreeCBS > 70) {
+                const warningDiv = document.createElement('div');
+                warningDiv.className = 'bias-insight bias-warning';
+                warningDiv.innerHTML = `
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>High Bias Detected — consider pausing trading to reset.</div>
+                `;
+                biasInsightsContainer.appendChild(warningDiv);
+            }
+            
+            if (avgLastFiveCBS < 30) {
+                const positiveDiv = document.createElement('div');
+                positiveDiv.className = 'bias-insight bias-positive';
+                positiveDiv.innerHTML = `
+                    <i class="fas fa-check-circle"></i>
+                    <div>Low Bias — trading discipline improving!</div>
+                `;
+                biasInsightsContainer.appendChild(positiveDiv);
+            }
+            
+            const biasCounts = {
+                fomo: 0,
+                revenge: 0,
+                lossAversion: 0,
+                confirmation: 0,
+                overconfidence: 0,
+                herding: 0,
+                recency: 0,
+                anchoring: 0
+            };
+            
+            trades.forEach(trade => {
+                for (const bias in trade.biases) {
+                    if (trade.biases[bias]) biasCounts[bias]++;
+                }
+            });
+            
+            let mostCommonBias = null;
+            let maxCount = 0;
+            
+            for (const bias in biasCounts) {
+                if (biasCounts[bias] > maxCount) {
+                    mostCommonBias = bias;
+                    maxCount = biasCounts[bias];
+                }
+            }
+            
+            if (mostCommonBias && maxCount > trades.length * 0.3) {
+                const commonBiasDiv = document.createElement('div');
+                commonBiasDiv.className = 'bias-insight bias-warning';
+                commonBiasDiv.innerHTML = `
+                    <i class="fas fa-chart-line"></i>
+                    <div>Pattern detected: ${mostCommonBias.replace(/([A-Z])/g, ' $1')} is your most common bias.</div>
+                `;
+                biasInsightsContainer.appendChild(commonBiasDiv);
+            }
+        }
+        
         // Save trades to Firestore
         function saveTrades() {
             if (!currentUser) return;
             
             const userRef = db.collection('users').doc(currentUser.uid);
             userRef.set({
-                trades: trades
+                trades: trades,
+                updatedAt: new Date()
             }, { merge: true })
             .then(() => {
                 showToast('Trades saved successfully!');
@@ -1403,6 +1889,7 @@
                     renderTradesTable();
                     updateStats();
                     updateCharts();
+                    updateBiasInsights();
                 }
             }).catch((error) => {
                 console.error("Error loading trades: ", error);
@@ -1411,6 +1898,34 @@
         
         // Initialize charts
         function initCharts() {
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#94a3b8'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#94a3b8'
+                        }
+                    }
+                }
+            };
+            
             // Performance Chart
             const perfCtx = document.getElementById('performanceChart').getContext('2d');
             performanceChart = new Chart(perfCtx, {
@@ -1427,33 +1942,7 @@
                         tension: 0.3
                     }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            },
-                            ticks: {
-                                color: '#94a3b8'
-                            }
-                        },
-                        x: {
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            },
-                            ticks: {
-                                color: '#94a3b8'
-                            }
-                        }
-                    }
-                }
+                options: chartOptions
             });
             
             // Setup Success Chart
@@ -1474,16 +1963,112 @@
                             'rgba(14, 165, 233, 0.7)',
                             'rgba(236, 72, 153, 0.7)'
                         ],
-                        borderColor: [
-                            'rgba(37, 99, 235, 1)',
-                            'rgba(16, 185, 129, 1)',
-                            'rgba(245, 158, 11, 1)',
-                            'rgba(239, 68, 68, 1)',
-                            'rgba(139, 92, 246, 1)',
-                            'rgba(14, 165, 233, 1)',
-                            'rgba(236, 72, 153, 1)'
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    ...chartOptions,
+                    scales: {
+                        ...chartOptions.scales,
+                        y: {
+                            ...chartOptions.scales.y,
+                            beginAtZero: true,
+                            max: 100
+                        },
+                        x: {
+                            ...chartOptions.scales.x,
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Bias Frequency Chart
+            const biasFreqCtx = document.getElementById('biasFrequencyChart').getContext('2d');
+            biasFrequencyChart = new Chart(biasFreqCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['FOMO', 'Revenge', 'Loss Aversion', 'Confirmation', 'Overconfidence', 'Herding', 'Recency', 'Anchoring'],
+                    datasets: [{
+                        label: 'Bias Frequency',
+                        data: [0, 0, 0, 0, 0, 0, 0, 0],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.7)',
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(75, 192, 192, 0.7)',
+                            'rgba(153, 102, 255, 0.7)',
+                            'rgba(255, 159, 64, 0.7)',
+                            'rgba(199, 199, 199, 0.7)',
+                            'rgba(83, 102, 255, 0.7)'
                         ],
                         borderWidth: 1
+                    }]
+                },
+                options: {
+                    ...chartOptions,
+                    scales: {
+                        ...chartOptions.scales,
+                        x: {
+                            ...chartOptions.scales.x,
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // CBS Trend Chart
+            const cbsTrendCtx = document.getElementById('cbsTrendChart').getContext('2d');
+            cbsTrendChart = new Chart(cbsTrendCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'CBS Trend',
+                        data: [],
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    ...chartOptions,
+                    scales: {
+                        ...chartOptions.scales,
+                        y: {
+                            ...chartOptions.scales.y,
+                            min: 0,
+                            max: 100
+                        }
+                    }
+                }
+            });
+            
+            // Bias Pattern Chart
+            const biasPatternCtx = document.getElementById('biasPatternChart').getContext('2d');
+            biasPatternChart = new Chart(biasPatternCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['FOMO', 'Revenge', 'Loss Aversion', 'Confirmation', 'Overconfidence', 'Herding', 'Recency', 'Anchoring'],
+                    datasets: [{
+                        label: 'Your Bias Profile',
+                        data: [0, 0, 0, 0, 0, 0, 0, 0],
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(54, 162, 235, 1)'
                     }]
                 },
                 options: {
@@ -1495,22 +2080,19 @@
                         }
                     },
                     scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100,
+                        r: {
+                            angleLines: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
                             grid: {
                                 color: 'rgba(255, 255, 255, 0.1)'
                             },
-                            ticks: {
+                            pointLabels: {
                                 color: '#94a3b8'
-                            }
-                        },
-                        x: {
-                            grid: {
-                                display: false
                             },
                             ticks: {
-                                color: '#94a3b8'
+                                color: '#94a3b8',
+                                backdropColor: 'transparent'
                             }
                         }
                     }
@@ -1522,38 +2104,34 @@
         function updateCharts() {
             if (trades.length === 0) return;
             
-            // Sort trades by date
             const sortedTrades = [...trades].sort((a, b) => new Date(a.date) - new Date(b.date));
             
-            // Calculate cumulative P/L
+            // Performance Chart
             let cumulativePips = 0;
             const cumulativeData = [];
             const dates = [];
             
             sortedTrades.forEach(trade => {
-                // Calculate P/L in pips
-                const pipValue = trade.pair.includes('JPY') ? 100 : 10000;
+                const pipValue = trade.pair.includes('JPY') ? 0.01 : 0.0001;
                 let plPips;
                 if (trade.direction === 'Long') {
-                    plPips = (trade.exitPrice - trade.entryPrice) * pipValue;
+                    plPips = (trade.exitPrice - trade.entryPrice) / pipValue;
                 } else {
-                    plPips = (trade.entryPrice - trade.exitPrice) * pipValue;
+                    plPips = (trade.entryPrice - trade.exitPrice) / pipValue;
                 }
                 
                 cumulativePips += plPips;
                 cumulativeData.push(cumulativePips);
                 
-                // Format date for chart
                 const date = new Date(trade.date);
                 dates.push(`${date.getDate()}/${date.getMonth() + 1}`);
             });
             
-            // Update performance chart
             performanceChart.data.labels = dates;
             performanceChart.data.datasets[0].data = cumulativeData;
             performanceChart.update();
             
-            // Update setup chart
+            // Setup Chart
             const setupTypes = ['Breakout', 'Pullback', 'Reversal', 'News Trade', 'Range Trade', 'Divergence', 'Other'];
             const setupData = [];
             
@@ -1565,12 +2143,12 @@
                 }
                 
                 const wins = setupTrades.filter(trade => {
-                    const pipValue = trade.pair.includes('JPY') ? 100 : 10000;
+                    const pipValue = trade.pair.includes('JPY') ? 0.01 : 0.0001;
                     let plPips;
                     if (trade.direction === 'Long') {
-                        plPips = (trade.exitPrice - trade.entryPrice) * pipValue;
+                        plPips = (trade.exitPrice - trade.entryPrice) / pipValue;
                     } else {
-                        plPips = (trade.entryPrice - trade.exitPrice) * pipValue;
+                        plPips = (trade.entryPrice - trade.exitPrice) / pipValue;
                     }
                     return plPips > 0;
                 }).length;
@@ -1581,6 +2159,61 @@
             
             setupChart.data.datasets[0].data = setupData;
             setupChart.update();
+            
+            // Bias Frequency Chart
+            const biasCounts = {
+                fomo: 0,
+                revenge: 0,
+                lossAversion: 0,
+                confirmation: 0,
+                overconfidence: 0,
+                herding: 0,
+                recency: 0,
+                anchoring: 0
+            };
+            
+            trades.forEach(trade => {
+                for (const bias in trade.biases) {
+                    if (trade.biases[bias]) biasCounts[bias]++;
+                }
+            });
+            
+            biasFrequencyChart.data.datasets[0].data = [
+                biasCounts.fomo,
+                biasCounts.revenge,
+                biasCounts.lossAversion,
+                biasCounts.confirmation,
+                biasCounts.overconfidence,
+                biasCounts.herding,
+                biasCounts.recency,
+                biasCounts.anchoring
+            ];
+            biasFrequencyChart.update();
+            
+            // CBS Trend Chart
+            const cbsData = [];
+            const cbsDates = [];
+            
+            sortedTrades.forEach(trade => {
+                cbsData.push(trade.cbs);
+                const date = new Date(trade.date);
+                cbsDates.push(`${date.getDate()}/${date.getMonth() + 1}`);
+            });
+            
+            cbsTrendChart.data.labels = cbsDates;
+            cbsTrendChart.data.datasets[0].data = cbsData;
+            cbsTrendChart.update();
+            
+            // Bias Pattern Chart
+            const biasPercentages = [];
+            const totalTrades = trades.length;
+            
+            for (const bias in biasCounts) {
+                biasPercentages.push((biasCounts[bias] / totalTrades) * 100);
+            }
+            
+            biasPatternChart.data.datasets[0].data = biasPercentages;
+            biasPatternChart.update();
         }
         
         // Update stats
@@ -1592,20 +2225,20 @@
                 winRateEl.textContent = '0%';
                 lossRateEl.textContent = '0%';
                 avgRREl.textContent = '0.0';
+                avgCBSEl.textContent = '0';
                 emptyState.style.display = 'block';
                 return;
             }
             
             emptyState.style.display = 'none';
             
-            // Calculate wins and losses
             const wins = trades.filter(trade => {
-                const pipValue = trade.pair.includes('JPY') ? 100 : 10000;
+                const pipValue = trade.pair.includes('JPY') ? 0.01 : 0.0001;
                 let plPips;
                 if (trade.direction === 'Long') {
-                    plPips = (trade.exitPrice - trade.entryPrice) * pipValue;
+                    plPips = (trade.exitPrice - trade.entryPrice) / pipValue;
                 } else {
-                    plPips = (trade.entryPrice - trade.exitPrice) * pipValue;
+                    plPips = (trade.entryPrice - trade.exitPrice) / pipValue;
                 }
                 return plPips > 0;
             }).length;
@@ -1617,7 +2250,6 @@
             winRateEl.textContent = `${winRate}%`;
             lossRateEl.textContent = `${lossRate}%`;
             
-            // Calculate average risk:reward
             let totalRR = 0;
             let countRR = 0;
             trades.forEach(trade => {
@@ -1633,6 +2265,9 @@
             
             const avgRR = countRR > 0 ? (totalRR / countRR).toFixed(1) : '0.0';
             avgRREl.textContent = avgRR;
+            
+            const avgCBS = Math.round(trades.reduce((sum, trade) => sum + trade.cbs, 0) / totalTrades);
+            avgCBSEl.textContent = avgCBS;
         }
         
         // Render trades table with current filter
@@ -1643,26 +2278,28 @@
             
             if (currentFilter === 'winners') {
                 filteredTrades = trades.filter(trade => {
-                    const pipValue = trade.pair.includes('JPY') ? 100 : 10000;
+                    const pipValue = trade.pair.includes('JPY') ? 0.01 : 0.0001;
                     let plPips;
                     if (trade.direction === 'Long') {
-                        plPips = (trade.exitPrice - trade.entryPrice) * pipValue;
+                        plPips = (trade.exitPrice - trade.entryPrice) / pipValue;
                     } else {
-                        plPips = (trade.entryPrice - trade.exitPrice) * pipValue;
+                        plPips = (trade.entryPrice - trade.exitPrice) / pipValue;
                     }
                     return plPips > 0;
                 });
             } else if (currentFilter === 'losers') {
                 filteredTrades = trades.filter(trade => {
-                    const pipValue = trade.pair.includes('JPY') ? 100 : 10000;
+                    const pipValue = trade.pair.includes('JPY') ? 0.01 : 0.0001;
                     let plPips;
                     if (trade.direction === 'Long') {
-                        plPips = (trade.exitPrice - trade.entryPrice) * pipValue;
+                        plPips = (trade.exitPrice - trade.entryPrice) / pipValue;
                     } else {
-                        plPips = (trade.entryPrice - trade.exitPrice) * pipValue;
+                        plPips = (trade.entryPrice - trade.exitPrice) / pipValue;
                     }
                     return plPips <= 0;
                 });
+            } else if (currentFilter === 'highBias') {
+                filteredTrades = trades.filter(trade => trade.cbs >= 70);
             }
             
             if (filteredTrades.length === 0) {
@@ -1675,25 +2312,29 @@
             filteredTrades.forEach(trade => {
                 const tr = document.createElement('tr');
                 
-                // Calculate P/L in pips
-                const pipValue = trade.pair.includes('JPY') ? 100 : 10000;
+                const pipValue = trade.pair.includes('JPY') ? 0.01 : 0.0001;
                 let plPips;
                 if (trade.direction === 'Long') {
-                    plPips = ((trade.exitPrice - trade.entryPrice) * pipValue).toFixed(1);
+                    plPips = ((trade.exitPrice - trade.entryPrice) / pipValue).toFixed(1);
                 } else {
-                    plPips = ((trade.entryPrice - trade.exitPrice) * pipValue).toFixed(1);
+                    plPips = ((trade.entryPrice - trade.exitPrice) / pipValue).toFixed(1);
                 }
+                
+                const cbsClass = getCBSClass(trade.cbs);
+                
+                const tradeDate = new Date(trade.date);
+                const formattedDate = `${tradeDate.getDate()}/${tradeDate.getMonth() + 1}/${tradeDate.getFullYear()}`;
                 
                 const mobileHtml = `
                     <td>
+                        <div><span class="responsive-label">Date:</span>${formattedDate}</div>
                         <div><span class="responsive-label">Pair:</span>${trade.pair}</div>
                         <div><span class="responsive-label">Dir:</span><span class="${trade.direction === 'Long' ? 'trade-long' : 'trade-short'}">${trade.direction === 'Long' ? 'L' : 'S'}</span></div>
-                        <div><span class="responsive-label">Entry:</span>${trade.entryPrice}</div>
-                        <div><span class="responsive-label">Exit:</span>${trade.exitPrice}</div>
                         <div><span class="responsive-label">P/L:</span><span class="${parseFloat(plPips) > 0 ? 'trade-profit' : 'trade-loss'}">${parseFloat(plPips) > 0 ? '+' : ''}${plPips}</span></div>
                         <div><span class="responsive-label">Risk:</span>${trade.riskPercent}%</div>
                         <div><span class="responsive-label">Setup:</span><span class="tag tag-${getTagClass(trade.setupType)}">${trade.setupType}</span></div>
                         <div><span class="responsive-label">Emotion:</span><div class="emotion-tag"><i class="${getEmotionIcon(trade.emotion)}"></i> ${trade.emotion}</div></div>
+                        <div><span class="responsive-label">CBS:</span><span class="cbs-score ${cbsClass}">${trade.cbs}</span></div>
                     </td>
                     <td class="action-icons">
                         <i class="fas fa-eye" title="View" onclick="viewTrade('${trade.id}')"></i>
@@ -1702,14 +2343,14 @@
                 `;
                 
                 const desktopHtml = `
+                    <td>${formattedDate}</td>
                     <td>${trade.pair}</td>
                     <td class="${trade.direction === 'Long' ? 'trade-long' : 'trade-short'}">${trade.direction === 'Long' ? 'L' : 'S'}</td>
-                    <td>${trade.entryPrice}</td>
-                    <td>${trade.exitPrice}</td>
                     <td class="${parseFloat(plPips) > 0 ? 'trade-profit' : 'trade-loss'}">${parseFloat(plPips) > 0 ? '+' : ''}${plPips}</td>
                     <td>${trade.riskPercent}%</td>
                     <td><span class="tag tag-${getTagClass(trade.setupType)}">${trade.setupType}</span></td>
                     <td><div class="emotion-tag"><i class="${getEmotionIcon(trade.emotion)}"></i> ${trade.emotion}</div></td>
+                    <td><span class="cbs-score ${cbsClass}">${trade.cbs}</span></td>
                     <td class="action-icons">
                         <i class="fas fa-eye" title="View" onclick="viewTrade('${trade.id}')"></i>
                         <i class="fas fa-trash" title="Delete" onclick="deleteTrade('${trade.id}')"></i>
@@ -1742,6 +2383,8 @@
                 case 'FOMO': return 'fas fa-grimace';
                 case 'Revenge Trading': return 'fas fa-angry';
                 case 'Overtrading': return 'fas fa-tired';
+                case 'Overconfident': return 'fas fa-grin-stars';
+                case 'Fearful': return 'fas fa-frown';
                 default: return 'fas fa-meh';
             }
         }
@@ -1751,14 +2394,29 @@
             const trade = trades.find(t => t.id === id);
             if (!trade) return;
             
-            // Calculate P/L in pips
-            const pipValue = trade.pair.includes('JPY') ? 100 : 10000;
+            const pipValue = trade.pair.includes('JPY') ? 0.01 : 0.0001;
             let plPips;
             if (trade.direction === 'Long') {
-                plPips = ((trade.exitPrice - trade.entryPrice) * pipValue).toFixed(1);
+                plPips = ((trade.exitPrice - trade.entryPrice) / pipValue).toFixed(1);
             } else {
-                plPips = ((trade.entryPrice - trade.exitPrice) * pipValue).toFixed(1);
+                plPips = ((trade.entryPrice - trade.exitPrice) / pipValue).toFixed(1);
             }
+            
+            let biasDetails = '<div class="form-group"><label>Detected Biases:</label><ul style="padding-left: 20px; margin-top: 5px;">';
+            if (trade.biases.fomo) biasDetails += '<li>FOMO Bias</li>';
+            if (trade.biases.revenge) biasDetails += '<li>Revenge Trading Bias</li>';
+            if (trade.biases.lossAversion) biasDetails += '<li>Loss Aversion Bias</li>';
+            if (trade.biases.confirmation) biasDetails += '<li>Confirmation Bias</li>';
+            if (trade.biases.overconfidence) biasDetails += '<li>Overconfidence Bias</li>';
+            if (trade.biases.herding) biasDetails += '<li>Herding Bias</li>';
+            if (trade.biases.recency) biasDetails += '<li>Recency Bias</li>';
+            if (trade.biases.anchoring) biasDetails += '<li>Anchoring Bias</li>';
+            if (!trade.biases.fomo && !trade.biases.revenge && !trade.biases.lossAversion && 
+                !trade.biases.confirmation && !trade.biases.overconfidence && !trade.biases.herding && 
+                !trade.biases.recency && !trade.biases.anchoring) {
+                biasDetails += '<li>No significant biases detected</li>';
+            }
+            biasDetails += '</ul></div>';
             
             recentTradeDetails.innerHTML = `
                 <div class="form-group">
@@ -1767,13 +2425,12 @@
                         <strong>${trade.pair}</strong> ${trade.direction} | 
                         Entry: ${trade.entryPrice} | 
                         Exit: ${trade.exitPrice} | 
-                        P/L: <span class="${parseFloat(plPips) > 0 ? 'trade-profit' : 'trade-loss'}">${parseFloat(plPips) > 0 ? '+' : ''}${plPips} pips</span>
+                        P/L: <span class="${parseFloat(plPips) > 0 ? 'trade-profit' : 'trade-loss'}">${parseFloat(plPips) > 0 ? '+' : ''}${plPips} pips</span> |
+                        CBS: <span class="cbs-score ${getCBSClass(trade.cbs)}">${trade.cbs}</span>
                     </p>
                 </div>
                 
-                <div class="setup-image">
-                    <i class="fas fa-chart-candlestick"></i>
-                </div>
+                ${biasDetails}
                 
                 <div class="form-group">
                     <label>Trade Notes</label>
@@ -1792,7 +2449,6 @@
                 </div>
             `;
             
-            // Scroll to details section on mobile
             if (window.innerWidth < 768) {
                 recentTradeDetails.scrollIntoView({ behavior: 'smooth' });
             }
@@ -1816,7 +2472,7 @@
                 renderTradesTable();
                 updateStats();
                 updateCharts();
-                // Reset trade details view if deleted trade was being viewed
+                updateBiasInsights();
                 recentTradeDetails.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-chart-line"></i>
@@ -1829,6 +2485,7 @@
         
         // Add new trade
         function addNewTrade() {
+            const date = document.getElementById('tradeDate').value || new Date().toISOString().split('T')[0];
             const pair = document.getElementById('currencyPair').value;
             const direction = document.getElementById('direction').value;
             const entryPrice = parseFloat(document.getElementById('entryPrice').value);
@@ -1843,7 +2500,6 @@
             const tradeNotes = document.getElementById('tradeNotes').value;
             const lessons = document.getElementById('lessons').value;
             
-            // Basic validation
             if (!pair || !entryPrice || !exitPrice) {
                 alert('Please fill in all required fields');
                 return;
@@ -1851,6 +2507,7 @@
             
             const newTrade = {
                 id: Date.now().toString(),
+                date,
                 pair,
                 direction,
                 entryPrice,
@@ -1863,18 +2520,25 @@
                 timeframe,
                 emotion,
                 tradeNotes,
-                lessons,
-                date: new Date().toISOString().split('T')[0] // Store date for filtering
+                lessons
             };
+            
+            newTrade.biases = detectBiases(newTrade, trades);
+            newTrade.cbs = calculateCBS(newTrade.biases);
+            
+            if (newTrade.cbs > 30) {
+                showBiasAlert(newTrade.biases);
+            }
             
             trades.push(newTrade);
             saveTrades();
             renderTradesTable();
             updateStats();
             updateCharts();
+            updateBiasInsights();
             modal.style.display = 'none';
             
-            // Reset form
+            document.getElementById('tradeDate').value = '';
             document.getElementById('currencyPair').value = 'EUR/USD';
             document.getElementById('direction').value = 'Long';
             document.getElementById('entryPrice').value = '';
@@ -1892,144 +2556,178 @@
             showToast('Trade added successfully!');
         }
         
-        // Export to PDF
-        async function exportToPDF() {
+        // Export to CSV
+        function exportToCSV() {
+            if (trades.length === 0) {
+                showToast('No trades to export!', 'danger');
+                return;
+            }
+            
             exportLoader.style.display = 'flex';
             
-            try {
-                // Create PDF
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF('p', 'mm', 'a4');
-                
-                // Add title
-                doc.setFontSize(20);
-                doc.setTextColor(30, 41, 59);
-                doc.text('FX Trading Journal Report', 105, 20, null, null, 'center');
-                doc.setFontSize(12);
-                doc.setTextColor(100);
-                doc.text(`Generated on ${new Date().toLocaleDateString()}`, 105, 28, null, null, 'center');
-                
-                // Add stats
-                doc.setFontSize(14);
-                doc.setTextColor(0);
-                doc.text('Performance Summary', 20, 40);
-                
-                doc.setFontSize(10);
-                doc.text(`Total Trades: ${trades.length}`, 20, 50);
-                doc.text(`Win Rate: ${winRateEl.textContent}`, 60, 50);
-                doc.text(`Loss Rate: ${lossRateEl.textContent}`, 100, 50);
-                doc.text(`Avg. Risk:Reward: ${avgRREl.textContent}`, 140, 50);
-                
-                // Create temporary container for charts
-                const tempContainer = document.createElement('div');
-                tempContainer.style.position = 'absolute';
-                tempContainer.style.left = '-9999px';
-                tempContainer.style.width = '600px';
-                tempContainer.style.backgroundColor = '#1e293b';
-                tempContainer.style.padding = '10px';
-                tempContainer.style.borderRadius = '10px';
-                
-                const perfCanvas = document.createElement('canvas');
-                perfCanvas.width = 600;
-                perfCanvas.height = 300;
-                tempContainer.appendChild(perfCanvas);
-                
-                const setupCanvas = document.createElement('canvas');
-                setupCanvas.width = 600;
-                setupCanvas.height = 250;
-                setupCanvas.style.marginTop = '20px';
-                tempContainer.appendChild(setupCanvas);
-                
-                document.body.appendChild(tempContainer);
-                
-                // Render charts to temporary canvas
-                const perfCtx = perfCanvas.getContext('2d');
-                const setupCtx = setupCanvas.getContext('2d');
-                
-                const tempPerfChart = new Chart(perfCtx, {
-                    type: 'line',
-                    data: JSON.parse(JSON.stringify(performanceChart.data)),
-                    options: {
-                        responsive: false,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } }
-                    }
-                });
-                
-                const tempSetupChart = new Chart(setupCtx, {
-                    type: 'bar',
-                    data: JSON.parse(JSON.stringify(setupChart.data)),
-                    options: {
-                        responsive: false,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } }
-                    }
-                });
-                
-                // Wait for charts to render
-                await new Promise(resolve => setTimeout(resolve, 800));
-                
-                // Convert to images
-                const perfImage = perfCanvas.toDataURL('image/png');
-                const setupImage = setupCanvas.toDataURL('image/png');
-                
-                // Add images to PDF
-                doc.addImage(perfImage, 'PNG', 10, 60, 190, 90);
-                doc.addImage(setupImage, 'PNG', 10, 160, 190, 70);
-                
-                // Add trade history
-                doc.addPage();
-                doc.setFontSize(16);
-                doc.text('Trade History', 105, 15, null, null, 'center');
-                
-                // Create table data
-                const tableData = [];
-                const headers = ['Pair', 'Dir', 'Entry', 'Exit', 'P/L', 'Risk', 'Setup', 'Emotion'];
-                
-                trades.forEach(trade => {
-                    // Calculate P/L in pips
-                    const pipValue = trade.pair.includes('JPY') ? 100 : 10000;
-                    let plPips;
-                    if (trade.direction === 'Long') {
-                        plPips = ((trade.exitPrice - trade.entryPrice) * pipValue).toFixed(1);
-                    } else {
-                        plPips = ((trade.entryPrice - trade.exitPrice) * pipValue).toFixed(1);
-                    }
+            setTimeout(() => {
+                try {
+                    const csvData = [];
+                    csvData.push(['Date', 'Pair', 'Direction', 'Entry', 'Exit', 'Stop Loss', 'Take Profit', 'Position Size', 'Risk %', 'Setup', 'Timeframe', 'Emotion', 'P/L (Pips)', 'CBS', 'FOMO', 'Revenge', 'Loss Aversion', 'Confirmation', 'Overconfidence', 'Herding', 'Recency', 'Anchoring', 'Notes', 'Lessons']);
                     
-                    tableData.push([
-                        trade.pair,
-                        trade.direction === 'Long' ? 'L' : 'S',
-                        trade.entryPrice,
-                        trade.exitPrice,
-                        `${parseFloat(plPips) > 0 ? '+' : ''}${plPips}`,
-                        `${trade.riskPercent}%`,
-                        trade.setupType,
-                        trade.emotion
-                    ]);
-                });
-                
-                // Add table to PDF
-                doc.autoTable({
-                    head: [headers],
-                    body: tableData,
-                    startY: 25,
-                    theme: 'grid',
-                    headStyles: { fillColor: [37, 99, 235] },
-                    styles: { fontSize: 8, cellPadding: 2 }
-                });
-                
-                // Save and download
-                doc.save('trading-journal-report.pdf');
-                
-                // Clean up
-                document.body.removeChild(tempContainer);
-                exportLoader.style.display = 'none';
-                showToast('PDF exported successfully!');
-            } catch (error) {
-                console.error('Error exporting PDF:', error);
-                exportLoader.style.display = 'none';
-                showToast('Error exporting PDF!', 'danger');
+                    trades.forEach(trade => {
+                        const pipValue = trade.pair.includes('JPY') ? 0.01 : 0.0001;
+                        let plPips;
+                        if (trade.direction === 'Long') {
+                            plPips = (trade.exitPrice - trade.entryPrice) / pipValue;
+                        } else {
+                            plPips = (trade.entryPrice - trade.exitPrice) / pipValue;
+                        }
+                        
+                        csvData.push([
+                            trade.date,
+                            trade.pair,
+                            trade.direction,
+                            trade.entryPrice,
+                            trade.exitPrice,
+                            trade.stopLoss,
+                            trade.takeProfit,
+                            trade.positionSize,
+                            trade.riskPercent,
+                            trade.setupType,
+                            trade.timeframe,
+                            trade.emotion,
+                            plPips.toFixed(1),
+                            trade.cbs,
+                            trade.biases.fomo ? 'Yes' : 'No',
+                            trade.biases.revenge ? 'Yes' : 'No',
+                            trade.biases.lossAversion ? 'Yes' : 'No',
+                            trade.biases.confirmation ? 'Yes' : 'No',
+                            trade.biases.overconfidence ? 'Yes' : 'No',
+                            trade.biases.herding ? 'Yes' : 'No',
+                            trade.biases.recency ? 'Yes' : 'No',
+                            trade.biases.anchoring ? 'Yes' : 'No',
+                            `"${trade.tradeNotes || ''}"`,
+                            `"${trade.lessons || ''}"`
+                        ]);
+                    });
+                    
+                    const csvString = csvData.map(row => row.join(',')).join('\n');
+                    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement('a');
+                    const url = URL.createObjectURL(blob);
+                    
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', 'trading-journal-export.csv');
+                    link.style.visibility = 'hidden';
+                    
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    exportLoader.style.display = 'none';
+                    showToast('CSV exported successfully!');
+                } catch (error) {
+                    console.error('Error exporting CSV:', error);
+                    exportLoader.style.display = 'none';
+                    showToast('Error exporting CSV!', 'danger');
+                }
+            }, 500);
+        }
+        
+        // Export to PDF
+        async function exportToPDF() {
+            if (trades.length === 0) {
+                showToast('No trades to export!', 'danger');
+                return;
             }
+            
+            exportLoader.style.display = 'flex';
+            
+            setTimeout(async () => {
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF('p', 'mm', 'a4');
+                    
+                    doc.setFontSize(20);
+                    doc.setTextColor(30, 41, 59);
+                    doc.text('Trading Journal Report', 105, 20, null, null, 'center');
+                    doc.setFontSize(12);
+                    doc.setTextColor(100);
+                    doc.text(`Generated on ${new Date().toLocaleDateString()}`, 105, 28, null, null, 'center');
+                    
+                    doc.setFontSize(14);
+                    doc.setTextColor(0);
+                    doc.text('Performance Summary', 20, 40);
+                    
+                    doc.setFontSize(10);
+                    doc.text(`Total Trades: ${trades.length}`, 20, 50);
+                    doc.text(`Win Rate: ${winRateEl.textContent}`, 60, 50);
+                    doc.text(`Loss Rate: ${lossRateEl.textContent}`, 100, 50);
+                    doc.text(`Avg. Risk:Reward: ${avgRREl.textContent}`, 140, 50);
+                    doc.text(`Avg. CBS: ${avgCBSEl.textContent}`, 180, 50);
+                    
+                    // Add chart images
+                    const performanceImage = performanceChart.toBase64Image();
+                    const setupImage = setupChart.toBase64Image();
+                    const biasFrequencyImage = biasFrequencyChart.toBase64Image();
+                    const cbsTrendImage = cbsTrendChart.toBase64Image();
+                    
+                    doc.addImage(performanceImage, 'PNG', 10, 60, 190, 90);
+                    doc.addImage(setupImage, 'PNG', 10, 160, 190, 90);
+                    
+                    doc.addPage();
+                    doc.setFontSize(16);
+                    doc.text('Bias Analysis', 105, 15, null, null, 'center');
+                    
+                    doc.addImage(biasFrequencyImage, 'PNG', 10, 30, 190, 90);
+                    doc.addImage(cbsTrendImage, 'PNG', 10, 130, 190, 90);
+                    
+                    doc.addPage();
+                    doc.setFontSize(16);
+                    doc.text('Trade History', 105, 15, null, null, 'center');
+                    
+                    const tableData = [];
+                    const headers = ['Date', 'Pair', 'Dir', 'P/L', 'Risk', 'Setup', 'Emotion', 'CBS'];
+                    
+                    trades.forEach(trade => {
+                        const pipValue = trade.pair.includes('JPY') ? 0.01 : 0.0001;
+                        let plPips;
+                        if (trade.direction === 'Long') {
+                            plPips = (trade.exitPrice - trade.entryPrice) / pipValue;
+                        } else {
+                            plPips = (trade.entryPrice - trade.exitPrice) / pipValue;
+                        }
+                        
+                        const tradeDate = new Date(trade.date);
+                        const formattedDate = `${tradeDate.getDate()}/${tradeDate.getMonth() + 1}/${tradeDate.getFullYear()}`;
+                        
+                        tableData.push([
+                            formattedDate,
+                            trade.pair,
+                            trade.direction === 'Long' ? 'L' : 'S',
+                            `${plPips > 0 ? '+' : ''}${plPips.toFixed(1)}`,
+                            `${trade.riskPercent}%`,
+                            trade.setupType,
+                            trade.emotion,
+                            trade.cbs.toString()
+                        ]);
+                    });
+                    
+                    doc.autoTable({
+                        head: [headers],
+                        body: tableData,
+                        startY: 25,
+                        theme: 'grid',
+                        headStyles: { fillColor: [37, 99, 235] },
+                        styles: { fontSize: 8, cellPadding: 2 }
+                    });
+                    
+                    doc.save('trading-journal-report.pdf');
+                    
+                    exportLoader.style.display = 'none';
+                    showToast('PDF exported successfully!');
+                } catch (error) {
+                    console.error('Error exporting PDF:', error);
+                    exportLoader.style.display = 'none';
+                    showToast('Error exporting PDF!', 'danger');
+                }
+            }, 500);
         }
         
         // PWA Installation Handling
@@ -2107,7 +2805,7 @@
                 window.addEventListener('load', () => {
                     // Create service worker script as a blob
                     const swContent = `
-                        const CACHE_NAME = 'trading-journal-v1';
+                        const CACHE_NAME = 'trafxos-v1';
                         const urlsToCache = [
                             './',
                             'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
@@ -2287,6 +2985,9 @@
         function initApp() {
             initCharts();
             
+            // Set current date as default
+            document.getElementById('tradeDate').value = new Date().toISOString().split('T')[0];
+            
             // Modal functionality
             addTradeBtn.addEventListener('click', () => modal.style.display = 'flex');
             mobileAddBtn.addEventListener('click', () => modal.style.display = 'flex');
@@ -2294,9 +2995,15 @@
             cancelTradeBtn.addEventListener('click', () => modal.style.display = 'none');
             saveTradeBtn.addEventListener('click', addNewTrade);
             
-            // Close modal when clicking outside
+            // Close modals when clicking outside
             window.addEventListener('click', (e) => {
                 if (e.target === modal) modal.style.display = 'none';
+                if (e.target === educationModal) educationModal.style.display = 'none';
+            });
+            
+            // Close education modal
+            closeEducationBtn.addEventListener('click', () => {
+                educationModal.style.display = 'none';
             });
             
             // Tab functionality
@@ -2310,7 +3017,14 @@
             });
             
             // Export functionality
-            exportBtn.addEventListener('click', exportToPDF);
+            exportBtn.addEventListener('click', () => {
+                const exportType = confirm('Click OK for PDF export, Cancel for CSV export');
+                if (exportType) {
+                    exportToPDF();
+                } else {
+                    exportToCSV();
+                }
+            });
             
             // Auth tab switching
             authTabs.forEach(tab => {
