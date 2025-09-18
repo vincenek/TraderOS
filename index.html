@@ -586,6 +586,7 @@
         
         .bias-insight i {
             font-size: 1.2rem;
+            color: var(--danger);
         }
         
         .bias-warning i {
@@ -819,6 +820,7 @@
         .auth-header h2 {
             font-size: 1.8rem;
             margin-bottom: 10px;
+            color: white;
         }
         
         .auth-header p {
@@ -838,6 +840,7 @@
             border: 1px solid var(--border);
             cursor: pointer;
             font-weight: 600;
+            color: white;
         }
         
         .auth-tab:first-child {
@@ -869,6 +872,7 @@
             display: block;
             margin-bottom: 5px;
             font-weight: 500;
+            color: white;
         }
         
         .auth-form-control {
@@ -914,6 +918,7 @@
         .auth-footer a {
             color: var(--primary);
             cursor: pointer;
+            text-decoration: underline;
         }
         
         /* User info */
@@ -932,6 +937,7 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
+            color: white;
         }
         
         .logout-btn {
@@ -1573,6 +1579,54 @@
             }, 3000);
         }
         
+        // Save user data to Firestore
+        function saveUserData() {
+            if (!currentUser) return;
+            
+            const userRef = db.collection('users').doc(currentUser.uid);
+            userRef.set({
+                trades: trades,
+                updatedAt: new Date()
+            }, { merge: true })
+            .then(() => {
+                console.log("User data saved successfully");
+            })
+            .catch((error) => {
+                console.error("Error saving user data: ", error);
+                showToast('Error saving data!', 'danger');
+            });
+        }
+        
+        // Load user data from Firestore
+        function loadUserData() {
+            if (!currentUser) return;
+            
+            const userRef = db.collection('users').doc(currentUser.uid);
+            userRef.get().then((doc) => {
+                if (doc.exists) {
+                    const userData = doc.data();
+                    if (userData.trades) {
+                        trades = userData.trades;
+                        renderTradesTable();
+                        updateStats();
+                        updateCharts();
+                        updateBiasInsights();
+                        showToast('Data loaded successfully!');
+                    } else {
+                        trades = [];
+                        showToast('Welcome! Start adding your first trade.');
+                    }
+                } else {
+                    // No user data exists yet
+                    trades = [];
+                    showToast('Welcome! Start adding your first trade.');
+                }
+            }).catch((error) => {
+                console.error("Error loading user data: ", error);
+                showToast('Error loading data!', 'danger');
+            });
+        }
+        
         // Cognitive Bias Detection Functions
         function detectBiases(trade, previousTrades) {
             const biases = {
@@ -1860,42 +1914,6 @@
             }
         }
         
-        // Save trades to Firestore
-        function saveTrades() {
-            if (!currentUser) return;
-            
-            const userRef = db.collection('users').doc(currentUser.uid);
-            userRef.set({
-                trades: trades,
-                updatedAt: new Date()
-            }, { merge: true })
-            .then(() => {
-                showToast('Trades saved successfully!');
-            })
-            .catch((error) => {
-                console.error("Error saving trades: ", error);
-                showToast('Error saving trades!', 'danger');
-            });
-        }
-        
-        // Load trades from Firestore
-        function loadTrades() {
-            if (!currentUser) return;
-            
-            const userRef = db.collection('users').doc(currentUser.uid);
-            userRef.get().then((doc) => {
-                if (doc.exists && doc.data().trades) {
-                    trades = doc.data().trades;
-                    renderTradesTable();
-                    updateStats();
-                    updateCharts();
-                    updateBiasInsights();
-                }
-            }).catch((error) => {
-                console.error("Error loading trades: ", error);
-            });
-        }
-        
         // Initialize charts
         function initCharts() {
             const chartOptions = {
@@ -1956,7 +1974,7 @@
                         data: [0, 0, 0, 0, 0, 0, 0],
                         backgroundColor: [
                             'rgba(37, 99, 235, 0.7)',
-                            'rgba(16, 185, 129, 0.7)',
+                            'rgable(16, 185, 129, 0.7)',
                             'rgba(245, 158, 11, 0.7)',
                             'rgba(239, 68, 68, 0.7)',
                             'rgba(139, 92, 246, 0.7)',
@@ -2459,7 +2477,7 @@
             const trade = trades.find(t => t.id === id);
             if (trade) {
                 trade.reviewed = true;
-                saveTrades();
+                saveUserData();
                 showToast('Trade marked as reviewed!');
             }
         }
@@ -2468,7 +2486,7 @@
         function deleteTrade(id) {
             if (confirm('Are you sure you want to delete this trade?')) {
                 trades = trades.filter(trade => trade.id !== id);
-                saveTrades();
+                saveUserData();
                 renderTradesTable();
                 updateStats();
                 updateCharts();
@@ -2531,7 +2549,7 @@
             }
             
             trades.push(newTrade);
-            saveTrades();
+            saveUserData();
             renderTradesTable();
             updateStats();
             updateCharts();
@@ -2608,7 +2626,7 @@
                     });
                     
                     const csvString = csvData.map(row => row.join(',')).join('\n');
-                    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+                    const blob = new Blob([csvString], { type: 'text/csi;charset=utf-8;' });
                     const link = document.createElement('a');
                     const url = URL.createObjectURL(blob);
                     
@@ -2893,7 +2911,8 @@
                     // Save user name to Firestore
                     db.collection('users').doc(user.uid).set({
                         name: name,
-                        email: email
+                        email: email,
+                        createdAt: new Date()
                     })
                     .then(() => {
                         showToast('Account created successfully!');
@@ -2955,6 +2974,7 @@
                 appContent.style.display = 'none';
                 trades = [];
                 renderTradesTable();
+                currentUser = null;
             }).catch((error) => {
                 console.error('Sign out error:', error);
             });
@@ -2978,7 +2998,7 @@
             });
             
             // Load user data
-            loadTrades();
+            loadUserData();
         }
         
         // Initialize the app
