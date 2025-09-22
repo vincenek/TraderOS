@@ -586,7 +586,7 @@
         
         .bias-insight i {
             font-size: 1.2rem;
-            flex-shrink: 0;
+            color: var(--danger);
         }
         
         .bias-warning i {
@@ -820,6 +820,7 @@
         .auth-header h2 {
             font-size: 1.8rem;
             margin-bottom: 10px;
+            color: white;
         }
         
         .auth-header p {
@@ -839,6 +840,7 @@
             border: 1px solid var(--border);
             cursor: pointer;
             font-weight: 600;
+            color: white;
         }
         
         .auth-tab:first-child {
@@ -846,7 +848,7 @@
         }
         
         .auth-tab:last-child {
-            border-radius: 0 6px 6px 6px;
+            border-radius: 0 6px 6px 0;
         }
         
         .auth-tab.active {
@@ -870,6 +872,7 @@
             display: block;
             margin-bottom: 5px;
             font-weight: 500;
+            color: white;
         }
         
         .auth-form-control {
@@ -915,6 +918,7 @@
         .auth-footer a {
             color: var(--primary);
             cursor: pointer;
+            text-decoration: underline;
         }
         
         /* User info */
@@ -933,6 +937,7 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
+            color: white;
         }
         
         .logout-btn {
@@ -1574,6 +1579,54 @@
             }, 3000);
         }
         
+        // Save user data to Firestore
+        function saveUserData() {
+            if (!currentUser) return;
+            
+            const userRef = db.collection('users').doc(currentUser.uid);
+            userRef.set({
+                trades: trades,
+                updatedAt: new Date()
+            }, { merge: true })
+            .then(() => {
+                console.log("User data saved successfully");
+            })
+            .catch((error) => {
+                console.error("Error saving user data: ", error);
+                showToast('Error saving data!', 'danger');
+            });
+        }
+        
+        // Load user data from Firestore
+        function loadUserData() {
+            if (!currentUser) return;
+            
+            const userRef = db.collection('users').doc(currentUser.uid);
+            userRef.get().then((doc) => {
+                if (doc.exists) {
+                    const userData = doc.data();
+                    if (userData.trades) {
+                        trades = userData.trades;
+                        renderTradesTable();
+                        updateStats();
+                        updateCharts();
+                        updateBiasInsights();
+                        showToast('Data loaded successfully!');
+                    } else {
+                        trades = [];
+                        showToast('Welcome! Start adding your first trade.');
+                    }
+                } else {
+                    // No user data exists yet
+                    trades = [];
+                    showToast('Welcome! Start adding your first trade.');
+                }
+            }).catch((error) => {
+                console.error("Error loading user data: ", error);
+                showToast('Error loading data!', 'danger');
+            });
+        }
+        
         // Cognitive Bias Detection Functions
         function detectBiases(trade, previousTrades) {
             const biases = {
@@ -1861,50 +1914,6 @@
             }
         }
         
-        // Save trades to Firestore
-        function saveTrades() {
-            if (!currentUser) return;
-            
-            const userRef = db.collection('users').doc(currentUser.uid);
-            userRef.set({
-                trades: trades,
-                updatedAt: new Date()
-            }, { merge: true })
-            .then(() => {
-                showToast('Trades saved successfully!');
-            })
-            .catch((error) => {
-                console.error("Error saving trades: ", error);
-                showToast('Error saving trades!', 'danger');
-            });
-        }
-        
-        // Load trades from Firestore
-        function loadTrades() {
-            if (!currentUser) return;
-            
-            const userRef = db.collection('users').doc(currentUser.uid);
-            userRef.get().then((doc) => {
-                if (doc.exists && doc.data().trades) {
-                    trades = doc.data().trades;
-                    renderTradesTable();
-                    updateStats();
-                    updateCharts();
-                    updateBiasInsights();
-                    showToast('Trades loaded successfully!');
-                } else {
-                    // Initialize with empty array if no trades exist
-                    trades = [];
-                    renderTradesTable();
-                    updateStats();
-                    showToast('No previous trades found. Starting fresh.');
-                }
-            }).catch((error) => {
-                console.error("Error loading trades: ", error);
-                showToast('Error loading trades!', 'danger');
-            });
-        }
-        
         // Initialize charts
         function initCharts() {
             const chartOptions = {
@@ -1965,7 +1974,7 @@
                         data: [0, 0, 0, 0, 0, 0, 0],
                         backgroundColor: [
                             'rgba(37, 99, 235, 0.7)',
-                            'rgba(16, 185, 129, 0.7)',
+                            'rgable(16, 185, 129, 0.7)',
                             'rgba(245, 158, 11, 0.7)',
                             'rgba(239, 68, 68, 0.7)',
                             'rgba(139, 92, 246, 0.7)',
@@ -2009,7 +2018,7 @@
                             'rgba(255, 206, 86, 0.7)',
                             'rgba(75, 192, 192, 0.7)',
                             'rgba(153, 102, 255, 0.7)',
-                            'rgza(255, 159, 64, 0.7)',
+                            'rgba(255, 159, 64, 0.7)',
                             'rgba(199, 199, 199, 0.7)',
                             'rgba(83, 102, 255, 0.7)'
                         ],
@@ -2446,7 +2455,7 @@
                     <p>${trade.tradeNotes || 'No notes provided for this trade.'}</p>
                 </div>
                 
-                <div class="formGroup">
+                <div class="form-group">
                     <label>Lessons Learned</label>
                     <p>${trade.lessons || 'No lessons recorded for this trade.'}</p>
                 </div>
@@ -2468,7 +2477,7 @@
             const trade = trades.find(t => t.id === id);
             if (trade) {
                 trade.reviewed = true;
-                saveTrades();
+                saveUserData();
                 showToast('Trade marked as reviewed!');
             }
         }
@@ -2477,7 +2486,7 @@
         function deleteTrade(id) {
             if (confirm('Are you sure you want to delete this trade?')) {
                 trades = trades.filter(trade => trade.id !== id);
-                saveTrades();
+                saveUserData();
                 renderTradesTable();
                 updateStats();
                 updateCharts();
@@ -2529,8 +2538,7 @@
                 timeframe,
                 emotion,
                 tradeNotes,
-                lessons,
-                reviewed: false
+                lessons
             };
             
             newTrade.biases = detectBiases(newTrade, trades);
@@ -2541,7 +2549,7 @@
             }
             
             trades.push(newTrade);
-            saveTrades();
+            saveUserData();
             renderTradesTable();
             updateStats();
             updateCharts();
@@ -2618,7 +2626,7 @@
                     });
                     
                     const csvString = csvData.map(row => row.join(',')).join('\n');
-                    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+                    const blob = new Blob([csvString], { type: 'text/csi;charset=utf-8;' });
                     const link = document.createElement('a');
                     const url = URL.createObjectURL(blob);
                     
@@ -2986,17 +2994,11 @@
                 } else {
                     userName.textContent = user.email;
                     userAvatar.textContent = user.email.charAt(0).toUpperCase();
-                    
-                    // Create user document if it doesn't exist
-                    db.collection('users').doc(user.uid).set({
-                        email: user.email,
-                        createdAt: new Date()
-                    });
                 }
             });
             
             // Load user data
-            loadTrades();
+            loadUserData();
         }
         
         // Initialize the app
@@ -3017,7 +3019,6 @@
             window.addEventListener('click', (e) => {
                 if (e.target === modal) modal.style.display = 'none';
                 if (e.target === educationModal) educationModal.style.display = 'none';
-                if (e.target === authModal) authModal.style.display = 'none';
             });
             
             // Close education modal
