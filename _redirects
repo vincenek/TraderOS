@@ -1,0 +1,3 @@
+# Proxy Firebase auth handler through Netlify so Google sign-in works
+# (user's ISP blocks *.firebaseapp.com — this routes it through trafxos.netlify.app instead)
+/__/auth/*  https://trader-os.firebaseapp.com/__/auth/:splat  200

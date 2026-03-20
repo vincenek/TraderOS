@@ -1,3080 +1,1199 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TrafxOS - Advanced Trading Journal</title>
-    
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="TrafxOS — The trading journal that fights your worst enemy: yourself. Behavioral analytics, discipline scoring, and prop firm challenge tracking." />
+  <meta name="theme-color" content="#0a0e1a" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.gstatic.com https://checkout.flutterwave.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https: blob:; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.firebaseapp.com https://api.flutterwave.com; frame-src https://checkout.flutterwave.com https://*.firebaseapp.com;" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="TrafxOS" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="https://i.postimg.cc/PxH6xwBr/web-app-manifest-192x192.png" />
+  <title>TrafxOS — Trading Psychology & Performance OS</title>
 
-    <!-- iOS Support -->
-    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
-    <meta name="apple-mobile-web-app-status-bar" content="#2563eb">
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
 
-    <!-- Theme Color -->
-    <meta name="theme-color" content="#2563eb">
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    
-    <style>
-        :root {
-            --primary: #2563eb;
-            --secondary: #0f172a;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --dark: #1e293b;
-            --light: #f8fafc;
-            --gray: #94a3b8;
-            --card-bg: rgba(15, 23, 42, 0.7);
-            --border: #334155;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background: linear-gradient(135deg, #0f172a, #1e293b);
-            color: var(--light);
-            min-height: 100vh;
-            padding: 10px;
-            font-size: 14px;
-            overflow-x: hidden;
-        }
-        
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-            padding: 5px;
-        }
-        
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .logo i {
-            font-size: 1.5rem;
-            color: var(--primary);
-        }
-        
-        .logo h1 {
-            font-size: 1.4rem;
-            font-weight: 700;
-            background: linear-gradient(to right, var(--primary), #8b5cf6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .stats-container {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            margin-bottom: 15px;
-        }
-        
-        .stat-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 10px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            min-height: 80px;
-        }
-        
-        .stat-card h3 {
-            font-size: 0.8rem;
-            color: var(--gray);
-            margin-bottom: 5px;
-        }
-        
-        .stat-value {
-            font-size: 1.4rem;
-            font-weight: 700;
-        }
-        
-        .win-rate .stat-value {
-            color: var(--success);
-        }
-        
-        .loss-rate .stat-value {
-            color: var(--danger);
-        }
-        
-        .main-content {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-        
-        .card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 12px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            width: 100%;
-        }
-        
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid var(--border);
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        
-        .card-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            flex: 1;
-        }
-        
-        .btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 0.85rem;
-            white-space: nowrap;
-        }
-        
-        .btn:hover {
-            background: #1d4ed8;
-            transform: translateY(-2px);
-        }
-        
-        .btn-outline {
-            background: transparent;
-            border: 1px solid var(--primary);
-            color: var(--primary);
-        }
-        
-        .btn-outline:hover {
-            background: rgba(37, 99, 235, 0.1);
-        }
-        
-        .btn-danger {
-            background: var(--danger);
-        }
-        
-        .btn-danger:hover {
-            background: #dc2626;
-        }
-        
-        .btn-success {
-            background: var(--success);
-        }
-        
-        .btn-success:hover {
-            background: #059669;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.8rem;
-        }
-        
-        th {
-            text-align: left;
-            padding: 8px 5px;
-            font-weight: 600;
-            color: var(--gray);
-            border-bottom: 1px solid var(--border);
-            font-size: 0.75rem;
-        }
-        
-        td {
-            padding: 8px 5px;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.8rem;
-        }
-        
-        tr:last-child td {
-            border-bottom: none;
-        }
-        
-        tr:hover {
-            background: rgba(30, 41, 59, 0.5);
-        }
-        
-        .trade-long {
-            color: var(--success);
-        }
-        
-        .trade-short {
-            color: var(--danger);
-        }
-        
-        .trade-profit {
-            color: var(--success);
-            font-weight: 700;
-        }
-        
-        .trade-loss {
-            color: var(--danger);
-            font-weight: 700;
-        }
-        
-        .tag {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
-        
-        .tag-success {
-            background: rgba(16, 185, 129, 0.2);
-            color: var(--success);
-        }
-        
-        .tag-danger {
-            background: rgba(239, 68, 68, 0.2);
-            color: var(--danger);
-        }
-        
-        .tag-warning {
-            background: rgba(245, 158, 11, 0.2);
-            color: var(--warning);
-        }
-        
-        .tag-primary {
-            background: rgba(37, 99, 235, 0.2);
-            color: var(--primary);
-        }
-        
-        .chart-container {
-            height: 200px;
-            margin-top: 12px;
-        }
-        
-        .emotion-tag {
-            display: flex;
-            align-items: center;
-            gap: 3px;
-            font-size: 0.8rem;
-        }
-        
-        .action-icons {
-            display: flex;
-            gap: 5px;
-        }
-        
-        .action-icons i {
-            cursor: pointer;
-            opacity: 0.7;
-            transition: all 0.3s ease;
-            font-size: 0.9rem;
-        }
-        
-        .action-icons i:hover {
-            opacity: 1;
-            transform: scale(1.1);
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
-            justify-content: center;
-            align-items: flex-start;
-            padding: 15px;
-            overflow-y: auto;
-        }
-        
-        .modal-content {
-            background: var(--dark);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            width: 100%;
-            max-width: 600px;
-            padding: 15px;
-            position: relative;
-            margin-top: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .close-modal {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: var(--gray);
-        }
-        
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 10px;
-            margin-bottom: 12px;
-        }
-        
-        .form-group {
-            margin-bottom: 12px;
-            position: relative;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-            font-size: 0.85rem;
-        }
-        
-        .form-control {
-            width: 100%;
-            padding: 10px 12px;
-            background: rgba(30, 41, 59, 0.5);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: var(--light);
-            font-size: 0.9rem;
-        }
-        
-        .form-control:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-        
-        .form-full {
-            grid-column: 1 / -1;
-        }
-        
-        .btn-group {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-            flex-wrap: wrap;
-        }
-        
-        footer {
-            text-align: center;
-            padding: 12px;
-            color: var(--gray);
-            border-top: 1px solid var(--border);
-            margin-top: 15px;
-            font-size: 0.8rem;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 20px 10px;
-            color: var(--gray);
-        }
-        
-        .empty-state i {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            opacity: 0.3;
-        }
-        
-        .empty-state h3 {
-            font-size: 1.1rem;
-            margin-bottom: 8px;
-        }
-        
-        .tabs {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 12px;
-            flex-wrap: wrap;
-        }
-        
-        .tab {
-            padding: 5px 12px;
-            background: rgba(30, 41, 59, 0.5);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.8rem;
-        }
-        
-        .tab.active {
-            background: var(--primary);
-            border-color: var(--primary);
-        }
-        
-        .tab:hover:not(.active) {
-            background: rgba(30, 41, 59, 0.8);
-        }
-        
-        .setup-image {
-            width: 100%;
-            height: 150px;
-            background: rgba(30, 41, 59, 0.5);
-            border-radius: 6px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: var(--gray);
-            margin-bottom: 12px;
-            overflow: hidden;
-        }
-        
-        .setup-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .export-loader {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 1100;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            color: white;
-        }
-        
-        .loader-spinner {
-            border: 5px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top: 5px solid var(--primary);
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--success);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            z-index: 2000;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            font-size: 0.9rem;
-            max-width: 90%;
-            text-align: center;
-        }
-        
-        .toast.show {
-            opacity: 1;
-        }
-        
-        .floating-add-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: var(--primary);
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.5rem;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            cursor: pointer;
-            z-index: 500;
-            border: none;
-        }
-        
-        .floating-add-btn:hover {
-            background: #1d4ed8;
-            transform: translateY(-3px);
-        }
-        
-        .cbs-score {
-            font-weight: 700;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            display: inline-block;
-            text-align: center;
-            min-width: 35px;
-        }
-        
-        .cbs-low {
-            background: rgba(16, 185, 129, 0.2);
-            color: var(--success);
-        }
-        
-        .cbs-medium {
-            background: rgba(245, 158, 11, 0.2);
-            color: var(--warning);
-        }
-        
-        .cbs-high {
-            background: rgba(239, 68, 68, 0.2);
-            color: var(--danger);
-        }
-        
-        .bias-insight {
-            padding: 12px 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 500;
-        }
-        
-        .bias-warning {
-            background: rgba(239, 68, 68, 0.15);
-            border-left: 4px solid var(--danger);
-        }
-        
-        .bias-positive {
-            background: rgba(16, 185, 129, 0.15);
-            border-left: 4px solid var(--success);
-        }
-        
-        .bias-insight i {
-            font-size: 1.2rem;
-        }
-        
-        .bias-warning i {
-            color: var(--danger);
-        }
-        
-        .bias-positive i {
-            color: var(--success);
-        }
-        
-        .bias-alert {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 2000;
-            padding: 15px;
-            max-width: 350px;
-            display: none;
-            color: #333;
-        }
-        
-        .bias-alert h3 {
-            margin: 0 0 10px 0;
-            color: #e74c3c;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .bias-alert-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        
-        .education-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .education-content {
-            background: var(--dark);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            width: 100%;
-            max-width: 600px;
-            padding: 20px;
-            position: relative;
-        }
-        
-        .education-content h2 {
-            margin-bottom: 15px;
-            color: var(--primary);
-        }
-        
-        .education-content p {
-            margin-bottom: 15px;
-            line-height: 1.6;
-        }
-        
-        .education-content h3 {
-            margin: 20px 0 10px 0;
-            color: var(--warning);
-        }
-        
-        .education-content ul {
-            padding-left: 20px;
-            margin-bottom: 15px;
-        }
-        
-        .education-content li {
-            margin-bottom: 8px;
-            line-height: 1.5;
-        }
-        
-        /* PWA Install Button */
-        .pwa-install-container {
-            position: fixed;
-            bottom: 90px;
-            right: 20px;
-            z-index: 1000;
-            display: none;
-        }
-        
-        .pwa-install-btn {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: var(--success);
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.5rem;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            cursor: pointer;
-            border: none;
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0% {
-                transform: scale(0.95);
-                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-            }
-            
-            70% {
-                transform: scale(1);
-                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
-            }
-            
-            100% {
-                transform: scale(0.95);
-                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
-            }
-        }
-        
-        .pwa-install-btn:hover {
-            background: #0da271;
-            transform: scale(1.05);
-        }
-        
-        /* Install Prompt */
-        .install-prompt {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: white;
-            border-radius: 16px;
-            padding: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            z-index: 1000;
-            transform: translateY(150%);
-            transition: transform 0.5s ease;
-        }
-        
-        .install-prompt.show {
-            transform: translateY(0);
-        }
-        
-        .install-icon {
-            width: 40px;
-            height: 40px;
-            background: var(--primary);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 20px;
-        }
-        
-        .install-text {
-            flex: 1;
-        }
-        
-        .install-close {
-            background: transparent;
-            border: none;
-            font-size: 20px;
-            color: var(--gray);
-            cursor: pointer;
-        }
-        
-        /* Offline Indicator */
-        .offline-indicator {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            background: var(--warning);
-            color: white;
-            padding: 10px 15px;
-            border-radius: 30px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            z-index: 100;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.3s ease;
-        }
-        
-        .offline-indicator.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        
-        /* Auth Modals */
-        .auth-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .auth-container {
-            background: var(--dark);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            width: 100%;
-            max-width: 400px;
-            padding: 25px;
-            position: relative;
-        }
-        
-        .auth-header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        
-        .auth-header h2 {
-            font-size: 1.8rem;
-            margin-bottom: 10px;
-        }
-        
-        .auth-header p {
-            color: var(--gray);
-        }
-        
-        .auth-tabs {
-            display: flex;
-            margin-bottom: 20px;
-        }
-        
-        .auth-tab {
-            flex: 1;
-            text-align: center;
-            padding: 12px;
-            background: rgba(30, 41, 59, 0.5);
-            border: 1px solid var(--border);
-            cursor: pointer;
-            font-weight: 600;
-        }
-        
-        .auth-tab:first-child {
-            border-radius: 6px 0 0 6px;
-        }
-        
-        .auth-tab:last-child {
-            border-radius: 0 6px 6px 0;
-        }
-        
-        .auth-tab.active {
-            background: var(--primary);
-            border-color: var(--primary);
-        }
-        
-        .auth-form {
-            display: none;
-        }
-        
-        .auth-form.active {
-            display: block;
-        }
-        
-        .auth-form-group {
-            margin-bottom: 15px;
-        }
-        
-        .auth-form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-        
-        .auth-form-control {
-            width: 100%;
-            padding: 12px;
-            background: rgba(30, 41, 59, 0.5);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: var(--light);
-            font-size: 1rem;
-        }
-        
-        .auth-form-control:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-        
-        .auth-btn {
-            width: 100%;
-            padding: 12px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        
-        .auth-error {
-            color: var(--danger);
-            text-align: center;
-            margin-top: 15px;
-            min-height: 20px;
-        }
-        
-        .auth-footer {
-            text-align: center;
-            margin-top: 20px;
-            color: var(--gray);
-        }
-        
-        .auth-footer a {
-            color: var(--primary);
-            cursor: pointer;
-        }
-        
-        /* User info */
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .user-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: var(--primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
-        
-        .logout-btn {
-            background: transparent;
-            border: none;
-            color: var(--gray);
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-        
-        .logout-btn:hover {
-            color: var(--light);
-        }
-        
-        /* Responsive adjustments */
-        @media (min-width: 576px) {
-            .stats-container {
-                grid-template-columns: repeat(4, 1fr);
-                gap: 10px;
-            }
-            
-            .stat-card {
-                padding: 12px;
-            }
-            
-            .stat-value {
-                font-size: 1.6rem;
-            }
-            
-            .card {
-                padding: 15px;
-            }
-            
-            .form-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-            
-            th, td {
-                font-size: 0.85rem;
-            }
-        }
-        
-        @media (min-width: 768px) {
-            .main-content {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 20px;
-            }
-            
-            .stats-container {
-                grid-template-columns: repeat(4, 1fr);
-            }
-            
-            .stat-value {
-                font-size: 1.8rem;
-            }
-            
-            .logo h1 {
-                font-size: 1.8rem;
-            }
-            
-            .logo i {
-                font-size: 2rem;
-            }
-        }
-        
-        @media (min-width: 992px) {
-            .main-content {
-                grid-template-columns: 2fr 1fr;
-            }
-            
-            .card {
-                padding: 20px;
-            }
-            
-            .stats-container {
-                grid-template-columns: repeat(5, 1fr);
-            }
-        }
-        
-        .table-wrapper {
-            overflow-x: auto;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        .form-group input, .form-group select, .form-group textarea {
-            font-size: 0.9rem;
-            padding: 12px;
-        }
-        
-        .form-group textarea {
-            min-height: 80px;
-        }
-        
-        .responsive-label {
-            display: none;
-            font-weight: bold;
-            margin-right: 5px;
-            font-size: 0.75rem;
-        }
-        
-        @media (max-width: 575px) {
-            .table-wrapper table {
-                display: block;
-            }
-            
-            .table-wrapper thead {
-                display: none;
-            }
-            
-            .table-wrapper tr {
-                display: block;
-                margin-bottom: 10px;
-                border: 1px solid var(--border);
-                border-radius: 8px;
-                padding: 8px;
-            }
-            
-            .table-wrapper td {
-                display: flex;
-                align-items: center;
-                padding: 8px;
-                border-bottom: 1px solid rgba(255,255,255,0.1);
-            }
-            
-            .table-wrapper td:last-child {
-                border-bottom: none;
-            }
-            
-            .responsive-label {
-                display: inline-block;
-                width: 80px;
-            }
-            
-            .action-icons {
-                justify-content: flex-end;
-            }
-            
-            .stats-container {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .auth-container {
-                width: 95%;
-            }
-        }
-    </style>
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- Firebase SDK (Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
+  <script src="firebase-config.js"></script>
+
+  <!-- Flutterwave Inline Payment (Nigeria-friendly) -->
+  <script src="https://checkout.flutterwave.com/v3.js"></script>
+
+  <link rel="stylesheet" href="app.css" />
 </head>
 <body>
-    <!-- Bias Alert -->
-    <div class="bias-alert" id="biasAlert">
-        <div class="bias-alert-content">
-            <h3><i class="fas fa-exclamation-triangle"></i> Bias Detected</h3>
-            <p id="biasAlertMessage"></p>
-            <div class="bias-alert-actions">
-                <button class="btn btn-outline" id="acknowledgeBias">Acknowledge</button>
-                <button class="btn" id="reviewBias">Review & Learn</button>
-            </div>
+
+<!-- ══════════════════════════════════════════════
+     SPLASH / ONBOARDING
+══════════════════════════════════════════════ -->
+<div id="splash" class="splash">
+  <div class="splash-inner">
+    <div class="splash-logo">
+      <span class="logo-icon">⚡</span>
+      <span class="logo-text">Trafx<span class="logo-accent">OS</span></span>
+    </div>
+    <p class="splash-tagline">Your trading psychology<br><strong>made visible.</strong></p>
+    <div class="splash-steps" id="splashSteps">
+      <!-- Step 1 -->
+      <div class="splash-step active" data-step="1">
+        <div class="splash-step-icon">🧠</div>
+        <h2>Stop Losing to Yourself</h2>
+        <p>80% of retail trading losses are behavioral — not analytical. TrafxOS maps the emotions costing you money so you can fix them, fast.</p>
+      </div>
+      <!-- Step 2 -->
+      <div class="splash-step" data-step="2">
+        <div class="splash-step-icon">📓</div>
+        <h2>Every Trade. Every Feeling.</h2>
+        <p>Log trades in under 20 seconds. Capture your emotional state, rule adherence, and setup quality — so your patterns can't hide.</p>
+      </div>
+      <!-- Step 3 -->
+      <div class="splash-step" data-step="3">
+        <div class="splash-step-icon">🎯</div>
+        <h2>Survive the Prop Firm Challenge</h2>
+        <p>Built-in challenge tracker auto-calculates your daily loss limit, max drawdown, and win rate requirements. Never blow a funded account again.</p>
+      </div>
+      <!-- Step 4 -->
+      <div class="splash-step" data-step="4">
+        <div class="splash-step-icon">🚀</div>
+        <h2>Your Edge, Quantified</h2>
+        <p>Discipline Score, EmotionIQ, Streak Tracking — built by traders, for traders. Let's build your operating system.</p>
+        <button class="btn-primary btn-lg splash-cta" id="splashCta">Get Started — It's Free</button>
+      </div>
+    </div>
+    <div class="splash-dots" id="splashDots">
+      <span class="dot active" data-dot="1"></span>
+      <span class="dot" data-dot="2"></span>
+      <span class="dot" data-dot="3"></span>
+      <span class="dot" data-dot="4"></span>
+    </div>
+    <button class="splash-skip" id="splashSkip">Skip intro</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MAIN APP
+══════════════════════════════════════════════ -->
+<div id="app" class="app hidden">
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <span class="logo-icon-sm">⚡</span>
+      <span class="topbar-brand">Trafx<span class="logo-accent">OS</span></span>
+    </div>
+    <div class="topbar-center">
+      <div class="discipline-badge" id="topDisciplineBadge">
+        <span class="discipline-label">DISCIPLINE</span>
+        <span class="discipline-score" id="topDisciplineScore">—</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="icon-btn" id="notifBtn" title="Alerts" aria-label="Alerts">
+        <i class="fa-solid fa-bell"></i>
+        <span class="notif-dot hidden" id="notifDot"></span>
+      </button>
+      <button class="icon-btn hidden" id="proCrownBtn" title="Pro Active" aria-label="Pro Member">
+        <i class="fa-solid fa-crown" style="color:var(--yellow)"></i>
+      </button>
+      <button class="icon-btn" id="authBtn" title="Account" aria-label="Account">
+        <i class="fa-solid fa-user"></i>
+      </button>
+      <button class="icon-btn" id="settingsBtn" title="Settings" aria-label="Settings">
+        <i class="fa-solid fa-gear"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- DAILY MISSION BANNER (contextual, only when relevant) -->
+  <div class="mission-banner hidden" id="missionBanner">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <span id="missionText">You've hit 2 losses today. Take a 30-min break before next trade.</span>
+    <button class="mission-dismiss" id="missionDismiss">✕</button>
+  </div>
+
+  <!-- PWA INSTALL BANNER (first-time users) -->
+  <div class="install-banner hidden" id="installBanner" role="banner">
+    <i class="fa-solid fa-mobile-screen-button"></i>
+    <div class="install-banner-text">
+      <strong>Install TrafxOS</strong> — add to your home screen for the full app experience
+    </div>
+    <button class="install-banner-btn" id="installBannerBtn">Install</button>
+    <button class="install-banner-dismiss" id="installBannerDismiss" aria-label="Dismiss">✕</button>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content" id="mainContent">
+
+    <!-- ── DASHBOARD VIEW ── -->
+    <section class="view active" id="view-dashboard">
+      
+      <!-- Greeting -->
+      <div class="greeting-row">
+        <div>
+          <h1 class="greeting" id="greetingText">Good morning, Trader</h1>
+          <p class="greeting-sub" id="greetingSub">Let's review yesterday and plan today.</p>
         </div>
+        <div class="streak-pill" id="streakPill">
+          <i class="fa-solid fa-fire"></i>
+          <span id="streakCount">0</span>d streak
+        </div>
+      </div>
+
+      <!-- Dashboard PWA Install Card (prominent position) -->
+      <div class="dash-install-card hidden" id="dashInstallCard">
+        <div class="dic-icon"><i class="fa-solid fa-mobile-screen-button"></i></div>
+        <div class="dic-body">
+          <strong>Install TrafxOS on Your Phone</strong>
+          <p>One tap for offline access, instant loads, and push alerts. Trade anywhere.</p>
+        </div>
+        <button class="btn-primary btn-sm" id="dashInstallBtn">Install Now</button>
+        <button class="dic-dismiss" id="dashInstallDismiss" aria-label="Dismiss">&times;</button>
+      </div>
+
+      <!-- KPI Cards Row -->
+      <div class="kpi-grid">
+        <div class="kpi-card kpi-pnl" id="kpiPnl">
+          <div class="kpi-label">Today's P&L</div>
+          <div class="kpi-value" id="kpiPnlValue">$0.00</div>
+          <div class="kpi-delta" id="kpiPnlDelta">—</div>
+        </div>
+        <div class="kpi-card kpi-winrate">
+          <div class="kpi-label">Win Rate</div>
+          <div class="kpi-value" id="kpiWinrateValue">—</div>
+          <div class="kpi-delta" id="kpiWinrateDelta">30-day avg</div>
+        </div>
+        <div class="kpi-card kpi-rr">
+          <div class="kpi-label">Avg R:R</div>
+          <div class="kpi-value" id="kpiRrValue">—</div>
+          <div class="kpi-delta">risk:reward</div>
+        </div>
+        <div class="kpi-card kpi-emotion">
+          <div class="kpi-label">EmotionIQ</div>
+          <div class="kpi-value" id="kpiEmotionValue">—</div>
+          <div class="kpi-delta" id="kpiEmotionDelta">this week</div>
+        </div>
+      </div>
+
+      <!-- FREE TIER TRADE COUNTER -->
+      <div class="free-limit-bar" id="freeLimitBar">
+        <div class="flb-left">
+          <span class="flb-label">Free trades</span>
+          <span class="flb-count"><span id="flbUsed">0</span>&thinsp;/&thinsp;30</span>
+        </div>
+        <div class="flb-bar-wrap"><div class="flb-bar" id="flbBar"></div></div>
+        <button class="flb-cta" id="flbUpgradeBtn">Go Pro →</button>
+      </div>
+
+      <!-- Quick Log Trade CTA -->
+      <button class="quick-log-btn" id="quickLogBtn">
+        <i class="fa-solid fa-plus"></i>
+        Log a Trade
+      </button>
+
+      <!-- Behavior Insights -->
+      <div class="section-header">
+        <h2 class="section-title">Behavioral Insights</h2>
+        <span class="section-hint">Your patterns, exposed</span>
+      </div>
+      <div class="insights-feed" id="insightsFeed">
+        <div class="insight-card insight-warning" id="insightPlaceholder">
+          <div class="insight-icon">💡</div>
+          <div class="insight-body">
+            <strong>Start logging trades</strong> to unlock personalized behavioral insights powered by EmotionIQ.
+          </div>
+        </div>
+      </div>
+
+      <!-- Equity Curve -->
+      <div class="section-header">
+        <h2 class="section-title">Equity Curve</h2>
+        <div class="chart-period-tabs" id="equityPeriodTabs">
+          <button class="period-tab active" data-period="7">7D</button>
+          <button class="period-tab" data-period="30">30D</button>
+          <button class="period-tab" data-period="90">90D</button>
+          <button class="period-tab" data-period="all">ALL</button>
+        </div>
+      </div>
+      <div class="chart-container">
+        <canvas id="equityChart"></canvas>
+      </div>
+
+      <!-- Emotion Distribution -->
+      <div class="section-header">
+        <h2 class="section-title">Emotion vs. P&L</h2>
+        <span class="section-hint">Which states cost you most?</span>
+      </div>
+      <div class="chart-container chart-sm">
+        <canvas id="emotionChart"></canvas>
+      </div>
+
+      <!-- Heatmap: Best & Worst Times -->
+      <div class="section-header">
+        <h2 class="section-title">Session Heatmap</h2>
+        <span class="section-hint">When you trade best</span>
+      </div>
+      <div class="heatmap-grid" id="sessionHeatmap">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Recent trades mini-list -->
+      <div class="section-header">
+        <h2 class="section-title">Recent Trades</h2>
+        <button class="link-btn" id="seeAllTradesBtn">See all</button>
+      </div>
+      <div class="recent-trades-list" id="recentTradesList">
+        <div class="empty-state">
+          <i class="fa-solid fa-book-open"></i>
+          <p>No trades yet. Log your first one above.</p>
+        </div>
+      </div>
+
+      <!-- Smart Alerts (personalized, data-driven) -->
+      <div class="section-header">
+        <h2 class="section-title">Smart Alerts</h2>
+        <span class="section-hint">Personalized from your data</span>
+      </div>
+      <div class="smart-alerts-feed" id="smartAlertsFeed">
+        <div class="smart-alert-placeholder"><i class="fa-solid fa-brain"></i> Log trades to unlock personalized alerts from your own data.</div>
+      </div>
+
+      <!-- Community Challenges -->
+      <div class="section-header">
+        <h2 class="section-title">Community Challenges</h2>
+        <span class="section-hint">Compete &amp; grow together</span>
+      </div>
+      <div class="community-challenges" id="communityChallenges">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Quick Feedback -->
+      <div class="feedback-fab" id="feedbackFab" title="Send Feedback" aria-label="Send Feedback">
+        <i class="fa-solid fa-comment-dots"></i>
+      </div>
+
+    </section>
+
+    <!-- ── LOG TRADE VIEW ── -->
+    <section class="view" id="view-log">
+      <div class="view-header">
+        <h1 class="view-title">Log Trade</h1>
+        <p class="view-sub">Fast, honest, complete.</p>
+      </div>
+
+      <form id="tradeForm" novalidate>
+
+        <!-- Pair / Instrument -->
+        <div class="form-group">
+          <label class="form-label">Instrument <span class="req">*</span></label>
+          <div class="instrument-grid" id="instrumentGrid">
+            <button type="button" class="instr-chip active" data-val="EUR/USD">EUR/USD</button>
+            <button type="button" class="instr-chip" data-val="GBP/USD">GBP/USD</button>
+            <button type="button" class="instr-chip" data-val="USD/JPY">USD/JPY</button>
+            <button type="button" class="instr-chip" data-val="XAU/USD">Gold</button>
+            <button type="button" class="instr-chip" data-val="BTC/USD">BTC</button>
+            <button type="button" class="instr-chip" data-val="NAS100">NAS100</button>
+            <button type="button" class="instr-chip" data-val="US30">US30</button>
+            <button type="button" class="instr-chip instr-custom" data-val="custom">+ Custom</button>
+          </div>
+          <input type="text" id="customInstrument" class="form-input hidden" placeholder="e.g. ETH/USD, SPX500…" />
+        </div>
+
+        <!-- Direction -->
+        <div class="form-group">
+          <label class="form-label">Direction <span class="req">*</span></label>
+          <div class="dir-toggle" id="directionToggle">
+            <button type="button" class="dir-btn dir-long active" data-dir="LONG">
+              <i class="fa-solid fa-arrow-trend-up"></i> LONG
+            </button>
+            <button type="button" class="dir-btn dir-short" data-dir="SHORT">
+              <i class="fa-solid fa-arrow-trend-down"></i> SHORT
+            </button>
+          </div>
+        </div>
+
+        <!-- Entry / Exit / SL / TP -->
+        <div class="form-row">
+          <div class="form-group half">
+            <label class="form-label">Entry Price <span class="req">*</span></label>
+            <input type="number" step="any" id="entryPrice" class="form-input" placeholder="0.00000" />
+          </div>
+          <div class="form-group half">
+            <label class="form-label">Exit Price</label>
+            <input type="number" step="any" id="exitPrice" class="form-input" placeholder="0.00000" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group half">
+            <label class="form-label">Stop Loss</label>
+            <input type="number" step="any" id="stopLoss" class="form-input" placeholder="0.00000" />
+          </div>
+          <div class="form-group half">
+            <label class="form-label">Take Profit</label>
+            <input type="number" step="any" id="takeProfit" class="form-input" placeholder="0.00000" />
+          </div>
+        </div>
+
+        <!-- Lot Size & P&L -->
+        <div class="form-row">
+          <div class="form-group half">
+            <label class="form-label">Lot / Position Size</label>
+            <input type="number" step="any" id="lotSize" class="form-input" placeholder="0.10" />
+          </div>
+          <div class="form-group half">
+            <label class="form-label">P&L ($)</label>
+            <input type="number" step="any" id="pnlInput" class="form-input" placeholder="+200.00" />
+          </div>
+        </div>
+
+        <!-- R:R Display -->
+        <div class="rr-display hidden" id="rrDisplay">
+          Calculated R:R — <strong id="rrValue">—</strong>
+        </div>
+
+        <!-- Setup Quality -->
+        <div class="form-group">
+          <label class="form-label">Setup Quality</label>
+          <div class="rating-row" id="setupQualityRating">
+            <button type="button" class="rate-btn" data-val="1">1</button>
+            <button type="button" class="rate-btn" data-val="2">2</button>
+            <button type="button" class="rate-btn" data-val="3">3</button>
+            <button type="button" class="rate-btn" data-val="4">4</button>
+            <button type="button" class="rate-btn" data-val="5">5</button>
+          </div>
+          <p class="form-hint">1 = forced/bad setup · 5 = textbook A+ setup</p>
+        </div>
+
+        <!-- Emotional State (Pre-Trade) -->
+        <div class="form-group">
+          <label class="form-label">How were you feeling BEFORE this trade? <span class="req">*</span></label>
+          <div class="emotion-grid" id="emotionGrid">
+            <button type="button" class="emo-btn" data-val="calm">😌 Calm</button>
+            <button type="button" class="emo-btn" data-val="confident">💪 Confident</button>
+            <button type="button" class="emo-btn" data-val="focused">🎯 Focused</button>
+            <button type="button" class="emo-btn" data-val="anxious">😰 Anxious</button>
+            <button type="button" class="emo-btn" data-val="frustrated">😤 Frustrated</button>
+            <button type="button" class="emo-btn" data-val="revenge">🔥 Revenge</button>
+            <button type="button" class="emo-btn" data-val="fomo">😱 FOMO</button>
+            <button type="button" class="emo-btn" data-val="bored">😴 Bored</button>
+            <button type="button" class="emo-btn" data-val="excited">🤩 Excited</button>
+            <button type="button" class="emo-btn" data-val="tired">🥱 Tired</button>
+          </div>
+        </div>
+
+        <!-- Rule Adherence -->
+        <div class="form-group">
+          <label class="form-label">Did you follow your trading rules?</label>
+          <div class="rules-check-list" id="rulesCheckList">
+            <label class="rule-check">
+              <input type="checkbox" id="rule_plan" /> Followed my trading plan
+            </label>
+            <label class="rule-check">
+              <input type="checkbox" id="rule_sl" /> Stop loss was set before entry
+            </label>
+            <label class="rule-check">
+              <input type="checkbox" id="rule_rr" /> Met minimum R:R requirement
+            </label>
+            <label class="rule-check">
+              <input type="checkbox" id="rule_session" /> Traded in my allowed session
+            </label>
+            <label class="rule-check">
+              <input type="checkbox" id="rule_size" /> Position size within risk limits
+            </label>
+          </div>
+        </div>
+
+        <!-- Trade Outcome -->
+        <div class="form-group">
+          <label class="form-label">Outcome</label>
+          <div class="outcome-toggle" id="outcomeToggle">
+            <button type="button" class="outcome-btn outcome-win active" data-outcome="WIN">WIN</button>
+            <button type="button" class="outcome-btn outcome-loss" data-outcome="LOSS">LOSS</button>
+            <button type="button" class="outcome-btn outcome-be" data-outcome="BE">BREAK EVEN</button>
+          </div>
+        </div>
+
+        <!-- Session -->
+        <div class="form-group">
+          <label class="form-label">Session</label>
+          <div class="chip-row" id="sessionChips">
+            <button type="button" class="chip active" data-val="London">London</button>
+            <button type="button" class="chip" data-val="NY">New York</button>
+            <button type="button" class="chip" data-val="Asia">Asia</button>
+            <button type="button" class="chip" data-val="Overlap">LN/NY Overlap</button>
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="form-group">
+          <label class="form-label">Trade Notes / Reflection</label>
+          <textarea id="tradeNotes" class="form-textarea" rows="4" placeholder="What did you see? What did you feel? What would you do differently?"></textarea>
+        </div>
+
+        <!-- Chart Screenshot Upload (optional) -->
+        <div class="form-group">
+          <label class="form-label">Chart Screenshot <span class="form-optional">(optional)</span></label>
+          <div class="screenshot-upload-area" id="screenshotUploadArea">
+            <input type="file" id="screenshotFileInput" accept="image/*" capture="environment" class="hidden" />
+            <div class="screenshot-dropzone" id="screenshotDropzone">
+              <i class="fa-solid fa-camera"></i>
+              <span>Tap to upload chart screenshot</span>
+              <span class="screenshot-hint">Max 1MB · JPG, PNG, WebP</span>
+            </div>
+            <div class="screenshot-preview hidden" id="screenshotPreview">
+              <img id="screenshotPreviewImg" alt="Screenshot preview" />
+              <button type="button" class="screenshot-remove" id="screenshotRemoveBtn" title="Remove">&times;</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mistake Tags -->
+        <div class="form-group">
+          <label class="form-label">Mistakes Made <span class="form-optional">(select all that apply)</span></label>
+          <div class="chip-row chip-row-wrap" id="mistakeTags">
+            <button type="button" class="chip chip-mistake" data-val="early_entry">Early entry</button>
+            <button type="button" class="chip chip-mistake" data-val="moved_sl">Moved SL</button>
+            <button type="button" class="chip chip-mistake" data-val="early_exit">Exited early</button>
+            <button type="button" class="chip chip-mistake" data-val="late_exit">Let it run too long</button>
+            <button type="button" class="chip chip-mistake" data-val="oversize">Oversized position</button>
+            <button type="button" class="chip chip-mistake" data-val="revenge">Revenge trade</button>
+            <button type="button" class="chip chip-mistake" data-val="no_plan">No clear plan</button>
+            <button type="button" class="chip chip-mistake" data-val="news">Traded into news</button>
+          </div>
+        </div>
+
+        <!-- Date/Time -->
+        <div class="form-group">
+          <label class="form-label">Date & Time</label>
+          <input type="datetime-local" id="tradeDateTime" class="form-input" />
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="btn-primary btn-full btn-lg" id="submitTradeBtn">
+          <i class="fa-solid fa-check"></i> Save Trade
+        </button>
+        <div class="form-error hidden" id="formError"></div>
+
+      </form>
+    </section>
+
+    <!-- ── JOURNAL / HISTORY VIEW ── -->
+    <section class="view" id="view-journal">
+      <div class="view-header">
+        <h1 class="view-title">Trade Journal</h1>
+        <div class="journal-controls">
+          <button class="icon-btn" id="exportBtn" title="Export CSV" aria-label="Export CSV"><i class="fa-solid fa-download"></i></button>
+          <button class="icon-btn" id="filterBtn" title="Filter" aria-label="Filter"><i class="fa-solid fa-sliders"></i></button>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="search-bar-wrapper">
+        <i class="fa-solid fa-magnifying-glass search-ico"></i>
+        <input type="text" id="journalSearch" class="search-input" placeholder="Search by instrument, notes, tag…" />
+      </div>
+
+      <!-- Filters Panel -->
+      <div class="filters-panel hidden" id="filtersPanel">
+        <div class="filter-row">
+          <div class="filter-group">
+            <label>Outcome</label>
+            <select id="filterOutcome" class="form-select">
+              <option value="">All</option>
+              <option value="WIN">Wins</option>
+              <option value="LOSS">Losses</option>
+              <option value="BE">Break Even</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Emotion</label>
+            <select id="filterEmotion" class="form-select">
+              <option value="">All</option>
+              <option value="calm">Calm</option>
+              <option value="confident">Confident</option>
+              <option value="anxious">Anxious</option>
+              <option value="frustrated">Frustrated</option>
+              <option value="revenge">Revenge</option>
+              <option value="fomo">FOMO</option>
+            </select>
+          </div>
+        </div>
+        <div class="filter-row">
+          <div class="filter-group">
+            <label>From</label>
+            <input type="date" id="filterFrom" class="form-input" />
+          </div>
+          <div class="filter-group">
+            <label>To</label>
+            <input type="date" id="filterTo" class="form-input" />
+          </div>
+        </div>
+        <button class="btn-secondary" id="clearFilters">Clear Filters</button>
+      </div>
+
+      <!-- Summary stats bar -->
+      <div class="journal-summary-bar" id="journalSummaryBar">
+        <div class="jsb-stat"><span class="jsb-val" id="jsbTotal">0</span><span class="jsb-lbl">Trades</span></div>
+        <div class="jsb-stat"><span class="jsb-val green" id="jsbWins">0</span><span class="jsb-lbl">Wins</span></div>
+        <div class="jsb-stat"><span class="jsb-val red" id="jsbLosses">0</span><span class="jsb-lbl">Losses</span></div>
+        <div class="jsb-stat"><span class="jsb-val" id="jsbPnl">$0</span><span class="jsb-lbl">Total P&L</span></div>
+      </div>
+
+      <!-- Trade list -->
+      <div class="trade-list" id="journalTradeList">
+        <div class="empty-state">
+          <i class="fa-solid fa-book-open"></i>
+          <p>Your journal is empty. Start logging trades!</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── ANALYTICS VIEW ── -->
+    <section class="view" id="view-analytics">
+      <div class="view-header">
+        <h1 class="view-title">Analytics</h1>
+        <p class="view-sub">The truth about your trading</p>
+      </div>
+
+      <!-- Analytics Tabs -->
+      <div class="analytics-tabs" id="analyticsTabs">
+        <button class="atab active" data-atab="performance">Performance</button>
+        <button class="atab" data-atab="behavior">Behavior</button>
+        <button class="atab" data-atab="patterns">Patterns</button>
+      </div>
+
+      <!-- Performance Tab -->
+      <div class="atab-content active" id="atab-performance">
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-val" id="statTotalTrades">—</div><div class="stat-lbl">Total Trades</div></div>
+          <div class="stat-card"><div class="stat-val green" id="statWinRate">—</div><div class="stat-lbl">Win Rate</div></div>
+          <div class="stat-card"><div class="stat-val" id="statAvgRR">—</div><div class="stat-lbl">Avg R:R</div></div>
+          <div class="stat-card"><div class="stat-val" id="statPF">—</div><div class="stat-lbl">Profit Factor</div></div>
+          <div class="stat-card"><div class="stat-val green" id="statBestDay">—</div><div class="stat-lbl">Best Day</div></div>
+          <div class="stat-card"><div class="stat-val red" id="statWorstDay">—</div><div class="stat-lbl">Worst Day</div></div>
+          <div class="stat-card"><div class="stat-val red" id="statMaxDD">—</div><div class="stat-lbl">Max Drawdown</div></div>
+          <div class="stat-card"><div class="stat-val" id="statExpectancy">—</div><div class="stat-lbl">Expectancy/Trade</div></div>
+        </div>
+
+        <div class="section-header"><h2 class="section-title">Cumulative P&L</h2></div>
+        <div class="chart-container"><canvas id="analyticsEquityChart"></canvas></div>
+
+        <div class="section-header"><h2 class="section-title">Win/Loss by Instrument</h2></div>
+        <div class="chart-container chart-sm"><canvas id="instrumentChart"></canvas></div>
+
+        <div class="section-header"><h2 class="section-title">P&L by Day of Week</h2></div>
+        <div class="chart-container chart-sm"><canvas id="dowChart"></canvas></div>
+      </div>
+
+      <!-- Behavior Tab -->
+      <div class="atab-content" id="atab-behavior">
+        <div class="behavior-score-card" id="behaviorScoreCard">
+          <div class="bsc-label">Discipline Score</div>
+          <div class="bsc-score" id="bscScore">—</div>
+          <div class="bsc-ring">
+            <svg viewBox="0 0 120 120" class="ring-svg">
+              <circle class="ring-bg" cx="60" cy="60" r="52" />
+              <circle class="ring-fill" cx="60" cy="60" r="52" id="disciplineRing" />
+            </svg>
+          </div>
+          <p class="bsc-desc" id="bscDesc">Log trades to build your Discipline Score.</p>
+        </div>
+
+        <div class="section-header"><h2 class="section-title">Emotion → Outcome Matrix</h2></div>
+        <div class="emotion-matrix" id="emotionMatrix">
+          <!-- Rendered by JS -->
+        </div>
+
+        <div class="section-header"><h2 class="section-title">Rule Adherence</h2></div>
+        <div class="rule-adherence-bars" id="ruleAdherenceBars">
+          <!-- Rendered by JS -->
+        </div>
+
+        <div class="section-header"><h2 class="section-title">Most Common Mistakes</h2></div>
+        <div class="chart-container chart-sm"><canvas id="mistakesChart"></canvas></div>
+      </div>
+
+      <!-- Patterns Tab -->
+      <div class="atab-content" id="atab-patterns">
+        <div class="section-header"><h2 class="section-title">Session Performance</h2></div>
+        <div class="chart-container chart-sm"><canvas id="sessionChart"></canvas></div>
+
+        <div class="section-header"><h2 class="section-title">Consecutive Loss Risk</h2></div>
+        <div class="streak-analysis" id="streakAnalysis">
+          <!-- Rendered by JS -->
+        </div>
+
+        <div class="section-header"><h2 class="section-title">Hold Time vs. P&L</h2></div>
+        <div class="chart-container"><canvas id="holdTimeChart"></canvas></div>
+
+        <div class="section-header"><h2 class="section-title">Best Performing Setups</h2></div>
+        <div class="setup-ranking" id="setupRanking">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ── PROP FIRM TRACKER VIEW ── -->
+    <section class="view" id="view-challenge">
+      <div class="view-header">
+        <h1 class="view-title">Challenge Tracker</h1>
+        <button class="btn-secondary btn-sm" id="addChallengeBtn">+ Add Challenge</button>
+      </div>
+
+      <div class="challenge-list" id="challengeList">
+        <div class="empty-state">
+          <i class="fa-solid fa-trophy"></i>
+          <p>No challenges tracked yet. Add your prop firm challenge to monitor your limits in real-time.</p>
+        </div>
+      </div>
+
+      <!-- Add/Edit Challenge Modal -->
+      <div class="modal-overlay hidden" id="challengeModal">
+        <div class="modal">
+          <div class="modal-header">
+            <h2 id="challengeModalTitle">New Challenge</h2>
+            <button class="modal-close" id="challengeModalClose">✕</button>
+          </div>
+          <form id="challengeForm">
+            <div class="form-group">
+              <label class="form-label">Firm Name</label>
+              <input type="text" id="cfFirm" class="form-input" placeholder="FTMO, MyForexFunds, etc." />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Account Size ($)</label>
+              <input type="number" id="cfSize" class="form-input" placeholder="100000" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Phase</label>
+              <select id="cfPhase" class="form-select">
+                <option value="challenge">Challenge (Phase 1)</option>
+                <option value="verification">Verification (Phase 2)</option>
+                <option value="funded">Funded Account</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <div class="form-group half">
+                <label class="form-label">Max Daily Loss (%)</label>
+                <input type="number" step="0.1" id="cfDailyLoss" class="form-input" placeholder="5" />
+              </div>
+              <div class="form-group half">
+                <label class="form-label">Max Total Drawdown (%)</label>
+                <input type="number" step="0.1" id="cfMaxDD" class="form-input" placeholder="10" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group half">
+                <label class="form-label">Profit Target (%)</label>
+                <input type="number" step="0.1" id="cfTarget" class="form-input" placeholder="10" />
+              </div>
+              <div class="form-group half">
+                <label class="form-label">Min Trading Days</label>
+                <input type="number" id="cfMinDays" class="form-input" placeholder="4" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Start Date</label>
+              <input type="date" id="cfStartDate" class="form-input" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Current Balance ($)</label>
+              <input type="number" step="0.01" id="cfBalance" class="form-input" placeholder="100000" />
+            </div>
+            <button type="submit" class="btn-primary btn-full">Save Challenge</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── PSYCHOLOGY VIEW ── -->
+    <section class="view" id="view-psychology">
+      <div class="view-header">
+        <h1 class="view-title">Psychology Lab</h1>
+        <p class="view-sub">Your mental edge starts here</p>
+      </div>
+
+      <!-- Daily Check-In -->
+      <div class="psych-checkin-card" id="psychCheckinCard">
+        <h2 class="psych-card-title">Daily Mental Check-In</h2>
+        <p class="psych-card-sub">Rate before your first trade of the day</p>
+
+        <div class="checkin-row">
+          <label>Sleep Quality</label>
+          <div class="slider-row">
+            <input type="range" min="1" max="10" value="7" id="ciSleep" class="checkin-slider" />
+            <span class="slider-val" id="ciSleepVal">7</span>
+          </div>
+        </div>
+        <div class="checkin-row">
+          <label>Stress Level</label>
+          <div class="slider-row">
+            <input type="range" min="1" max="10" value="3" id="ciStress" class="checkin-slider" />
+            <span class="slider-val" id="ciStressVal">3</span>
+          </div>
+        </div>
+        <div class="checkin-row">
+          <label>Focus / Motivation</label>
+          <div class="slider-row">
+            <input type="range" min="1" max="10" value="7" id="ciFocus" class="checkin-slider" />
+            <span class="slider-val" id="ciFocusVal">7</span>
+          </div>
+        </div>
+        <div class="checkin-row">
+          <label>Emotional Stability</label>
+          <div class="slider-row">
+            <input type="range" min="1" max="10" value="7" id="ciStability" class="checkin-slider" />
+            <span class="slider-val" id="ciStabilityVal">7</span>
+          </div>
+        </div>
+
+        <div class="trade-readiness" id="tradeReadiness">
+          <div class="tr-label">Trade Readiness</div>
+          <div class="tr-score" id="trScore">—</div>
+          <div class="tr-msg" id="trMsg">Complete the check-in to see your readiness score.</div>
+        </div>
+
+        <button class="btn-primary btn-full" id="saveCheckinBtn">Save Today's Check-In</button>
+      </div>
+
+      <!-- Psychology Lessons -->
+      <div class="section-header">
+        <h2 class="section-title">Psychology Lessons</h2>
+        <span class="section-hint">Curated for your patterns</span>
+      </div>
+      <div class="lessons-grid" id="lessonsGrid">
+        <div class="lesson-card">
+          <div class="lesson-emoji">🔁</div>
+          <h3>The Revenge Trading Loop</h3>
+          <p>Why your brain enters revenge mode and how to break the cycle before it costs you another account.</p>
+          <button class="btn-secondary lesson-read-btn" data-lesson="revenge">Read</button>
+        </div>
+        <div class="lesson-card">
+          <div class="lesson-emoji">📏</div>
+          <h3>Position Sizing Psychology</h3>
+          <p>The hidden link between bet size and emotional dysregulation — why oversizing creates a self-destructive spiral.</p>
+          <button class="btn-secondary lesson-read-btn" data-lesson="sizing">Read</button>
+        </div>
+        <div class="lesson-card">
+          <div class="lesson-emoji">⏱️</div>
+          <h3>The Wait Game: Patience as Edge</h3>
+          <p>How elite traders manufacture patience and why most retail traders lose purely by trading too much.</p>
+          <button class="btn-secondary lesson-read-btn" data-lesson="patience">Read</button>
+        </div>
+        <div class="lesson-card">
+          <div class="lesson-emoji">🧊</div>
+          <h3>Cold State vs. Hot State Decisions</h3>
+          <p>Behavioral economics applied to trading: the dual-system model and how to keep System 2 in charge.</p>
+          <button class="btn-secondary lesson-read-btn" data-lesson="cognitive">Read</button>
+        </div>
+        <div class="lesson-card">
+          <div class="lesson-emoji">📉</div>
+          <h3>Loss Aversion & the Breakeven Trap</h3>
+          <p>Why moving your stop to breakeven too early is costing you your best trades.</p>
+          <button class="btn-secondary lesson-read-btn" data-lesson="lossaversion">Read</button>
+        </div>
+        <div class="lesson-card">
+          <div class="lesson-emoji">🎯</div>
+          <h3>Process Goals vs. Outcome Goals</h3>
+          <p>The professional mindset shift that separates consistent traders from gamblers.</p>
+          <button class="btn-secondary lesson-read-btn" data-lesson="processgoals">Read</button>
+        </div>
+      </div>
+
+      <!-- Lesson Modal -->
+      <div class="modal-overlay hidden" id="lessonModal">
+        <div class="modal modal-lg">
+          <div class="modal-header">
+            <h2 id="lessonModalTitle">Lesson</h2>
+            <button class="modal-close" id="lessonModalClose">✕</button>
+          </div>
+          <div class="lesson-content" id="lessonContent"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SETTINGS VIEW ── -->
+    <section class="view" id="view-settings">
+      <div class="view-header">
+        <h1 class="view-title">Settings</h1>
+      </div>
+
+      <div class="settings-section">
+        <h2 class="settings-section-title">Trading Profile</h2>
+        <div class="form-group">
+          <label class="form-label">Your Name</label>
+          <input type="text" id="settingName" class="form-input" placeholder="e.g. Alex" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Account Currency</label>
+          <select id="settingCurrency" class="form-select">
+            <option value="USD">USD ($)</option>
+            <option value="GBP">GBP (£)</option>
+            <option value="EUR">EUR (€)</option>
+            <option value="NGN">NGN (₦)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Starting Balance ($)</label>
+          <input type="number" id="settingBalance" class="form-input" placeholder="10000" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Risk Per Trade (%)</label>
+          <input type="number" step="0.1" id="settingRisk" class="form-input" placeholder="1.0" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Max Daily Loss (%)</label>
+          <input type="number" step="0.1" id="settingDailyLoss" class="form-input" placeholder="3.0" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Max Daily Trades</label>
+          <input type="number" id="settingMaxTrades" class="form-input" placeholder="3" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Minimum R:R Ratio</label>
+          <input type="number" step="0.1" id="settingMinRR" class="form-input" placeholder="1.5" />
+        </div>
+        <button class="btn-primary" id="saveSettingsBtn">Save Profile</button>
+      </div>
+
+      <div class="settings-section">
+        <h2 class="settings-section-title">Notifications</h2>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Daily journaling reminder</div>
+            <div class="toggle-sub">Remind me to log trades at end of session</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="notifJournal" checked />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Loss streak alert</div>
+            <div class="toggle-sub">Alert after 3 consecutive losses</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="notifLossStreak" checked />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Daily limit warning</div>
+            <div class="toggle-sub">Warn when approaching daily loss limit</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="notifDailyLimit" checked />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h2 class="settings-section-title">Data Management</h2>
+        <button class="btn-secondary" id="exportAllBtn"><i class="fa-solid fa-download"></i> Export All Data (CSV)</button>
+        <button class="btn-secondary" id="importBtn"><i class="fa-solid fa-upload"></i> Import Trades (CSV)</button>
+        <input type="file" id="importFileInput" accept=".csv" class="hidden" />
+        <button class="btn-secondary" id="importMT4Btn"><i class="fa-solid fa-file-import"></i> Import from MT4/MT5</button>
+        <input type="file" id="importMT4FileInput" accept=".htm,.html,.csv" class="hidden" />
+        <button class="btn-danger" id="clearDataBtn"><i class="fa-solid fa-trash"></i> Clear All Data</button>
+      </div>
+
+      <div class="settings-section">
+        <h2 class="settings-section-title">About TrafxOS</h2>
+        <p class="about-text">Version 2.0.0 · Built for traders who take psychology seriously.</p>
+        <p class="about-text">Data is stored locally on your device. We never sell your trading data.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- PWA INSTALL FAB -->
+  <button class="pwa-install-fab hidden" id="pwaInstallFab" aria-label="Install TrafxOS App">
+    <i class="fa-solid fa-download"></i> Install App
+  </button>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav" id="bottomNav">
+    <button class="nav-btn active" data-view="dashboard" aria-label="Dashboard">
+      <i class="fa-solid fa-chart-line"></i>
+      <span>Dashboard</span>
+    </button>
+    <button class="nav-btn" data-view="journal" aria-label="Journal">
+      <i class="fa-solid fa-book-open"></i>
+      <span>Journal</span>
+    </button>
+    <button class="nav-btn nav-btn-center" data-view="log" aria-label="Log Trade">
+      <div class="nav-center-icon">
+        <i class="fa-solid fa-plus"></i>
+      </div>
+      <span>Log</span>
+    </button>
+    <button class="nav-btn" data-view="analytics" aria-label="Analytics">
+      <i class="fa-solid fa-brain"></i>
+      <span>Analytics</span>
+    </button>
+    <button class="nav-btn" data-view="psychology" aria-label="Psychology">
+      <i class="fa-solid fa-heart-pulse"></i>
+      <span>Psych</span>
+    </button>
+  </nav>
+
+</div>
+
+<!-- TRADE DETAIL MODAL -->
+<div class="modal-overlay hidden" id="tradeDetailModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="tradeDetailTitle">Trade Detail</h2>
+      <button class="modal-close" id="tradeDetailClose">✕</button>
+    </div>
+    <div class="trade-detail-content" id="tradeDetailContent"></div>
+    <div class="modal-actions">
+      <button class="btn-danger" id="deleteTradeBtn"><i class="fa-solid fa-trash"></i> Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST NOTIFICATIONS -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- NOTIFICATION PANEL (slide-down) -->
+<div class="notif-panel hidden" id="notifPanel">
+  <div class="notif-panel-header">
+    <h3>Notifications</h3>
+    <button class="notif-clear-btn" id="notifClearAll">Clear all</button>
+  </div>
+  <div class="notif-list" id="notifList">
+    <div class="notif-empty">No notifications yet. Trade well!</div>
+  </div>
+</div>
+
+<!-- FEEDBACK MODAL -->
+<div class="modal-overlay hidden" id="feedbackModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Send Feedback</h2>
+      <button class="modal-close" id="feedbackModalClose">&times;</button>
+    </div>
+    <p style="font-size:0.85rem;color:var(--text-2);margin-bottom:14px">Help us make TrafxOS even better. How's your experience?</p>
+    <div class="feedback-emoji-row" id="feedbackEmojiRow">
+      <button class="fb-emoji-btn" data-rating="1" title="Terrible">&#x1F621;</button>
+      <button class="fb-emoji-btn" data-rating="2" title="Bad">&#x1F61E;</button>
+      <button class="fb-emoji-btn" data-rating="3" title="Okay">&#x1F610;</button>
+      <button class="fb-emoji-btn" data-rating="4" title="Good">&#x1F60A;</button>
+      <button class="fb-emoji-btn" data-rating="5" title="Amazing">&#x1F929;</button>
+    </div>
+    <div class="form-group" style="margin-top:12px">
+      <label class="form-label">What can we improve?</label>
+      <textarea id="feedbackText" class="form-textarea" rows="3" placeholder="Tell us anything&hellip;"></textarea>
+    </div>
+    <button class="btn-primary btn-full" id="feedbackSubmitBtn">Submit Feedback</button>
+  </div>
+</div>
+
+<!-- ═══ INNOVATIVE PWA INSTALL MODAL ═══ -->
+<div class="pwa-full-modal hidden" id="pwaInstallModal">
+  <div class="pwa-full-backdrop"></div>
+  <div class="pwa-full-card">
+    <button class="pwa-full-close" id="pwaModalClose">✕</button>
+    <div class="pwa-phone-col">
+      <div class="pwa-phone-art">
+        <div class="pwa-phone-body">
+          <div class="pwa-phone-notch"></div>
+          <div class="pwa-phone-screen">
+            <div class="pwa-icon-grid">
+              <span class="pwa-ig-icon">📊</span>
+              <span class="pwa-ig-icon">📅</span>
+              <span class="pwa-ig-icon">💬</span>
+              <span class="pwa-ig-icon pwa-ig-hl" id="trafxIconAnim">⚡</span>
+              <span class="pwa-ig-icon">📷</span>
+              <span class="pwa-ig-icon">🗺️</span>
+            </div>
+          </div>
+          <div class="pwa-phone-dock">
+            <span class="pwa-dock-slot"><i class="fa-solid fa-phone"></i></span>
+            <span class="pwa-dock-slot"><i class="fa-solid fa-envelope"></i></span>
+            <span class="pwa-dock-slot pwa-dock-target">⚡</span>
+            <span class="pwa-dock-slot"><i class="fa-brands fa-safari"></i></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pwa-copy-col">
+      <div class="pwa-modal-logo">⚡ TrafxOS</div>
+      <h2 class="pwa-headline">Your Trading OS.<br>Always with you.</h2>
+      <p class="pwa-subline">Install for the full experience — offline-ready, home screen native, no browser chrome.</p>
+      <ul class="pwa-perks">
+        <li><i class="fa-solid fa-wifi-slash"></i> Works 100% offline</li>
+        <li><i class="fa-solid fa-bolt"></i> 2× faster load time</li>
+        <li><i class="fa-solid fa-expand"></i> Distraction-free fullscreen</li>
+        <li><i class="fa-solid fa-bell"></i> Push loss-streak alerts</li>
+      </ul>
+      <div class="pwa-ios-hint hidden" id="pwaIosHint">
+        <i class="fa-solid fa-arrow-up-from-bracket"></i>
+        Tap <strong>Share</strong> → <strong>Add to Home Screen</strong>
+      </div>
+      <button class="btn-primary btn-full btn-lg" id="pwaModalInstallBtn">
+        <i class="fa-solid fa-download"></i> Add to Home Screen — Free
+      </button>
+      <button class="pwa-later-link" id="pwaModalLater">Continue in browser →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ AUTH MODAL ═══ -->
+<div class="modal-overlay hidden" id="authModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Your Account</h2>
+      <button class="modal-close" id="authModalClose">✕</button>
+    </div>
+    <div id="authSignedOut">
+      <p style="font-size:0.85rem;color:var(--text-2);margin-bottom:16px">Sign in to sync trades across devices and back up in the cloud.</p>
+      <button class="btn-google" id="googleSignInBtn">
+        <svg class="google-svg" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.79-.07-1.54-.19-2.27h-11.3v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82Z"/><path fill="#34A853" d="M12.255 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96h-3.98v3.09C3.515 21.3 7.615 24 12.255 24Z"/><path fill="#FBBC05" d="M5.525 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.62h-3.98a11.86 11.86 0 0 0 0 10.76l3.98-3.09Z"/><path fill="#EA4335" d="M12.255 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C18.205 1.19 15.495 0 12.255 0c-4.64 0-8.74 2.7-10.71 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96Z"/></svg>
+        Continue with Google
+      </button>
+      <!-- Inline error shown when Google sign-in is blocked (unauthorized domain) -->
+      <div id="googleAuthError" class="google-auth-error hidden"></div>
+      <div class="auth-or"><span>or</span></div>
+      <input type="email" id="authEmail" class="form-input" placeholder="Email" style="margin-bottom:8px" />
+      <input type="password" id="authPassword" class="form-input" placeholder="Password" style="margin-bottom:14px" />
+      <button class="btn-primary btn-full" id="emailSignInBtn" style="margin-bottom:8px">Sign In</button>
+      <button class="btn-secondary btn-full" id="emailSignUpBtn">Create Account</button>
+    </div>
+    <div id="authSignedIn" class="hidden">
+      <div class="auth-user-row">
+        <div class="auth-avatar-circle" id="authAvatarEl">?</div>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:0.95rem" id="authUserName">—</div>
+          <div style="font-size:0.78rem;color:var(--text-3)" id="authUserEmail">—</div>
+        </div>
+        <div class="pro-pill" id="authProPill">FREE</div>
+      </div>
+      <div class="sync-status-row" id="syncStatusRow">
+        <i class="fa-solid fa-rotate" style="animation:spin 1s linear infinite" id="syncIcon"></i>
+        <span id="syncStatusText">Checking sync...</span>
+      </div>
+      <button class="btn-primary btn-full" id="upgradeFromAuthBtn" style="margin-bottom:8px">⚡ Upgrade to Pro — from $19/mo</button>
+      <button class="btn-secondary btn-full" id="signOutBtn">Sign Out</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ UPGRADE MODAL ═══ -->
+<div class="modal-overlay hidden" id="upgradeModal">
+  <div class="modal modal--pro">
+
+    <!-- Hero header -->
+    <div class="upgrade-hero">
+      <button class="modal-close upgrade-close" id="upgradeModalClose">✕</button>
+      <div class="upgrade-hero-badge"><i class="fa-solid fa-crown"></i>&nbsp;TrafxOS Pro</div>
+      <h2>Unlock the full Trading OS</h2>
+      <p>Join traders who've stopped emotional trading for good.</p>
     </div>
 
-    <!-- Education Modal -->
-    <div class="education-modal" id="educationModal">
-        <div class="education-content">
-            <span class="close-modal" id="closeEducation">&times;</span>
-            <div id="educationContent"></div>
-        </div>
-    </div>
+    <!-- Body -->
+    <div class="upgrade-body">
 
-    <!-- Auth Modals -->
-    <div class="auth-modal" id="authModal">
-        <div class="auth-container">
-            <div class="auth-header">
-                <div class="logo">
-                    <i class="fas fa-brain"></i>
-                    <h1>TrafxOS</h1>
-                </div>
-                <p>Advanced Trading Journal with Cognitive Bias Detection</p>
-            </div>
-            
-            <div class="auth-tabs">
-                <div class="auth-tab active" data-tab="signin">Sign In</div>
-                <div class="auth-tab" data-tab="signup">Sign Up</div>
-            </div>
-            
-            <div class="auth-form active" id="signinForm">
-                <div class="auth-form-group">
-                    <label>Email</label>
-                    <input type="email" class="auth-form-control" id="loginEmail" placeholder="your@email.com">
-                </div>
-                
-                <div class="auth-form-group">
-                    <label>Password</label>
-                    <input type="password" class="auth-form-control" id="loginPassword" placeholder="••••••••">
-                </div>
-                
-                <button class="auth-btn" id="signInBtn">Sign In</button>
-                
-                <div class="auth-error" id="loginError"></div>
-                
-                <div class="auth-footer">
-                    <p>Forgot your password? <a id="resetPasswordLink">Reset it</a></p>
-                </div>
-            </div>
-            
-            <div class="auth-form" id="signupForm">
-                <div class="auth-form-group">
-                    <label>Name</label>
-                    <input type="text" class="auth-form-control" id="signupName" placeholder="Your Name">
-                </div>
-                
-                <div class="auth-form-group">
-                    <label>Email</label>
-                    <input type="email" class="auth-form-control" id="signupEmail" placeholder="your@email.com">
-                </div>
-                
-                <div class="auth-form-group">
-                    <label>Password</label>
-                    <input type="password" class="auth-form-control" id="signupPassword" placeholder="••••••••">
-                </div>
-                
-                <div class="auth-form-group">
-                    <label>Confirm Password</label>
-                    <input type="password" class="auth-form-control" id="signupConfirmPassword" placeholder="••••••••">
-                </div>
-                
-                <button class="auth-btn" id="signUpBtn">Create Account</button>
-                
-                <div class="auth-error" id="signupError"></div>
-                
-                <div class="auth-footer">
-                    <p>Already have an account? <a id="switchToLogin">Sign in</a></p>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Main App Content -->
-    <div id="appContent" style="display: none;">
-        <div class="container">
-            <header>
-                <div class="logo">
-                    <i class="fas fa-brain"></i>
-                    <h1>TrafxOS - Advanced Trading Journal</h1>
-                </div>
-                <div class="user-info">
-                    <div class="user-avatar" id="userAvatar">U</div>
-                    <div>
-                        <div id="userName">User</div>
-                        <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
-                    </div>
-                    <div class="desktop-add-btn">
-                        <button class="btn" id="addTradeBtn">
-                            <i class="fas fa-plus"></i> <span class="desktop-text">Add Trade</span>
-                        </button>
-                    </div>
-                </div>
-            </header>
-            
-            <div id="biasInsightsContainer"></div>
-            
-            <div class="stats-container">
-                <div class="stat-card">
-                    <h3>Total Trades</h3>
-                    <div class="stat-value" id="totalTrades">0</div>
-                </div>
-                <div class="stat-card win-rate">
-                    <h3>Win Rate</h3>
-                    <div class="stat-value" id="winRate">0%</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Avg. R:R</h3>
-                    <div class="stat-value" id="avgRR">0.0</div>
-                </div>
-                <div class="stat-card loss-rate">
-                    <h3>Loss Rate</h3>
-                    <div class="stat-value" id="lossRate">0%</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Avg. CBS</h3>
-                    <div class="stat-value" id="avgCBS">0</div>
-                </div>
-            </div>
-            
-            <div class="main-content">
-                <div>
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Trade History</h2>
-                            <div class="tabs">
-                                <div class="tab active" data-filter="all">All</div>
-                                <div class="tab" data-filter="winners">Wins</div>
-                                <div class="tab" data-filter="losers">Losses</div>
-                                <div class="tab" data-filter="highBias">High Bias</div>
-                            </div>
-                        </div>
-                        
-                        <div class="table-wrapper">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Pair</th>
-                                        <th>Dir</th>
-                                        <th>P/L</th>
-                                        <th>Risk</th>
-                                        <th>Setup</th>
-                                        <th>Emotion</th>
-                                        <th>CBS</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tradesTableBody">
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <div class="empty-state" id="emptyState">
-                            <i class="fas fa-file-alt"></i>
-                            <h3>No Trades Recorded</h3>
-                            <p>Add your first trade to start tracking your performance</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div>
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Performance Analytics</h2>
-                            <div>
-                                <button class="btn btn-outline" id="exportBtn">
-                                    <i class="fas fa-download"></i> <span class="desktop-text">Export Data</span>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="chart-container">
-                            <canvas id="performanceChart"></canvas>
-                        </div>
-                        
-                        <div class="chart-container" style="height: 180px; margin-top: 15px;">
-                            <canvas id="setupChart"></canvas>
-                        </div>
-                    </div>
-                    
-                    <div class="card" style="margin-top: 15px;">
-                        <div class="card-header">
-                            <h2 class="card-title">Cognitive Bias Analytics</h2>
-                        </div>
-                        
-                        <div class="chart-container">
-                            <canvas id="biasFrequencyChart"></canvas>
-                        </div>
-                        
-                        <div class="chart-container" style="height: 180px; margin-top: 15px;">
-                            <canvas id="cbsTrendChart"></canvas>
-                        </div>
-                    </div>
-                    
-                    <div class="card" style="margin-top: 15px;">
-                        <div class="card-header">
-                            <h2 class="card-title">Bias Pattern Detection</h2>
-                        </div>
-                        
-                        <div class="chart-container">
-                            <canvas id="biasPatternChart"></canvas>
-                        </div>
-                    </div>
-                    
-                    <div class="card" style="margin-top: 15px;">
-                        <div class="card-header">
-                            <h2 class="card-title">Recent Trade Details</h2>
-                        </div>
-                        
-                        <div id="recentTradeDetails">
-                            <div class="empty-state">
-                                <i class="fas fa-chart-line"></i>
-                                <h3>No Trade Selected</h3>
-                                <p>Select a trade to view details</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <footer>
-                <p>TrafxOS v2.0 | Advanced Cognitive Bias Detection System</p>
-            </footer>
-        </div>
-        
-        <button class="floating-add-btn" id="mobileAddBtn">
-            <i class="fas fa-plus"></i>
-        </button>
-    </div>
-    
-    <!-- PWA Install Button -->
-    <div class="pwa-install-container" id="pwaInstallContainer">
-        <button class="pwa-install-btn" id="pwaInstallBtn">
-            <i class="fas fa-download"></i>
-        </button>
-    </div>
-    
-    <!-- Install Prompt -->
-    <div class="install-prompt" id="installPrompt">
-        <div class="install-icon">
-            <i class="fas fa-download"></i>
-        </div>
-        <div class="install-text">
-            <strong>Install TrafxOS</strong>
-            <p>Add to home screen for quick access</p>
-        </div>
-        <button class="install-close" id="closePrompt">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-    
-    <!-- Offline Indicator -->
-    <div class="offline-indicator" id="offlineIndicator">
-        <i class="fas fa-wifi-slash"></i>
-        <span>You are currently offline</span>
-    </div>
-    
-    <div class="toast" id="toast"></div>
-    
-    <div class="export-loader" id="exportLoader">
-        <div class="loader-spinner"></div>
-        <p>Generating report...</p>
-    </div>
-    
-    <div class="modal" id="addTradeModal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <h2 style="margin-bottom: 15px;">Add New Trade</h2>
-            
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Date</label>
-                    <input type="date" class="form-control" id="tradeDate">
-                </div>
-                
-                <div class="form-group">
-                    <label>Currency Pair</label>
-                    <select class="form-control" id="currencyPair">
-                        <option>EUR/USD</option>
-                        <option>GBP/USD</option>
-                        <option>USD/JPY</option>
-                        <option>AUD/USD</option>
-                        <option>USD/CAD</option>
-                        <option>NZD/USD</option>
-                        <option>EUR/JPY</option>
-                        <option>GBP/JPY</option>
-                        <option>Other</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Direction</label>
-                    <select class="form-control" id="direction">
-                        <option>Long</option>
-                        <option>Short</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Entry Price</label>
-                    <input type="number" step="0.00001" class="form-control" id="entryPrice" placeholder="1.12345">
-                </div>
-                
-                <div class="form-group">
-                    <label>Exit Price</label>
-                    <input type="number" step="0.00001" class="form-control" id="exitPrice" placeholder="1.12890">
-                </div>
-                
-                <div class="form-group">
-                    <label>Stop Loss</label>
-                    <input type="number" step="0.00001" class="form-control" id="stopLoss" placeholder="1.12000">
-                </div>
-                
-                <div class="form-group">
-                    <label>Take Profit</label>
-                    <input type="number" step="0.00001" class="form-control" id="takeProfit" placeholder="1.13000">
-                </div>
-                
-                <div class="form-group">
-                    <label>Position Size</label>
-                    <input type="number" class="form-control" id="positionSize" placeholder="0.5">
-                </div>
-                
-                <div class="form-group">
-                    <label>Risk %</label>
-                    <input type="number" class="form-control" id="riskPercent" placeholder="1.5">
-                </div>
-                
-                <div class="form-group form-full">
-                    <label>Setup Type</label>
-                    <select class="form-control" id="setupType">
-                        <option>Breakout</option>
-                        <option>Pullback</option>
-                        <option>Reversal</option>
-                        <option>Range Trade</option>
-                        <option>News Trade</option>
-                        <option>Divergence</option>
-                        <option>Other</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Timeframe</label>
-                    <select class="form-control" id="timeframe">
-                        <option>1M</option>
-                        <option>5M</option>
-                        <option>15M</option>
-                        <option>1H</option>
-                        <option>4H</option>
-                        <option>Daily</option>
-                        <option>Weekly</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Emotional State</label>
-                    <select class="form-control" id="emotion">
-                        <option>Confident</option>
-                        <option>Calm</option>
-                        <option>Hesitant</option>
-                        <option>Anxious</option>
-                        <option>FOMO</option>
-                        <option>Revenge Trading</option>
-                        <option>Overtrading</option>
-                        <option>Overconfident</option>
-                        <option>Fearful</option>
-                    </select>
-                </div>
-                
-                <div class="form-group form-full">
-                    <label>Trade Notes</label>
-                    <textarea class="form-control" id="tradeNotes" rows="3" placeholder="Why did you take this trade? What was your plan?"></textarea>
-                </div>
-                
-                <div class="form-group form-full">
-                    <label>Lessons Learned</label>
-                    <textarea class="form-control" id="lessons" rows="3" placeholder="What worked well? What would you do differently?"></textarea>
-                </div>
-            </div>
-            
-            <div class="btn-group">
-                <button class="btn" id="saveTradeBtn">
-                    <i class="fas fa-save"></i> Save Trade
-                </button>
-                <button class="btn btn-outline" id="cancelTradeBtn">
-                    Cancel
-                </button>
-            </div>
-        </div>
-    </div>
+      <!-- Gated feature banner -->
+      <div class="upgrade-feature-banner hidden" id="upgradeFeatureRow">
+        <i class="fa-solid fa-lock"></i>
+        <span><strong id="upgradeFeatureName">This feature</strong> is Pro-only.</span>
+      </div>
 
-    <script>
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyByv7zwSod9JCnYqUxC3Mb7VrPKihvjOHA",
-            authDomain: "trader-os.firebaseapp.com",
-            projectId: "trader-os",
-            storageBucket: "trader-os.appspot.com",
-            messagingSenderId: "879978387606",
-            appId: "1:879978387606:web:a37e5aa8075032b6294ab7",
-            measurementId: "G-BL4PJWJJCV"
-        };
-        
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-        
-        // Initialize variables
-        let trades = [];
-        let currentFilter = 'all';
-        let performanceChart, setupChart, biasFrequencyChart, cbsTrendChart, biasPatternChart;
-        let deferredPrompt; // For PWA installation
-        let currentUser = null;
-        
-        // DOM Elements
-        const authModal = document.getElementById('authModal');
-        const appContent = document.getElementById('appContent');
-        const signInForm = document.getElementById('signinForm');
-        const signUpForm = document.getElementById('signupForm');
-        const signInBtn = document.getElementById('signInBtn');
-        const signUpBtn = document.getElementById('signUpBtn');
-        const authTabs = document.querySelectorAll('.auth-tab');
-        const loginError = document.getElementById('loginError');
-        const signupError = document.getElementById('signupError');
-        const resetPasswordLink = document.getElementById('resetPasswordLink');
-        const switchToLogin = document.getElementById('switchToLogin');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const userAvatar = document.getElementById('userAvatar');
-        const userName = document.getElementById('userName');
-        
-        const addTradeBtn = document.getElementById('addTradeBtn');
-        const mobileAddBtn = document.getElementById('mobileAddBtn');
-        const modal = document.getElementById('addTradeModal');
-        const closeModalBtn = document.querySelector('.close-modal');
-        const saveTradeBtn = document.getElementById('saveTradeBtn');
-        const cancelTradeBtn = document.getElementById('cancelTradeBtn');
-        const tradesTableBody = document.getElementById('tradesTableBody');
-        const emptyState = document.getElementById('emptyState');
-        const totalTradesEl = document.getElementById('totalTrades');
-        const winRateEl = document.getElementById('winRate');
-        const lossRateEl = document.getElementById('lossRate');
-        const avgRREl = document.getElementById('avgRR');
-        const avgCBSEl = document.getElementById('avgCBS');
-        const recentTradeDetails = document.getElementById('recentTradeDetails');
-        const exportBtn = document.getElementById('exportBtn');
-        const exportLoader = document.getElementById('exportLoader');
-        const tabs = document.querySelectorAll('.tab');
-        const toast = document.getElementById('toast');
-        const pwaInstallBtn = document.getElementById('pwaInstallBtn');
-        const pwaInstallContainer = document.getElementById('pwaInstallContainer');
-        const installPrompt = document.getElementById('installPrompt');
-        const closePrompt = document.getElementById('closePrompt');
-        const offlineIndicator = document.getElementById('offlineIndicator');
-        const biasAlert = document.getElementById('biasAlert');
-        const biasAlertMessage = document.getElementById('biasAlertMessage');
-        const acknowledgeBiasBtn = document.getElementById('acknowledgeBias');
-        const reviewBiasBtn = document.getElementById('reviewBias');
-        const educationModal = document.getElementById('educationModal');
-        const educationContent = document.getElementById('educationContent');
-        const closeEducationBtn = document.getElementById('closeEducation');
-        const biasInsightsContainer = document.getElementById('biasInsightsContainer');
-        
-        // Show toast notification
-        function showToast(message, type = 'success') {
-            toast.textContent = message;
-            toast.style.background = type === 'success' ? 'var(--success)' : 'var(--danger)';
-            toast.classList.add('show');
-            
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
-        }
-        
-        // Cognitive Bias Detection Functions
-        function detectBiases(trade, previousTrades) {
-            const biases = {
-                fomo: false,
-                revenge: false,
-                lossAversion: false,
-                confirmation: false,
-                overconfidence: false,
-                herding: false,
-                recency: false,
-                anchoring: false
-            };
-            
-            // FOMO Bias
-            if (trade.emotion === "FOMO" || trade.emotion === "Anxious") {
-                biases.fomo = true;
-            }
-            
-            // Revenge Trading Bias
-            if (previousTrades.length > 0) {
-                const lastTrade = previousTrades[previousTrades.length - 1];
-                const lastTradeDate = new Date(lastTrade.date);
-                const currentTradeDate = new Date(trade.date);
-                const timeDiff = Math.abs(currentTradeDate - lastTradeDate) / (1000 * 60);
-                
-                const pipValue = lastTrade.pair.includes('JPY') ? 0.01 : 0.0001;
-                let lastTradePL;
-                if (lastTrade.direction === 'Long') {
-                    lastTradePL = (lastTrade.exitPrice - lastTrade.entryPrice) / pipValue;
-                } else {
-                    lastTradePL = (lastTrade.entryPrice - lastTrade.exitPrice) / pipValue;
-                }
-                
-                if (lastTradePL < 0 && timeDiff < 60) {
-                    biases.revenge = true;
-                }
-            }
-            
-            // Loss Aversion Bias
-            if (trade.stopLoss && trade.takeProfit) {
-                const pipValue = trade.pair.includes('JPY') ? 0.01 : 0.0001;
-                let tradePL;
-                if (trade.direction === 'Long') {
-                    tradePL = (trade.exitPrice - trade.entryPrice) / pipValue;
-                } else {
-                    tradePL = (trade.entryPrice - trade.exitPrice) / pipValue;
-                }
-                
-                const risk = Math.abs(trade.entryPrice - trade.stopLoss) / pipValue;
-                const reward = Math.abs(trade.takeProfit - trade.entryPrice) / pipValue;
-                
-                if (tradePL > 0 && tradePL < reward * 0.7) {
-                    biases.lossAversion = true;
-                }
-                
-                if (tradePL < 0 && Math.abs(tradePL) > risk * 1.1) {
-                    biases.lossAversion = true;
-                }
-            }
-            
-            // Confirmation Bias
-            if (previousTrades.length > 0) {
-                const sameSetupTrades = previousTrades.filter(t => t.setupType === trade.setupType);
-                if (sameSetupTrades.length >= 3) {
-                    const lastThree = sameSetupTrades.slice(-3);
-                    const allLosses = lastThree.every(t => {
-                        const pipValue = t.pair.includes('JPY') ? 0.01 : 0.0001;
-                        let pl;
-                        if (t.direction === 'Long') {
-                            pl = (t.exitPrice - t.entryPrice) / pipValue;
-                        } else {
-                            pl = (t.entryPrice - t.exitPrice) / pipValue;
-                        }
-                        return pl < 0;
-                    });
-                    
-                    if (allLosses) {
-                        biases.confirmation = true;
-                    }
-                }
-            }
-            
-            // Overconfidence Bias
-            if (previousTrades.length >= 3) {
-                const recentTrades = previousTrades.slice(-3);
-                const recentWins = recentTrades.filter(t => {
-                    const pipValue = t.pair.includes('JPY') ? 0.01 : 0.0001;
-                    let pl;
-                    if (t.direction === 'Long') {
-                        pl = (t.exitPrice - t.entryPrice) / pipValue;
-                    } else {
-                        pl = (t.entryPrice - t.exitPrice) / pipValue;
-                    }
-                    return pl > 0;
-                });
-                
-                if (recentWins.length >= 2 && trade.riskPercent > recentTrades.reduce((sum, t) => sum + t.riskPercent, 0) / recentTrades.length) {
-                    biases.overconfidence = true;
-                }
-            }
-            
-            // Herding Bias
-            if (previousTrades.length >= 5) {
-                const recentTrades = previousTrades.slice(-5);
-                const sameDirectionTrades = recentTrades.filter(t => t.direction === trade.direction);
-                
-                if (sameDirectionTrades.length / recentTrades.length >= 0.8) {
-                    biases.herding = true;
-                }
-            }
-            
-            // Recency Bias
-            if (previousTrades.length > 0) {
-                const lastTrade = previousTrades[previousTrades.length - 1];
-                if (lastTrade.setupType === trade.setupType) {
-                    biases.recency = true;
-                }
-            }
-            
-            // Anchoring Bias
-            const priceDecimal = trade.entryPrice.toString().split('.')[1] || '';
-            if (priceDecimal.length >= 2) {
-                const lastTwoDigits = parseInt(priceDecimal.slice(-2));
-                if (lastTwoDigits >= 95 || lastTwoDigits <= 5) {
-                    biases.anchoring = true;
-                }
-            }
-            
-            return biases;
-        }
-        
-        // Calculate Cognitive Bias Score (0-100)
-        function calculateCBS(biases) {
-            let score = 0;
-            if (biases.fomo) score += 15;
-            if (biases.revenge) score += 20;
-            if (biases.lossAversion) score += 20;
-            if (biases.confirmation) score += 15;
-            if (biases.overconfidence) score += 10;
-            if (biases.herding) score += 8;
-            if (biases.recency) score += 7;
-            if (biases.anchoring) score += 5;
-            
-            return Math.min(score, 100);
-        }
-        
-        // Get CBS class for styling
-        function getCBSClass(score) {
-            if (score <= 30) return 'cbs-low';
-            if (score <= 70) return 'cbs-medium';
-            return 'cbs-high';
-        }
-        
-        // Show bias alert
-        function showBiasAlert(biases) {
-            const biasMessages = [];
-            
-            if (biases.fomo) biasMessages.push("FOMO (Fear Of Missing Out) detected - trading based on emotion rather than strategy.");
-            if (biases.revenge) biasMessages.push("Revenge trading detected - trying to recover losses quickly.");
-            if (biases.lossAversion) biasMessages.push("Loss aversion detected - exiting winners early or letting losers run.");
-            if (biases.confirmation) biasMessages.push("Confirmation bias detected - repeating losing strategies.");
-            if (biases.overconfidence) biasMessages.push("Overconfidence detected - increasing risk after wins.");
-            if (biases.herding) biasMessages.push("Herding bias detected - following the crowd without independent analysis.");
-            if (biases.recency) biasMessages.push("Recency bias detected - overweighting recent events.");
-            if (biases.anchoring) biasMessages.push("Anchoring bias detected - focusing on round numbers.");
-            
-            if (biasMessages.length > 0) {
-                biasAlertMessage.innerHTML = biasMessages.join('<br><br>');
-                biasAlert.style.display = 'block';
-                
-                acknowledgeBiasBtn.onclick = () => {
-                    biasAlert.style.display = 'none';
-                };
-                
-                reviewBiasBtn.onclick = () => {
-                    biasAlert.style.display = 'none';
-                    showBiasEducation(biases);
-                };
-            }
-        }
-        
-        // Show bias education
-        function showBiasEducation(biases) {
-            let content = '<h2>Cognitive Bias Education</h2>';
-            
-            if (biases.fomo) {
-                content += `
-                    <h3>FOMO (Fear Of Missing Out)</h3>
-                    <p>FOMO occurs when traders enter positions due to the fear of missing out on potential profits, rather than based on their trading plan.</p>
-                    <h3>How to overcome FOMO:</h3>
-                    <ul>
-                        <li>Stick to your trading plan and strategy</li>
-                        <li>Remember that there will always be other trading opportunities</li>
-                        <li>Avoid chasing prices after big moves</li>
-                        <li>Practice patience and discipline</li>
-                    </ul>
-                `;
-            }
-            
-            if (biases.revenge) {
-                content += `
-                    <h3>Revenge Trading</h3>
-                    <p>Revenge trading happens when traders try to immediately recover losses by taking impulsive trades without proper analysis.</p>
-                    <h3>How to overcome revenge trading:</h3>
-                    <ul>
-                        <li>Take a break after a losing trade</li>
-                        <li>Review what went wrong before entering a new trade</li>
-                        <li>Stick to your risk management rules</li>
-                        <li>Accept that losses are part of trading</li>
-                    </ul>
-                `;
-            }
-            
-            educationContent.innerHTML = content;
-            educationModal.style.display = 'flex';
-        }
-        
-        // Update bias insights based on recent trades
-        function updateBiasInsights() {
-            biasInsightsContainer.innerHTML = '';
-            
-            if (trades.length < 3) return;
-            
-            const lastThreeTrades = trades.slice(-3);
-            const lastFiveTrades = trades.slice(-5);
-            
-            const avgLastThreeCBS = lastThreeTrades.reduce((sum, trade) => sum + trade.cbs, 0) / lastThreeTrades.length;
-            const avgLastFiveCBS = lastFiveTrades.reduce((sum, trade) => sum + trade.cbs, 0) / lastFiveTrades.length;
-            
-            if (avgLastThreeCBS > 70) {
-                const warningDiv = document.createElement('div');
-                warningDiv.className = 'bias-insight bias-warning';
-                warningDiv.innerHTML = `
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <div>High Bias Detected — consider pausing trading to reset.</div>
-                `;
-                biasInsightsContainer.appendChild(warningDiv);
-            }
-            
-            if (avgLastFiveCBS < 30) {
-                const positiveDiv = document.createElement('div');
-                positiveDiv.className = 'bias-insight bias-positive';
-                positiveDiv.innerHTML = `
-                    <i class="fas fa-check-circle"></i>
-                    <div>Low Bias — trading discipline improving!</div>
-                `;
-                biasInsightsContainer.appendChild(positiveDiv);
-            }
-            
-            const biasCounts = {
-                fomo: 0,
-                revenge: 0,
-                lossAversion: 0,
-                confirmation: 0,
-                overconfidence: 0,
-                herding: 0,
-                recency: 0,
-                anchoring: 0
-            };
-            
-            trades.forEach(trade => {
-                for (const bias in trade.biases) {
-                    if (trade.biases[bias]) biasCounts[bias]++;
-                }
-            });
-            
-            let mostCommonBias = null;
-            let maxCount = 0;
-            
-            for (const bias in biasCounts) {
-                if (biasCounts[bias] > maxCount) {
-                    mostCommonBias = bias;
-                    maxCount = biasCounts[bias];
-                }
-            }
-            
-            if (mostCommonBias && maxCount > trades.length * 0.3) {
-                const commonBiasDiv = document.createElement('div');
-                commonBiasDiv.className = 'bias-insight bias-warning';
-                commonBiasDiv.innerHTML = `
-                    <i class="fas fa-chart-line"></i>
-                    <div>Pattern detected: ${mostCommonBias.replace(/([A-Z])/g, ' $1')} is your most common bias.</div>
-                `;
-                biasInsightsContainer.appendChild(commonBiasDiv);
-            }
-        }
-        
-        // Save trades to Firestore
-        function saveTrades() {
-            if (!currentUser) return;
-            
-            const userRef = db.collection('users').doc(currentUser.uid);
-            userRef.set({
-                trades: trades,
-                updatedAt: new Date()
-            }, { merge: true })
-            .then(() => {
-                showToast('Trades saved successfully!');
-            })
-            .catch((error) => {
-                console.error("Error saving trades: ", error);
-                showToast('Error saving trades!', 'danger');
-            });
-        }
-        
-        // Load trades from Firestore
-        function loadTrades() {
-            if (!currentUser) return;
-            
-            const userRef = db.collection('users').doc(currentUser.uid);
-            userRef.get().then((doc) => {
-                if (doc.exists && doc.data().trades) {
-                    trades = doc.data().trades;
-                    renderTradesTable();
-                    updateStats();
-                    updateCharts();
-                    updateBiasInsights();
-                }
-            }).catch((error) => {
-                console.error("Error loading trades: ", error);
-            });
-        }
-        
-        // Initialize charts
-        function initCharts() {
-            const chartOptions = {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        ticks: {
-                            color: '#94a3b8'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        ticks: {
-                            color: '#94a3b8'
-                        }
-                    }
-                }
-            };
-            
-            // Performance Chart
-            const perfCtx = document.getElementById('performanceChart').getContext('2d');
-            performanceChart = new Chart(perfCtx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'Cumulative P/L (Pips)',
-                        data: [],
-                        borderColor: '#10b981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.3
-                    }]
-                },
-                options: chartOptions
-            });
-            
-            // Setup Success Chart
-            const setupCtx = document.getElementById('setupChart').getContext('2d');
-            setupChart = new Chart(setupCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['Breakout', 'Pullback', 'Reversal', 'News', 'Range', 'Divergence', 'Other'],
-                    datasets: [{
-                        label: 'Win Rate %',
-                        data: [0, 0, 0, 0, 0, 0, 0],
-                        backgroundColor: [
-                            'rgba(37, 99, 235, 0.7)',
-                            'rgba(16, 185, 129, 0.7)',
-                            'rgba(245, 158, 11, 0.7)',
-                            'rgba(239, 68, 68, 0.7)',
-                            'rgba(139, 92, 246, 0.7)',
-                            'rgba(14, 165, 233, 0.7)',
-                            'rgba(236, 72, 153, 0.7)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    ...chartOptions,
-                    scales: {
-                        ...chartOptions.scales,
-                        y: {
-                            ...chartOptions.scales.y,
-                            beginAtZero: true,
-                            max: 100
-                        },
-                        x: {
-                            ...chartOptions.scales.x,
-                            grid: {
-                                display: false
-                            }
-                        }
-                    }
-                }
-            });
-            
-            // Bias Frequency Chart
-            const biasFreqCtx = document.getElementById('biasFrequencyChart').getContext('2d');
-            biasFrequencyChart = new Chart(biasFreqCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['FOMO', 'Revenge', 'Loss Aversion', 'Confirmation', 'Overconfidence', 'Herding', 'Recency', 'Anchoring'],
-                    datasets: [{
-                        label: 'Bias Frequency',
-                        data: [0, 0, 0, 0, 0, 0, 0, 0],
-                        backgroundColor: [
-                            'rgba(255, 99, 132, 0.7)',
-                            'rgba(54, 162, 235, 0.7)',
-                            'rgba(255, 206, 86, 0.7)',
-                            'rgba(75, 192, 192, 0.7)',
-                            'rgba(153, 102, 255, 0.7)',
-                            'rgba(255, 159, 64, 0.7)',
-                            'rgba(199, 199, 199, 0.7)',
-                            'rgba(83, 102, 255, 0.7)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    ...chartOptions,
-                    scales: {
-                        ...chartOptions.scales,
-                        x: {
-                            ...chartOptions.scales.x,
-                            grid: {
-                                display: false
-                            },
-                            ticks: {
-                                maxRotation: 45,
-                                minRotation: 45
-                            }
-                        }
-                    }
-                }
-            });
-            
-            // CBS Trend Chart
-            const cbsTrendCtx = document.getElementById('cbsTrendChart').getContext('2d');
-            cbsTrendChart = new Chart(cbsTrendCtx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'CBS Trend',
-                        data: [],
-                        borderColor: '#8b5cf6',
-                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.3
-                    }]
-                },
-                options: {
-                    ...chartOptions,
-                    scales: {
-                        ...chartOptions.scales,
-                        y: {
-                            ...chartOptions.scales.y,
-                            min: 0,
-                            max: 100
-                        }
-                    }
-                }
-            });
-            
-            // Bias Pattern Chart
-            const biasPatternCtx = document.getElementById('biasPatternChart').getContext('2d');
-            biasPatternChart = new Chart(biasPatternCtx, {
-                type: 'radar',
-                data: {
-                    labels: ['FOMO', 'Revenge', 'Loss Aversion', 'Confirmation', 'Overconfidence', 'Herding', 'Recency', 'Anchoring'],
-                    datasets: [{
-                        label: 'Your Bias Profile',
-                        data: [0, 0, 0, 0, 0, 0, 0, 0],
-                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        pointBackgroundColor: 'rgba(54, 162, 235, 1)',
-                        pointBorderColor: '#fff',
-                        pointHoverBackgroundColor: '#fff',
-                        pointHoverBorderColor: 'rgba(54, 162, 235, 1)'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        r: {
-                            angleLines: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            },
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            },
-                            pointLabels: {
-                                color: '#94a3b8'
-                            },
-                            ticks: {
-                                color: '#94a3b8',
-                                backdropColor: 'transparent'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        
-        // Update charts with real data
-        function updateCharts() {
-            if (trades.length === 0) return;
-            
-            const sortedTrades = [...trades].sort((a, b) => new Date(a.date) - new Date(b.date));
-            
-            // Performance Chart
-            let cumulativePips = 0;
-            const cumulativeData = [];
-            const dates = [];
-            
-            sortedTrades.forEach(trade => {
-                const pipValue = trade.pair.includes('JPY') ? 0.01 : 0.0001;
-                let plPips;
-                if (trade.direction === 'Long') {
-                    plPips = (trade.exitPrice - trade.entryPrice) / pipValue;
-                } else {
-                    plPips = (trade.entryPrice - trade.exitPrice) / pipValue;
-                }
-                
-                cumulativePips += plPips;
-                cumulativeData.push(cumulativePips);
-                
-                const date = new Date(trade.date);
-                dates.push(`${date.getDate()}/${date.getMonth() + 1}`);
-            });
-            
-            performanceChart.data.labels = dates;
-            performanceChart.data.datasets[0].data = cumulativeData;
-            performanceChart.update();
-            
-            // Setup Chart
-            const setupTypes = ['Breakout', 'Pullback', 'Reversal', 'News Trade', 'Range Trade', 'Divergence', 'Other'];
-            const setupData = [];
-            
-            setupTypes.forEach(setup => {
-                const setupTrades = trades.filter(trade => trade.setupType === setup);
-                if (setupTrades.length === 0) {
-                    setupData.push(0);
-                    return;
-                }
-                
-                const wins = setupTrades.filter(trade => {
-                    const pipValue = trade.pair.includes('JPY') ? 0.01 : 0.0001;
-                    let plPips;
-                    if (trade.direction === 'Long') {
-                        plPips = (trade.exitPrice - trade.entryPrice) / pipValue;
-                    } else {
-                        plPips = (trade.entryPrice - trade.exitPrice) / pipValue;
-                    }
-                    return plPips > 0;
-                }).length;
-                
-                const winRate = (wins / setupTrades.length) * 100;
-                setupData.push(winRate);
-            });
-            
-            setupChart.data.datasets[0].data = setupData;
-            setupChart.update();
-            
-            // Bias Frequency Chart
-            const biasCounts = {
-                fomo: 0,
-                revenge: 0,
-                lossAversion: 0,
-                confirmation: 0,
-                overconfidence: 0,
-                herding: 0,
-                recency: 0,
-                anchoring: 0
-            };
-            
-            trades.forEach(trade => {
-                for (const bias in trade.biases) {
-                    if (trade.biases[bias]) biasCounts[bias]++;
-                }
-            });
-            
-            biasFrequencyChart.data.datasets[0].data = [
-                biasCounts.fomo,
-                biasCounts.revenge,
-                biasCounts.lossAversion,
-                biasCounts.confirmation,
-                biasCounts.overconfidence,
-                biasCounts.herding,
-                biasCounts.recency,
-                biasCounts.anchoring
-            ];
-            biasFrequencyChart.update();
-            
-            // CBS Trend Chart
-            const cbsData = [];
-            const cbsDates = [];
-            
-            sortedTrades.forEach(trade => {
-                cbsData.push(trade.cbs);
-                const date = new Date(trade.date);
-                cbsDates.push(`${date.getDate()}/${date.getMonth() + 1}`);
-            });
-            
-            cbsTrendChart.data.labels = cbsDates;
-            cbsTrendChart.data.datasets[0].data = cbsData;
-            cbsTrendChart.update();
-            
-            // Bias Pattern Chart
-            const biasPercentages = [];
-            const totalTrades = trades.length;
-            
-            for (const bias in biasCounts) {
-                biasPercentages.push((biasCounts[bias] / totalTrades) * 100);
-            }
-            
-            biasPatternChart.data.datasets[0].data = biasPercentages;
-            biasPatternChart.update();
-        }
-        
-        // Update stats
-        function updateStats() {
-            const totalTrades = trades.length;
-            totalTradesEl.textContent = totalTrades;
-            
-            if (totalTrades === 0) {
-                winRateEl.textContent = '0%';
-                lossRateEl.textContent = '0%';
-                avgRREl.textContent = '0.0';
-                avgCBSEl.textContent = '0';
-                emptyState.style.display = 'block';
-                return;
-            }
-            
-            emptyState.style.display = 'none';
-            
-            const wins = trades.filter(trade => {
-                const pipValue = trade.pair.includes('JPY') ? 0.01 : 0.0001;
-                let plPips;
-                if (trade.direction === 'Long') {
-                    plPips = (trade.exitPrice - trade.entryPrice) / pipValue;
-                } else {
-                    plPips = (trade.entryPrice - trade.exitPrice) / pipValue;
-                }
-                return plPips > 0;
-            }).length;
-            
-            const losses = totalTrades - wins;
-            const winRate = Math.round((wins / totalTrades) * 100);
-            const lossRate = 100 - winRate;
-            
-            winRateEl.textContent = `${winRate}%`;
-            lossRateEl.textContent = `${lossRate}%`;
-            
-            let totalRR = 0;
-            let countRR = 0;
-            trades.forEach(trade => {
-                if (trade.stopLoss && trade.takeProfit) {
-                    const risk = Math.abs(trade.entryPrice - trade.stopLoss);
-                    const reward = Math.abs(trade.takeProfit - trade.entryPrice);
-                    if (risk > 0) {
-                        totalRR += reward / risk;
-                        countRR++;
-                    }
-                }
-            });
-            
-            const avgRR = countRR > 0 ? (totalRR / countRR).toFixed(1) : '0.0';
-            avgRREl.textContent = avgRR;
-            
-            const avgCBS = Math.round(trades.reduce((sum, trade) => sum + trade.cbs, 0) / totalTrades);
-            avgCBSEl.textContent = avgCBS;
-        }
-        
-        // Render trades table with current filter
-        function renderTradesTable() {
-            tradesTableBody.innerHTML = '';
-            
-            let filteredTrades = trades;
-            
-            if (currentFilter === 'winners') {
-                filteredTrades = trades.filter(trade => {
-                    const pipValue = trade.pair.includes('JPY') ? 0.01 : 0.0001;
-                    let plPips;
-                    if (trade.direction === 'Long') {
-                        plPips = (trade.exitPrice - trade.entryPrice) / pipValue;
-                    } else {
-                        plPips = (trade.entryPrice - trade.exitPrice) / pipValue;
-                    }
-                    return plPips > 0;
-                });
-            } else if (currentFilter === 'losers') {
-                filteredTrades = trades.filter(trade => {
-                    const pipValue = trade.pair.includes('JPY') ? 0.01 : 0.0001;
-                    let plPips;
-                    if (trade.direction === 'Long') {
-                        plPips = (trade.exitPrice - trade.entryPrice) / pipValue;
-                    } else {
-                        plPips = (trade.entryPrice - trade.exitPrice) / pipValue;
-                    }
-                    return plPips <= 0;
-                });
-            } else if (currentFilter === 'highBias') {
-                filteredTrades = trades.filter(trade => trade.cbs >= 70);
-            }
-            
-            if (filteredTrades.length === 0) {
-                emptyState.style.display = 'block';
-                return;
-            }
-            
-            emptyState.style.display = 'none';
-            
-            filteredTrades.forEach(trade => {
-                const tr = document.createElement('tr');
-                
-                const pipValue = trade.pair.includes('JPY') ? 0.01 : 0.0001;
-                let plPips;
-                if (trade.direction === 'Long') {
-                    plPips = ((trade.exitPrice - trade.entryPrice) / pipValue).toFixed(1);
-                } else {
-                    plPips = ((trade.entryPrice - trade.exitPrice) / pipValue).toFixed(1);
-                }
-                
-                const cbsClass = getCBSClass(trade.cbs);
-                
-                const tradeDate = new Date(trade.date);
-                const formattedDate = `${tradeDate.getDate()}/${tradeDate.getMonth() + 1}/${tradeDate.getFullYear()}`;
-                
-                const mobileHtml = `
-                    <td>
-                        <div><span class="responsive-label">Date:</span>${formattedDate}</div>
-                        <div><span class="responsive-label">Pair:</span>${trade.pair}</div>
-                        <div><span class="responsive-label">Dir:</span><span class="${trade.direction === 'Long' ? 'trade-long' : 'trade-short'}">${trade.direction === 'Long' ? 'L' : 'S'}</span></div>
-                        <div><span class="responsive-label">P/L:</span><span class="${parseFloat(plPips) > 0 ? 'trade-profit' : 'trade-loss'}">${parseFloat(plPips) > 0 ? '+' : ''}${plPips}</span></div>
-                        <div><span class="responsive-label">Risk:</span>${trade.riskPercent}%</div>
-                        <div><span class="responsive-label">Setup:</span><span class="tag tag-${getTagClass(trade.setupType)}">${trade.setupType}</span></div>
-                        <div><span class="responsive-label">Emotion:</span><div class="emotion-tag"><i class="${getEmotionIcon(trade.emotion)}"></i> ${trade.emotion}</div></div>
-                        <div><span class="responsive-label">CBS:</span><span class="cbs-score ${cbsClass}">${trade.cbs}</span></div>
-                    </td>
-                    <td class="action-icons">
-                        <i class="fas fa-eye" title="View" onclick="viewTrade('${trade.id}')"></i>
-                        <i class="fas fa-trash" title="Delete" onclick="deleteTrade('${trade.id}')"></i>
-                    </td>
-                `;
-                
-                const desktopHtml = `
-                    <td>${formattedDate}</td>
-                    <td>${trade.pair}</td>
-                    <td class="${trade.direction === 'Long' ? 'trade-long' : 'trade-short'}">${trade.direction === 'Long' ? 'L' : 'S'}</td>
-                    <td class="${parseFloat(plPips) > 0 ? 'trade-profit' : 'trade-loss'}">${parseFloat(plPips) > 0 ? '+' : ''}${plPips}</td>
-                    <td>${trade.riskPercent}%</td>
-                    <td><span class="tag tag-${getTagClass(trade.setupType)}">${trade.setupType}</span></td>
-                    <td><div class="emotion-tag"><i class="${getEmotionIcon(trade.emotion)}"></i> ${trade.emotion}</div></td>
-                    <td><span class="cbs-score ${cbsClass}">${trade.cbs}</span></td>
-                    <td class="action-icons">
-                        <i class="fas fa-eye" title="View" onclick="viewTrade('${trade.id}')"></i>
-                        <i class="fas fa-trash" title="Delete" onclick="deleteTrade('${trade.id}')"></i>
-                    </td>
-                `;
-                
-                tr.innerHTML = window.innerWidth < 576 ? mobileHtml : desktopHtml;
-                tradesTableBody.appendChild(tr);
-            });
-        }
-        
-        // Get tag class based on setup type
-        function getTagClass(setupType) {
-            switch(setupType) {
-                case 'Breakout': return 'primary';
-                case 'Pullback': return 'success';
-                case 'Reversal': return 'warning';
-                case 'News Trade': return 'danger';
-                default: return 'primary';
-            }
-        }
-        
-        // Get emotion icon
-        function getEmotionIcon(emotion) {
-            switch(emotion) {
-                case 'Confident': return 'fas fa-smile';
-                case 'Calm': return 'fas fa-smile-beam';
-                case 'Hesitant': return 'fas fa-meh';
-                case 'Anxious': return 'fas fa-flushed';
-                case 'FOMO': return 'fas fa-grimace';
-                case 'Revenge Trading': return 'fas fa-angry';
-                case 'Overtrading': return 'fas fa-tired';
-                case 'Overconfident': return 'fas fa-grin-stars';
-                case 'Fearful': return 'fas fa-frown';
-                default: return 'fas fa-meh';
-            }
-        }
-        
-        // View trade details
-        function viewTrade(id) {
-            const trade = trades.find(t => t.id === id);
-            if (!trade) return;
-            
-            const pipValue = trade.pair.includes('JPY') ? 0.01 : 0.0001;
-            let plPips;
-            if (trade.direction === 'Long') {
-                plPips = ((trade.exitPrice - trade.entryPrice) / pipValue).toFixed(1);
-            } else {
-                plPips = ((trade.entryPrice - trade.exitPrice) / pipValue).toFixed(1);
-            }
-            
-            let biasDetails = '<div class="form-group"><label>Detected Biases:</label><ul style="padding-left: 20px; margin-top: 5px;">';
-            if (trade.biases.fomo) biasDetails += '<li>FOMO Bias</li>';
-            if (trade.biases.revenge) biasDetails += '<li>Revenge Trading Bias</li>';
-            if (trade.biases.lossAversion) biasDetails += '<li>Loss Aversion Bias</li>';
-            if (trade.biases.confirmation) biasDetails += '<li>Confirmation Bias</li>';
-            if (trade.biases.overconfidence) biasDetails += '<li>Overconfidence Bias</li>';
-            if (trade.biases.herding) biasDetails += '<li>Herding Bias</li>';
-            if (trade.biases.recency) biasDetails += '<li>Recency Bias</li>';
-            if (trade.biases.anchoring) biasDetails += '<li>Anchoring Bias</li>';
-            if (!trade.biases.fomo && !trade.biases.revenge && !trade.biases.lossAversion && 
-                !trade.biases.confirmation && !trade.biases.overconfidence && !trade.biases.herding && 
-                !trade.biases.recency && !trade.biases.anchoring) {
-                biasDetails += '<li>No significant biases detected</li>';
-            }
-            biasDetails += '</ul></div>';
-            
-            recentTradeDetails.innerHTML = `
-                <div class="form-group">
-                    <label>Trade Summary</label>
-                    <p>
-                        <strong>${trade.pair}</strong> ${trade.direction} | 
-                        Entry: ${trade.entryPrice} | 
-                        Exit: ${trade.exitPrice} | 
-                        P/L: <span class="${parseFloat(plPips) > 0 ? 'trade-profit' : 'trade-loss'}">${parseFloat(plPips) > 0 ? '+' : ''}${plPips} pips</span> |
-                        CBS: <span class="cbs-score ${getCBSClass(trade.cbs)}">${trade.cbs}</span>
-                    </p>
-                </div>
-                
-                ${biasDetails}
-                
-                <div class="form-group">
-                    <label>Trade Notes</label>
-                    <p>${trade.tradeNotes || 'No notes provided for this trade.'}</p>
-                </div>
-                
-                <div class="form-group">
-                    <label>Lessons Learned</label>
-                    <p>${trade.lessons || 'No lessons recorded for this trade.'}</p>
-                </div>
-                
-                <div class="btn-group">
-                    <button class="btn btn-success" onclick="markTradeReviewed('${trade.id}')">
-                        <i class="fas fa-check"></i> Mark Reviewed
-                    </button>
-                </div>
-            `;
-            
-            if (window.innerWidth < 768) {
-                recentTradeDetails.scrollIntoView({ behavior: 'smooth' });
-            }
-        }
-        
-        // Mark trade as reviewed
-        function markTradeReviewed(id) {
-            const trade = trades.find(t => t.id === id);
-            if (trade) {
-                trade.reviewed = true;
-                saveTrades();
-                showToast('Trade marked as reviewed!');
-            }
-        }
-        
-        // Delete trade
-        function deleteTrade(id) {
-            if (confirm('Are you sure you want to delete this trade?')) {
-                trades = trades.filter(trade => trade.id !== id);
-                saveTrades();
-                renderTradesTable();
-                updateStats();
-                updateCharts();
-                updateBiasInsights();
-                recentTradeDetails.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-chart-line"></i>
-                        <h3>No Trade Selected</h3>
-                        <p>Select a trade to view details</p>
-                    </div>
-                `;
-            }
-        }
-        
-        // Add new trade
-        function addNewTrade() {
-            const date = document.getElementById('tradeDate').value || new Date().toISOString().split('T')[0];
-            const pair = document.getElementById('currencyPair').value;
-            const direction = document.getElementById('direction').value;
-            const entryPrice = parseFloat(document.getElementById('entryPrice').value);
-            const exitPrice = parseFloat(document.getElementById('exitPrice').value);
-            const stopLoss = parseFloat(document.getElementById('stopLoss').value) || 0;
-            const takeProfit = parseFloat(document.getElementById('takeProfit').value) || 0;
-            const positionSize = parseFloat(document.getElementById('positionSize').value) || 0;
-            const riskPercent = parseFloat(document.getElementById('riskPercent').value) || 0;
-            const setupType = document.getElementById('setupType').value;
-            const timeframe = document.getElementById('timeframe').value;
-            const emotion = document.getElementById('emotion').value;
-            const tradeNotes = document.getElementById('tradeNotes').value;
-            const lessons = document.getElementById('lessons').value;
-            
-            if (!pair || !entryPrice || !exitPrice) {
-                alert('Please fill in all required fields');
-                return;
-            }
-            
-            const newTrade = {
-                id: Date.now().toString(),
-                date,
-                pair,
-                direction,
-                entryPrice,
-                exitPrice,
-                stopLoss,
-                takeProfit,
-                positionSize,
-                riskPercent,
-                setupType,
-                timeframe,
-                emotion,
-                tradeNotes,
-                lessons
-            };
-            
-            newTrade.biases = detectBiases(newTrade, trades);
-            newTrade.cbs = calculateCBS(newTrade.biases);
-            
-            if (newTrade.cbs > 30) {
-                showBiasAlert(newTrade.biases);
-            }
-            
-            trades.push(newTrade);
-            saveTrades();
-            renderTradesTable();
-            updateStats();
-            updateCharts();
-            updateBiasInsights();
-            modal.style.display = 'none';
-            
-            document.getElementById('tradeDate').value = '';
-            document.getElementById('currencyPair').value = 'EUR/USD';
-            document.getElementById('direction').value = 'Long';
-            document.getElementById('entryPrice').value = '';
-            document.getElementById('exitPrice').value = '';
-            document.getElementById('stopLoss').value = '';
-            document.getElementById('takeProfit').value = '';
-            document.getElementById('positionSize').value = '';
-            document.getElementById('riskPercent').value = '';
-            document.getElementById('setupType').value = 'Breakout';
-            document.getElementById('timeframe').value = '1H';
-            document.getElementById('emotion').value = 'Confident';
-            document.getElementById('tradeNotes').value = '';
-            document.getElementById('lessons').value = '';
-            
-            showToast('Trade added successfully!');
-        }
-        
-        // Export to CSV
-        function exportToCSV() {
-            if (trades.length === 0) {
-                showToast('No trades to export!', 'danger');
-                return;
-            }
-            
-            exportLoader.style.display = 'flex';
-            
-            setTimeout(() => {
-                try {
-                    const csvData = [];
-                    csvData.push(['Date', 'Pair', 'Direction', 'Entry', 'Exit', 'Stop Loss', 'Take Profit', 'Position Size', 'Risk %', 'Setup', 'Timeframe', 'Emotion', 'P/L (Pips)', 'CBS', 'FOMO', 'Revenge', 'Loss Aversion', 'Confirmation', 'Overconfidence', 'Herding', 'Recency', 'Anchoring', 'Notes', 'Lessons']);
-                    
-                    trades.forEach(trade => {
-                        const pipValue = trade.pair.includes('JPY') ? 0.01 : 0.0001;
-                        let plPips;
-                        if (trade.direction === 'Long') {
-                            plPips = (trade.exitPrice - trade.entryPrice) / pipValue;
-                        } else {
-                            plPips = (trade.entryPrice - trade.exitPrice) / pipValue;
-                        }
-                        
-                        csvData.push([
-                            trade.date,
-                            trade.pair,
-                            trade.direction,
-                            trade.entryPrice,
-                            trade.exitPrice,
-                            trade.stopLoss,
-                            trade.takeProfit,
-                            trade.positionSize,
-                            trade.riskPercent,
-                            trade.setupType,
-                            trade.timeframe,
-                            trade.emotion,
-                            plPips.toFixed(1),
-                            trade.cbs,
-                            trade.biases.fomo ? 'Yes' : 'No',
-                            trade.biases.revenge ? 'Yes' : 'No',
-                            trade.biases.lossAversion ? 'Yes' : 'No',
-                            trade.biases.confirmation ? 'Yes' : 'No',
-                            trade.biases.overconfidence ? 'Yes' : 'No',
-                            trade.biases.herding ? 'Yes' : 'No',
-                            trade.biases.recency ? 'Yes' : 'No',
-                            trade.biases.anchoring ? 'Yes' : 'No',
-                            `"${trade.tradeNotes || ''}"`,
-                            `"${trade.lessons || ''}"`
-                        ]);
-                    });
-                    
-                    const csvString = csvData.map(row => row.join(',')).join('\n');
-                    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-                    const link = document.createElement('a');
-                    const url = URL.createObjectURL(blob);
-                    
-                    link.setAttribute('href', url);
-                    link.setAttribute('download', 'trading-journal-export.csv');
-                    link.style.visibility = 'hidden';
-                    
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    
-                    exportLoader.style.display = 'none';
-                    showToast('CSV exported successfully!');
-                } catch (error) {
-                    console.error('Error exporting CSV:', error);
-                    exportLoader.style.display = 'none';
-                    showToast('Error exporting CSV!', 'danger');
-                }
-            }, 500);
-        }
-        
-        // Export to PDF
-        async function exportToPDF() {
-            if (trades.length === 0) {
-                showToast('No trades to export!', 'danger');
-                return;
-            }
-            
-            exportLoader.style.display = 'flex';
-            
-            setTimeout(async () => {
-                try {
-                    const { jsPDF } = window.jspdf;
-                    const doc = new jsPDF('p', 'mm', 'a4');
-                    
-                    doc.setFontSize(20);
-                    doc.setTextColor(30, 41, 59);
-                    doc.text('Trading Journal Report', 105, 20, null, null, 'center');
-                    doc.setFontSize(12);
-                    doc.setTextColor(100);
-                    doc.text(`Generated on ${new Date().toLocaleDateString()}`, 105, 28, null, null, 'center');
-                    
-                    doc.setFontSize(14);
-                    doc.setTextColor(0);
-                    doc.text('Performance Summary', 20, 40);
-                    
-                    doc.setFontSize(10);
-                    doc.text(`Total Trades: ${trades.length}`, 20, 50);
-                    doc.text(`Win Rate: ${winRateEl.textContent}`, 60, 50);
-                    doc.text(`Loss Rate: ${lossRateEl.textContent}`, 100, 50);
-                    doc.text(`Avg. Risk:Reward: ${avgRREl.textContent}`, 140, 50);
-                    doc.text(`Avg. CBS: ${avgCBSEl.textContent}`, 180, 50);
-                    
-                    // Add chart images
-                    const performanceImage = performanceChart.toBase64Image();
-                    const setupImage = setupChart.toBase64Image();
-                    const biasFrequencyImage = biasFrequencyChart.toBase64Image();
-                    const cbsTrendImage = cbsTrendChart.toBase64Image();
-                    
-                    doc.addImage(performanceImage, 'PNG', 10, 60, 190, 90);
-                    doc.addImage(setupImage, 'PNG', 10, 160, 190, 90);
-                    
-                    doc.addPage();
-                    doc.setFontSize(16);
-                    doc.text('Bias Analysis', 105, 15, null, null, 'center');
-                    
-                    doc.addImage(biasFrequencyImage, 'PNG', 10, 30, 190, 90);
-                    doc.addImage(cbsTrendImage, 'PNG', 10, 130, 190, 90);
-                    
-                    doc.addPage();
-                    doc.setFontSize(16);
-                    doc.text('Trade History', 105, 15, null, null, 'center');
-                    
-                    const tableData = [];
-                    const headers = ['Date', 'Pair', 'Dir', 'P/L', 'Risk', 'Setup', 'Emotion', 'CBS'];
-                    
-                    trades.forEach(trade => {
-                        const pipValue = trade.pair.includes('JPY') ? 0.01 : 0.0001;
-                        let plPips;
-                        if (trade.direction === 'Long') {
-                            plPips = (trade.exitPrice - trade.entryPrice) / pipValue;
-                        } else {
-                            plPips = (trade.entryPrice - trade.exitPrice) / pipValue;
-                        }
-                        
-                        const tradeDate = new Date(trade.date);
-                        const formattedDate = `${tradeDate.getDate()}/${tradeDate.getMonth() + 1}/${tradeDate.getFullYear()}`;
-                        
-                        tableData.push([
-                            formattedDate,
-                            trade.pair,
-                            trade.direction === 'Long' ? 'L' : 'S',
-                            `${plPips > 0 ? '+' : ''}${plPips.toFixed(1)}`,
-                            `${trade.riskPercent}%`,
-                            trade.setupType,
-                            trade.emotion,
-                            trade.cbs.toString()
-                        ]);
-                    });
-                    
-                    doc.autoTable({
-                        head: [headers],
-                        body: tableData,
-                        startY: 25,
-                        theme: 'grid',
-                        headStyles: { fillColor: [37, 99, 235] },
-                        styles: { fontSize: 8, cellPadding: 2 }
-                    });
-                    
-                    doc.save('trading-journal-report.pdf');
-                    
-                    exportLoader.style.display = 'none';
-                    showToast('PDF exported successfully!');
-                } catch (error) {
-                    console.error('Error exporting PDF:', error);
-                    exportLoader.style.display = 'none';
-                    showToast('Error exporting PDF!', 'danger');
-                }
-            }, 500);
-        }
-        
-        // PWA Installation Handling
-        function handlePWAInstall() {
-            // Listen for beforeinstallprompt event
-            window.addEventListener('beforeinstallprompt', (e) => {
-                // Prevent the mini-infobar from appearing on mobile
-                e.preventDefault();
-                // Stash the event so it can be triggered later
-                deferredPrompt = e;
-                // Show the install button
-                pwaInstallContainer.style.display = 'block';
-                
-                // Also show the install prompt after 5 seconds
-                setTimeout(() => {
-                    if (deferredPrompt) {
-                        installPrompt.classList.add('show');
-                    }
-                }, 5000);
-            });
-            
-            // Handle install button click
-            pwaInstallBtn.addEventListener('click', async () => {
-                if (deferredPrompt) {
-                    // Show the install prompt
-                    deferredPrompt.prompt();
-                    // Wait for the user to respond to the prompt
-                    const { outcome } = await deferredPrompt.userChoice;
-                    // Optionally, send analytics event with outcome of user choice
-                    console.log(`User response to the install prompt: ${outcome}`);
-                    // Hide the install button
-                    pwaInstallContainer.style.display = 'none';
-                    // Clear the deferredPrompt variable
-                    deferredPrompt = null;
-                    // Hide the prompt
-                    installPrompt.classList.remove('show');
-                }
-            });
-            
-            // Close prompt
-            closePrompt.addEventListener('click', () => {
-                installPrompt.classList.remove('show');
-            });
-            
-            // Listen for app installed event
-            window.addEventListener('appinstalled', () => {
-                // Hide the install button
-                pwaInstallContainer.style.display = 'none';
-                // Clear the deferredPrompt variable
-                deferredPrompt = null;
-                // Hide the prompt
-                installPrompt.classList.remove('show');
-                // Show success message
-                showToast('App installed successfully!');
-            });
-            
-            // Offline detection
-            window.addEventListener('offline', () => {
-                offlineIndicator.classList.add('show');
-            });
-            
-            window.addEventListener('online', () => {
-                offlineIndicator.classList.remove('show');
-            });
-            
-            // Initialize offline status
-            if (!navigator.onLine) {
-                offlineIndicator.classList.add('show');
-            }
-        }
-        
-        // Register Service Worker
-        function registerServiceWorker() {
-            if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                    // Create service worker script as a blob
-                    const swContent = `
-                        const CACHE_NAME = 'trafxos-v1';
-                        const urlsToCache = [
-                            './',
-                            'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
-                            'https://cdn.jsdelivr.net/npm/chart.js',
-                            'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
-                            'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
-                        ];
-                        
-                        self.addEventListener('install', event => {
-                            event.waitUntil(
-                                caches.open(CACHE_NAME)
-                                    .then(cache => {
-                                        return cache.addAll(urlsToCache);
-                                    })
-                            );
-                        });
-                        
-                        self.addEventListener('activate', event => {
-                            event.waitUntil(
-                                caches.keys().then(cacheNames => {
-                                    return Promise.all(
-                                        cacheNames.map(cacheName => {
-                                            if (cacheName !== CACHE_NAME) {
-                                                return caches.delete(cacheName);
-                                            }
-                                        })
-                                    );
-                                })
-                            );
-                        });
-                        
-                        self.addEventListener('fetch', event => {
-                            event.respondWith(
-                                caches.match(event.request)
-                                    .then(response => {
-                                        return response || fetch(event.request);
-                                    })
-                            );
-                        });
-                    `;
-                    
-                    const blob = new Blob([swContent], { type: 'application/javascript' });
-                    const swUrl = URL.createObjectURL(blob);
-                    
-                    navigator.serviceWorker.register(swUrl)
-                        .then(registration => {
-                            console.log('Service Worker registered with scope:', registration.scope);
-                        })
-                        .catch(error => {
-                            console.error('Service Worker registration failed:', error);
-                        });
-                });
-            }
-        }
-        
-        // Authentication functions
-        function signUp() {
-            const name = document.getElementById('signupName').value;
-            const email = document.getElementById('signupEmail').value;
-            const password = document.getElementById('signupPassword').value;
-            const confirmPassword = document.getElementById('signupConfirmPassword').value;
-            
-            // Validation
-            if (!name || !email || !password || !confirmPassword) {
-                signupError.textContent = 'Please fill in all fields';
-                return;
-            }
-            
-            if (password !== confirmPassword) {
-                signupError.textContent = 'Passwords do not match';
-                return;
-            }
-            
-            if (password.length < 6) {
-                signupError.textContent = 'Password should be at least 6 characters';
-                return;
-            }
-            
-            signupError.textContent = '';
-            
-            auth.createUserWithEmailAndPassword(email, password)
-                .then((userCredential) => {
-                    const user = userCredential.user;
-                    
-                    // Save user name to Firestore
-                    db.collection('users').doc(user.uid).set({
-                        name: name,
-                        email: email
-                    })
-                    .then(() => {
-                        showToast('Account created successfully!');
-                        initAppForUser(user);
-                    })
-                    .catch((error) => {
-                        console.error("Error saving user info: ", error);
-                        signupError.textContent = error.message;
-                    });
-                })
-                .catch((error) => {
-                    signupError.textContent = error.message;
-                });
-        }
-        
-        function signIn() {
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            
-            if (!email || !password) {
-                loginError.textContent = 'Please fill in all fields';
-                return;
-            }
-            
-            loginError.textContent = '';
-            
-            auth.signInWithEmailAndPassword(email, password)
-                .then((userCredential) => {
-                    const user = userCredential.user;
-                    showToast('Signed in successfully!');
-                    initAppForUser(user);
-                })
-                .catch((error) => {
-                    loginError.textContent = error.message;
-                });
-        }
-        
-        function resetPassword() {
-            const email = document.getElementById('loginEmail').value;
-            
-            if (!email) {
-                loginError.textContent = 'Please enter your email';
-                return;
-            }
-            
-            auth.sendPasswordResetEmail(email)
-                .then(() => {
-                    showToast('Password reset email sent!');
-                })
-                .catch((error) => {
-                    loginError.textContent = error.message;
-                });
-        }
-        
-        function signOut() {
-            auth.signOut().then(() => {
-                showToast('Signed out successfully!');
-                authModal.style.display = 'flex';
-                appContent.style.display = 'none';
-                trades = [];
-                renderTradesTable();
-            }).catch((error) => {
-                console.error('Sign out error:', error);
-            });
-        }
-        
-        function initAppForUser(user) {
-            currentUser = user;
-            authModal.style.display = 'none';
-            appContent.style.display = 'block';
-            
-            // Set user info
-            db.collection('users').doc(user.uid).get().then((doc) => {
-                if (doc.exists) {
-                    const userData = doc.data();
-                    userName.textContent = userData.name || user.email;
-                    userAvatar.textContent = userData.name ? userData.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase();
-                } else {
-                    userName.textContent = user.email;
-                    userAvatar.textContent = user.email.charAt(0).toUpperCase();
-                }
-            });
-            
-            // Load user data
-            loadTrades();
-        }
-        
-        // Initialize the app
-        function initApp() {
-            initCharts();
-            
-            // Set current date as default
-            document.getElementById('tradeDate').value = new Date().toISOString().split('T')[0];
-            
-            // Modal functionality
-            addTradeBtn.addEventListener('click', () => modal.style.display = 'flex');
-            mobileAddBtn.addEventListener('click', () => modal.style.display = 'flex');
-            closeModalBtn.addEventListener('click', () => modal.style.display = 'none');
-            cancelTradeBtn.addEventListener('click', () => modal.style.display = 'none');
-            saveTradeBtn.addEventListener('click', addNewTrade);
-            
-            // Close modals when clicking outside
-            window.addEventListener('click', (e) => {
-                if (e.target === modal) modal.style.display = 'none';
-                if (e.target === educationModal) educationModal.style.display = 'none';
-            });
-            
-            // Close education modal
-            closeEducationBtn.addEventListener('click', () => {
-                educationModal.style.display = 'none';
-            });
-            
-            // Tab functionality
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    tabs.forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    currentFilter = tab.dataset.filter;
-                    renderTradesTable();
-                });
-            });
-            
-            // Export functionality
-            exportBtn.addEventListener('click', () => {
-                const exportType = confirm('Click OK for PDF export, Cancel for CSV export');
-                if (exportType) {
-                    exportToPDF();
-                } else {
-                    exportToCSV();
-                }
-            });
-            
-            // Auth tab switching
-            authTabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    const tabName = tab.dataset.tab;
-                    authTabs.forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    
-                    signInForm.classList.remove('active');
-                    signUpForm.classList.remove('active');
-                    
-                    if (tabName === 'signin') {
-                        signInForm.classList.add('active');
-                    } else {
-                        signUpForm.classList.add('active');
-                    }
-                });
-            });
-            
-            // Auth buttons
-            signInBtn.addEventListener('click', signIn);
-            signUpBtn.addEventListener('click', signUp);
-            resetPasswordLink.addEventListener('click', resetPassword);
-            switchToLogin.addEventListener('click', () => {
-                authTabs[0].click();
-            });
-            logoutBtn.addEventListener('click', signOut);
-            
-            // PWA installation handling
-            handlePWAInstall();
-            
-            // Register Service Worker
-            registerServiceWorker();
-            
-            // Handle window resize for responsive table
-            window.addEventListener('resize', renderTradesTable);
-            
-            // Auth state observer
-            auth.onAuthStateChanged((user) => {
-                if (user) {
-                    initAppForUser(user);
-                } else {
-                    authModal.style.display = 'flex';
-                    appContent.style.display = 'none';
-                }
-            });
-        }
-        
-        // Start the app
-        document.addEventListener('DOMContentLoaded', initApp);
-    </script>
+      <!-- Billing pills -->
+      <div class="billing-pills">
+        <div class="billing-pill active" id="billMonthly" role="button" tabindex="0">
+          <span class="billing-pill-period">Monthly</span>
+          <span class="billing-pill-price">$19</span>
+          <span class="billing-pill-note">per month, USD</span>
+        </div>
+        <div class="billing-pill" id="billAnnual" role="button" tabindex="0">
+          <span class="billing-pill-badge">SAVE 34%</span>
+          <span class="billing-pill-period">Annual</span>
+          <span class="billing-pill-price">$12</span>
+          <span class="billing-pill-note">per month &middot; $149/yr</span>
+        </div>
+      </div>
+
+      <!-- Feature grid -->
+      <ul class="pro-features-list">
+        <li><i class="fa-solid fa-check-circle"></i> Unlimited trade logging</li>
+        <li><i class="fa-solid fa-check-circle"></i> Full EmotionIQ engine</li>
+        <li><i class="fa-solid fa-check-circle"></i> Behavior deep-dive analytics</li>
+        <li><i class="fa-solid fa-check-circle"></i> Patterns analytics</li>
+        <li><i class="fa-solid fa-check-circle"></i> All 6 Psychology lessons</li>
+        <li><i class="fa-solid fa-check-circle"></i> Cloud sync across devices</li>
+        <li><i class="fa-solid fa-check-circle"></i> Full CSV export</li>
+        <li><i class="fa-solid fa-check-circle"></i> Unlimited prop challenges</li>
+      </ul>
+
+      <!-- Checkout details - required by Flutterwave -->
+      <div class="checkout-details-section">
+        <label class="checkout-label" for="checkoutEmail">Email for receipt <span class="req-star">*</span></label>
+        <input type="email" id="checkoutEmail" class="form-input" placeholder="you@example.com" autocomplete="email" style="margin-bottom:10px" />
+        <label class="checkout-label" for="checkoutName">Your name</label>
+        <input type="text" id="checkoutName" class="form-input" placeholder="Your name" autocomplete="name" />
+      </div>
+
+      <!-- Shown only when Flutterwave key is not yet configured -->
+      <div id="flwSetupNotice" class="flw-setup-notice hidden">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <div>
+          <strong>Payment setup in progress</strong><br>
+          To accept payments, go to your <strong>Flutterwave Dashboard → Settings → API Keys</strong>, copy the key starting with <code>FLWPUBK_TEST-</code> and paste it into <code>firebase-config.js</code>, then redeploy.<br>
+          <span class="flw-setup-alt">In the meantime, share a Pro key with early users using the field below.</span>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <button class="btn-primary btn-full btn-lg" id="upgradeCheckoutBtn">
+        <i class="fa-solid fa-lock-open"></i>&nbsp;<span id="checkoutBtnLabel">Get Pro &mdash; $19/month</span>
+      </button>
+
+      <!-- Trust row -->
+      <div class="trust-row">
+        <span class="trust-item"><i class="fa-solid fa-shield-halved"></i> Secure</span>
+        <span class="trust-item"><i class="fa-solid fa-rotate-left"></i> 30-day refund</span>
+        <span class="trust-item"><i class="fa-solid fa-xmark"></i> Cancel anytime</span>
+      </div>
+      <div class="payment-icons-row">
+        <span class="pay-icon-badge">VISA</span>
+        <span class="pay-icon-badge">MC</span>
+        <span class="pay-icon-badge">BANK</span>
+        <span class="pay-icon-badge">USSD</span>
+        <span class="pay-icon-badge flw-badge">Flutterwave</span>
+      </div>
+
+      <!-- Pro key section -->
+      <div class="pro-key-section">
+        <p class="pro-key-label">Already have a Pro key? Enter it here.</p>
+        <div class="pro-key-row">
+          <input type="text" id="proKeyInput" class="form-input" placeholder="TRAFXOS-BETA-2026" autocomplete="off" />
+          <button class="btn-secondary" id="proKeyApplyBtn">Apply</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
 </body>
 </html>
