@@ -1,0 +1,9 @@
+{
+  "name": "trafxos-functions",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Server-side payment verification and Pro entitlement for TrafxOS",
+  "dependencies": {
+    "firebase-admin": "^12.6.0"
+  }
+}

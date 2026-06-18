@@ -2,10 +2,34 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <script>
+  // Force-clear old service worker cache so updates actually reach the browser
+  (function(){
+    var V=14;
+    var s=parseInt(localStorage.getItem('trafxos_cv')||'0');
+    if(s<V){
+      localStorage.setItem('trafxos_cv',V);
+      if('serviceWorker' in navigator){
+        navigator.serviceWorker.getRegistrations().then(function(r){
+          r.forEach(function(w){w.unregister();});
+        });
+        caches.keys().then(function(n){
+          n.forEach(function(c){caches.delete(c);});
+        });
+        if(s>0){location.reload(true);return;}
+      }
+    }
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.addEventListener('controllerchange',function(){
+        if(!window.__swrl){window.__swrl=1;location.reload();}
+      });
+    }
+  })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="description" content="TrafxOS — The trading journal that fights your worst enemy: yourself. Behavioral analytics, discipline scoring, and prop firm challenge tracking." />
   <meta name="theme-color" content="#0a0e1a" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.gstatic.com https://checkout.flutterwave.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https: blob:; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.firebaseapp.com https://api.flutterwave.com; frame-src https://checkout.flutterwave.com https://*.firebaseapp.com;" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.gstatic.com https://checkout.flutterwave.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https: blob:; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.firebaseapp.com https://api.flutterwave.com https://*.flutterwave.com https://*.ravepay.co https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; frame-src 'self' https://checkout.flutterwave.com https://*.flutterwave.com https://*.f4b-flutterwave.com https://*.firebaseapp.com https://trafxos.netlify.app https://accounts.google.com;" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="TrafxOS" />
@@ -29,12 +53,12 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
-  <script src="firebase-config.js"></script>
+  <script src="firebase-config.js?v=14"></script>
 
   <!-- Flutterwave Inline Payment (Nigeria-friendly) -->
   <script src="https://checkout.flutterwave.com/v3.js"></script>
 
-  <link rel="stylesheet" href="app.css" />
+  <link rel="stylesheet" href="app.css?v=14" />
 </head>
 <body>
 
@@ -93,7 +117,7 @@
   <!-- TOP BAR -->
   <header class="topbar">
     <div class="topbar-left">
-      <span class="logo-icon-sm">⚡</span>
+      <span class="topbar-bolt">⚡</span>
       <span class="topbar-brand">Trafx<span class="logo-accent">OS</span></span>
     </div>
     <div class="topbar-center">
@@ -106,9 +130,6 @@
       <button class="icon-btn" id="notifBtn" title="Alerts" aria-label="Alerts">
         <i class="fa-solid fa-bell"></i>
         <span class="notif-dot hidden" id="notifDot"></span>
-      </button>
-      <button class="icon-btn hidden" id="proCrownBtn" title="Pro Active" aria-label="Pro Member">
-        <i class="fa-solid fa-crown" style="color:var(--yellow)"></i>
       </button>
       <button class="icon-btn" id="authBtn" title="Account" aria-label="Account">
         <i class="fa-solid fa-user"></i>
@@ -279,11 +300,6 @@
       </div>
       <div class="community-challenges" id="communityChallenges">
         <!-- Rendered by JS -->
-      </div>
-
-      <!-- Quick Feedback -->
-      <div class="feedback-fab" id="feedbackFab" title="Send Feedback" aria-label="Send Feedback">
-        <i class="fa-solid fa-comment-dots"></i>
       </div>
 
     </section>
@@ -637,8 +653,10 @@
           <!-- Rendered by JS -->
         </div>
 
-        <div class="section-header"><h2 class="section-title">Hold Time vs. P&L</h2></div>
+        <div class="section-header"><h2 class="section-title">R:R Ratio vs Actual P&L</h2><span class="section-hint">Does planned risk:reward predict real results?</span></div>
+        <div id="rrPnlEmpty" class="chart-empty-state hidden"><i class="fa-solid fa-chart-scatter"></i><p>Log trades with R:R ratio to unlock this chart</p></div>
         <div class="chart-container"><canvas id="holdTimeChart"></canvas></div>
+        <div id="rrInsight" class="chart-insight-bar hidden"></div>
 
         <div class="section-header"><h2 class="section-title">Best Performing Setups</h2></div>
         <div class="setup-ranking" id="setupRanking">
@@ -813,6 +831,28 @@
         </div>
       </div>
 
+      <!-- Mindset Performance Trend (Pro) -->
+      <div class="section-header" style="margin-top:8px">
+        <h2 class="section-title">Mindset Performance Trend <span class="pro-badge-inline" id="mindsetProBadge"><i class="fa-solid fa-crown"></i> PRO</span></h2>
+        <span class="section-hint">Your mental state vs your P&L</span>
+      </div>
+      <div id="mindsetTrendSection"></div>
+
+      <!-- MT4/MT5 Auto-Journal Coming Soon -->
+      <div class="coming-soon-card">
+        <div class="cs-badge">Coming Soon</div>
+        <div class="cs-icon"><i class="fa-solid fa-plug-circle-bolt"></i></div>
+        <h3 class="cs-title">MT4 / MT5 Auto-Journal</h3>
+        <p class="cs-desc">Connect TrafxOS directly to your trading terminal. Every trade you execute is automatically logged — with a post-trade emotion prompt so the psychology data captures itself.</p>
+        <ul class="cs-features">
+          <li><i class="fa-solid fa-check"></i> Auto-import your full trade history</li>
+          <li><i class="fa-solid fa-check"></i> Real-time position monitoring</li>
+          <li><i class="fa-solid fa-check"></i> Instant emotion prompt after each close</li>
+          <li><i class="fa-solid fa-check"></i> Zero manual logging needed</li>
+        </ul>
+        <div class="cs-footer">Premium Feature &middot; <button class="cs-notify-btn" id="csNotifyBtn" onclick="notifyMT5Launch()">Notify me when live</button></div>
+      </div>
+
       <!-- Lesson Modal -->
       <div class="modal-overlay hidden" id="lessonModal">
         <div class="modal modal-lg">
@@ -830,6 +870,9 @@
       <div class="view-header">
         <h1 class="view-title">Settings</h1>
       </div>
+
+      <!-- Pro Status Card — populated by renderSettingsProStatus() -->
+      <div class="settings-section" id="settingsProStatusSection"></div>
 
       <div class="settings-section">
         <h2 class="settings-section-title">Trading Profile</h2>
@@ -969,6 +1012,11 @@
   </div>
 </div>
 
+<!-- FEEDBACK FAB — always visible across all tabs -->
+<div class="feedback-fab" id="feedbackFab" title="Send Feedback" aria-label="Send Feedback">
+  <i class="fa-solid fa-comment-dots"></i>
+</div>
+
 <!-- TOAST NOTIFICATIONS -->
 <div class="toast-container" id="toastContainer"></div>
 
@@ -1005,6 +1053,22 @@
     <button class="btn-primary btn-full" id="feedbackSubmitBtn">Submit Feedback</button>
   </div>
 </div>
+<!-- Hidden Netlify form for feedback email delivery -->
+<form name="trafxos-feedback" data-netlify="true" netlify-honeypot="bot-field" hidden>
+  <input name="bot-field" />
+  <input name="rating" />
+  <input name="message" />
+  <input name="user" />
+  <input name="timestamp" />
+</form>
+
+<!-- Hidden Netlify form for MT4/MT5 launch notifications -->
+<form name="trafxos-notify" data-netlify="true" netlify-honeypot="bot-field" hidden>
+  <input name="bot-field" />
+  <input name="email" />
+  <input name="feature" />
+  <input name="timestamp" />
+</form>
 
 <!-- ═══ INNOVATIVE PWA INSTALL MODAL ═══ -->
 <div class="pwa-full-modal hidden" id="pwaInstallModal">
@@ -1072,10 +1136,13 @@
       <!-- Inline error shown when Google sign-in is blocked (unauthorized domain) -->
       <div id="googleAuthError" class="google-auth-error hidden"></div>
       <div class="auth-or"><span>or</span></div>
+      <input type="text" id="authDisplayName" class="form-input hidden" placeholder="Your name" style="margin-bottom:8px" autocomplete="name" />
       <input type="email" id="authEmail" class="form-input" placeholder="Email" style="margin-bottom:8px" />
-      <input type="password" id="authPassword" class="form-input" placeholder="Password" style="margin-bottom:14px" />
+      <input type="password" id="authPassword" class="form-input" placeholder="Password" style="margin-bottom:6px" autocomplete="current-password" />
+      <div id="authForgotRow" style="text-align:right;margin:0 2px 12px"><span id="forgotPasswordLink" style="font-size:0.78rem;color:var(--accent);cursor:pointer">Forgot password?</span></div>
       <button class="btn-primary btn-full" id="emailSignInBtn" style="margin-bottom:8px">Sign In</button>
       <button class="btn-secondary btn-full" id="emailSignUpBtn">Create Account</button>
+      <div class="auth-mode-toggle"><span id="authModeHint" style="font-size:0.78rem;color:var(--text-3);display:block;text-align:center;margin-top:10px;cursor:pointer"></span></div>
     </div>
     <div id="authSignedIn" class="hidden">
       <div class="auth-user-row">
@@ -1100,9 +1167,13 @@
 <div class="modal-overlay hidden" id="upgradeModal">
   <div class="modal modal--pro">
 
+    <!-- Sticky close bar — always reachable on mobile -->
+    <div class="upgrade-sticky-close">
+      <button class="upgrade-close-btn" id="upgradeModalClose" aria-label="Close">✕ Close</button>
+    </div>
+
     <!-- Hero header -->
     <div class="upgrade-hero">
-      <button class="modal-close upgrade-close" id="upgradeModalClose">✕</button>
       <div class="upgrade-hero-badge"><i class="fa-solid fa-crown"></i>&nbsp;TrafxOS Pro</div>
       <h2>Unlock the full Trading OS</h2>
       <p>Join traders who've stopped emotional trading for good.</p>
@@ -1136,6 +1207,7 @@
       <ul class="pro-features-list">
         <li><i class="fa-solid fa-check-circle"></i> Unlimited trade logging</li>
         <li><i class="fa-solid fa-check-circle"></i> Full EmotionIQ engine</li>
+        <li><i class="fa-solid fa-check-circle"></i> Full performance analytics</li>
         <li><i class="fa-solid fa-check-circle"></i> Behavior deep-dive analytics</li>
         <li><i class="fa-solid fa-check-circle"></i> Patterns analytics</li>
         <li><i class="fa-solid fa-check-circle"></i> All 6 Psychology lessons</li>
@@ -1182,18 +1254,23 @@
       </div>
 
       <!-- Pro key section -->
+      <div class="upgrade-or-divider"><span>or unlock with a key</span></div>
       <div class="pro-key-section">
-        <p class="pro-key-label">Already have a Pro key? Enter it here.</p>
+        <p class="pro-key-label"><i class="fa-solid fa-key"></i> Have a Pro access key? Enter it below to unlock instantly — no payment needed.</p>
         <div class="pro-key-row">
-          <input type="text" id="proKeyInput" class="form-input" placeholder="TRAFXOS-BETA-2026" autocomplete="off" />
-          <button class="btn-secondary" id="proKeyApplyBtn">Apply</button>
+          <input type="text" id="proKeyInput" class="form-input pro-key-input" placeholder="TRAFXOS-XXXX-XXXX" autocomplete="off" spellcheck="false" />
+          <button class="btn-primary btn-sm" id="proKeyApplyBtn"><i class="fa-solid fa-unlock"></i> Unlock</button>
         </div>
       </div>
+
+      <!-- Mobile-friendly bottom dismiss -->
+      <button class="upgrade-maybe-later" id="upgradeMaybeLater">Maybe later</button>
+      <p class="upgrade-kcorp-credit">Property of KCorp</p>
 
     </div>
   </div>
 </div>
 
-<script src="app.js"></script>
+<script src="app.js?v=14"></script>
 </body>
 </html>

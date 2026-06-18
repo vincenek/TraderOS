@@ -56,20 +56,28 @@ Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
 const PRO = {
   FREE_LIMIT: 30,
 
+  // Authoritative Pro state comes from Firestore (users/{uid}.pro), which ONLY our
+  // server (Admin SDK in a Netlify Function) can write. localStorage is just an
+  // offline mirror of that server truth — never the source of authority.
+  _state: null, // { pro, plan, proSince, source } once loaded from the server
+
   get active() {
-    return localStorage.getItem('trafxos_pro') === '1';
+    if (this._state) return !!this._state.pro;          // server is the source of truth
+    return localStorage.getItem('trafxos_pro') === '1';  // offline fallback only
   },
 
-  activate(code) {
-    if (!code) return false;
-    const norm = code.toUpperCase().trim();
-    const validCodes = new Set((window.PRO_CODES || []).map(c => c.toUpperCase()));
-    if (validCodes.has(norm)) {
+  // Apply the entitlement read from Firestore and mirror it for offline use.
+  setFromServer(data) {
+    this._state = data || { pro: false };
+    if (this._state.pro) {
       localStorage.setItem('trafxos_pro', '1');
-      localStorage.setItem('trafxos_pro_code', norm);
-      return true;
+      if (this._state.plan)     localStorage.setItem('trafxos_flw_plan', this._state.plan);
+      if (this._state.proSince) localStorage.setItem('trafxos_pro_since', this._state.proSince);
+    } else {
+      ['trafxos_pro', 'trafxos_pro_since', 'trafxos_flw_plan', 'trafxos_pro_code'].forEach(k => localStorage.removeItem(k));
     }
-    return false;
+    updateProUI();
+    renderFreeLimitBar();
   },
 
   canLog()     { return this.active || DB.trades.length < this.FREE_LIMIT; },
@@ -77,6 +85,21 @@ const PRO = {
   canLesson()  { return this.active; },
   canExport()  { return this.active || DB.trades.length <= 10; },
 };
+
+/* Call an authenticated Netlify Function — attaches the Firebase ID token so the
+   server can verify who the user is and grant Pro to the right account. */
+async function callFn(path, body) {
+  if (!FIREBASE.user) { const e = new Error('Sign in required'); e.code = 'no-auth'; throw e; }
+  const token = await FIREBASE.user.getIdToken();
+  const res = await fetch(`/.netlify/functions/${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(body || {}),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) { const e = new Error(data.error || `Request failed (${res.status})`); e.status = res.status; throw e; }
+  return data;
+}
 
 function showUpgradeModal(featureName) {
   const row = document.getElementById('upgradeFeatureRow');
@@ -104,18 +127,51 @@ function showUpgradeModal(featureName) {
 }
 
 function updateProUI() {
-  const proCrownBtn = document.getElementById('proCrownBtn');
-  if (proCrownBtn) proCrownBtn.classList.toggle('hidden', !PRO.active);
+  // Merge crown indicator INTO the auth button — no extra button
+  const authBtn = document.getElementById('authBtn');
+  if (authBtn) authBtn.classList.toggle('is-pro', PRO.active);
   const authProPill = document.getElementById('authProPill');
   if (authProPill) {
     authProPill.textContent = PRO.active ? 'PRO' : 'FREE';
     authProPill.classList.toggle('pro-active', PRO.active);
   }
+  // Show/hide Pro lock badge on the Analytics nav button
+  const analyticsNavBtn = document.querySelector('.nav-btn[data-view="analytics"]');
+  if (analyticsNavBtn) {
+    let lockDot = analyticsNavBtn.querySelector('.nav-pro-dot');
+    if (!PRO.active) {
+      if (!lockDot) {
+        lockDot = document.createElement('span');
+        lockDot.className = 'nav-pro-dot';
+        lockDot.title = 'Pro feature';
+        analyticsNavBtn.appendChild(lockDot);
+      }
+    } else {
+      lockDot?.remove();
+    }
+  }
+  // Hide upgrade button in auth modal when already Pro
+  const upgradeFromAuthBtn = document.getElementById('upgradeFromAuthBtn');
+  if (upgradeFromAuthBtn) {
+    if (PRO.active) {
+      upgradeFromAuthBtn.innerHTML = '<i class="fa-solid fa-crown"></i> Pro is Active — Thank you!';
+      upgradeFromAuthBtn.disabled = true;
+      upgradeFromAuthBtn.style.opacity = '0.6';
+      upgradeFromAuthBtn.style.cursor = 'default';
+    } else {
+      upgradeFromAuthBtn.innerHTML = '⚡ Upgrade to Pro — from $19/mo';
+      upgradeFromAuthBtn.disabled = false;
+      upgradeFromAuthBtn.style.opacity = '';
+      upgradeFromAuthBtn.style.cursor = '';
+    }
+  }
 }
 
-/* Comprehensive Pro activation — call after payment or key entry */
-function activateProFull() {
-  localStorage.setItem('trafxos_pro', '1');
+/* Comprehensive Pro activation — call AFTER the server has granted Pro.
+   Re-reads the authoritative entitlement from Firestore rather than trusting the client. */
+async function activateProFull(email) {
+  if (email) localStorage.setItem('trafxos_pro_email', email);
+  await FIREBASE.loadProStatus();   // pulls users/{uid}.pro set by the Netlify function
   updateProUI();
   renderFreeLimitBar();
   renderDashboard();
@@ -125,6 +181,8 @@ function activateProFull() {
   if (activeView === 'analytics')   renderAnalytics();
   if (activeView === 'psychology')  initPsychologyLab();
   if (activeView === 'journal')     renderJournal();
+  // Refresh settings Pro status if visible
+  renderSettingsProStatus();
 }
 
 function renderFreeLimitBar() {
@@ -160,88 +218,97 @@ const FIREBASE = {
       this.auth.onAuthStateChanged(user => {
         this.user = user;
         this.updateAuthUI(user);
-        if (user) this.syncTrades();
+        if (user) {
+          this.syncTrades();
+          this.loadProStatus();   // authoritative Pro check
+        } else {
+          // Pro is tied to an account — signed out means no Pro.
+          PRO.setFromServer({ pro: false });
+        }
       });
-      // Handle the result when Google redirects back (mobile auth flow)
+      // Handle redirect result (fallback if popup was blocked)
       this.auth.getRedirectResult().then(result => {
         if (result && result.user) {
           hideModal('authModal');
           toast('Signed in with Google! Syncing your trades…', 'success');
         }
-      }).catch(err => {
-        const code = err.code || '';
-        if (!code || code === 'auth/no-such-provider') return; // nothing happened
-        if (code === 'auth/unauthorized-domain') {
-          const errEl = document.getElementById('googleAuthError');
-          if (errEl) {
-            errEl.innerHTML = `
-              <strong>⚠️ One quick setup step needed:</strong><br>
-              Add <code>trafxos.netlify.app</code> to Firebase → Authentication → Settings → Authorized domains, then try again.
-              <div class="auth-error-alt">⭐ <strong>Email sign-in works right now</strong> — use the fields below while you set this up.</div>
-            `;
-            errEl.classList.remove('hidden');
-          }
-        } else if (code !== 'auth/popup-closed-by-user' && code !== 'auth/cancelled-popup-request') {
-          toast('Google sign-in failed: ' + (err.message || code), 'error', 5000);
-        }
-      });
+      }).catch(() => { /* redirect errors handled in signInWithGoogle */ });
     } catch (err) {
       console.warn('[TrafxOS] Firebase init skipped:', err.message);
     }
   },
 
   async signInWithGoogle() {
-    // Clear any previous inline error
     const errEl = document.getElementById('googleAuthError');
     if (errEl) errEl.classList.add('hidden');
+    const btn = document.getElementById('googleSignInBtn');
 
     if (!this.auth) {
       toast('Firebase not configured. Fill in firebase-config.js to enable sign-in.', 'warn', 5000);
       return;
     }
-    try {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: 'select_account' });
 
-      // Mobile browsers block popups — redirect to Google instead so we don't get a blank page
-      const isMobile = /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent);
-      if (isMobile) {
+    // Show loading state
+    if (btn) { btn.disabled = true; btn.textContent = 'Signing in…'; }
+
+    const provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+
+    // Mobile: use redirect (popups lose connection on mobile browsers)
+    // Desktop: use popup (cleaner UX)
+    const isMobile = /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent);
+
+    if (isMobile) {
+      try {
         await this.auth.signInWithRedirect(provider);
-        return; // page redirects — getRedirectResult() in init() handles the response
+        // Page will redirect to Google — getRedirectResult() in init() handles the return
+      } catch (err) {
+        const code = err.code || '';
+        const msg = code === 'auth/network-request-failed'
+          ? 'Network error — check your connection and try again.'
+          : code === 'auth/unauthorized-domain'
+          ? 'This domain is not authorised for sign-in. Add it in Firebase Console → Authentication → Authorized Domains.'
+          : code === 'auth/operation-not-allowed'
+          ? 'Google sign-in is not enabled. Enable it in Firebase Console → Authentication → Sign-in methods.'
+          : 'Google sign-in failed: ' + (err.message || code);
+        if (errEl) { errEl.textContent = msg; errEl.classList.remove('hidden'); }
+        else toast(msg, 'error', 8000);
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<svg class="google-svg" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.79-.07-1.54-.19-2.27h-11.3v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82Z"/><path fill="#34A853" d="M12.255 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96h-3.98v3.09C3.515 21.3 7.615 24 12.255 24Z"/><path fill="#FBBC05" d="M5.525 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.62h-3.98a11.86 11.86 0 0 0 0 10.76l3.98-3.09Z"/><path fill="#EA4335" d="M12.255 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C18.205 1.19 15.495 0 12.255 0c-4.64 0-8.74 2.7-10.71 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96Z"/></svg> Continue with Google';
+        }
       }
+      return;
+    }
 
-      // Desktop: popup works fine
-      await this.auth.signInWithPopup(provider);
-      hideModal('authModal');
-      toast('Signed in! Syncing your trades…', 'success');
+    // Desktop: popup
+    try {
+      const result = await this.auth.signInWithPopup(provider);
+      if (result && result.user) {
+        hideModal('authModal');
+        toast('Signed in! Syncing your trades…', 'success');
+      }
     } catch (err) {
       const code = err.code || '';
-      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') return;
-      if (code === 'auth/unauthorized-domain') {
-        if (errEl) {
-          errEl.innerHTML = `
-            <strong>⚠️ One quick setup step needed:</strong><br>
-            Google sign-in is blocked because <code>trafxos.netlify.app</code> isn't yet in your Firebase allowed list.<br>
-            <ol>
-              <li>Go to <strong>Firebase Console</strong> → your project (trader-os)</li>
-              <li>Click <strong>Authentication</strong> → <strong>Settings</strong> tab</li>
-              <li>Scroll to <strong>Authorized domains</strong> → <strong>Add domain</strong></li>
-              <li>Type <code>trafxos.netlify.app</code> and save</li>
-              <li>Come back and tap "Continue with Google" again</li>
-            </ol>
-            <div class="auth-error-alt">⭐ <strong>Email sign-in works right now</strong> — use the fields below while you set this up.</div>
-          `;
-          errEl.classList.remove('hidden');
-        } else {
-          toast(
-            'Google sign-in blocked: add trafxos.netlify.app to Firebase → Authentication → Settings → Authorized domains.',
-            'error', 10000
-          );
-        }
-      } else if (code === 'auth/popup-blocked') {
-        toast('Pop-up was blocked. Allow pop-ups for this site in your browser settings, then try again.', 'warn', 6000);
+      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+        // User closed — ignore
       } else {
-        toast('Google sign-in failed: ' + (err.message || code), 'error', 5000);
+        const msg = code === 'auth/network-request-failed'
+          ? 'Network error — check your connection and try again.'
+          : code === 'auth/unauthorized-domain'
+          ? 'This domain is not authorised. Add localhost/trafxos.netlify.app in Firebase Console → Authentication → Authorized Domains.'
+          : code === 'auth/operation-not-allowed'
+          ? 'Google sign-in is disabled. Enable it in Firebase Console → Authentication → Sign-in methods.'
+          : code === 'auth/popup-blocked'
+          ? 'Pop-up was blocked by your browser. Allow pop-ups for this site and try again.'
+          : 'Google sign-in failed: ' + (err.message || code);
+        if (errEl) { errEl.textContent = msg; errEl.classList.remove('hidden'); }
+        else toast(msg, 'error', 8000);
+      }
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<svg class="google-svg" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.79-.07-1.54-.19-2.27h-11.3v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82Z"/><path fill="#34A853" d="M12.255 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96h-3.98v3.09C3.515 21.3 7.615 24 12.255 24Z"/><path fill="#FBBC05" d="M5.525 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.62h-3.98a11.86 11.86 0 0 0 0 10.76l3.98-3.09Z"/><path fill="#EA4335" d="M12.255 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C18.205 1.19 15.495 0 12.255 0c-4.64 0-8.74 2.7-10.71 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96Z"/></svg> Continue with Google';
       }
     }
   },
@@ -255,12 +322,21 @@ const FIREBASE = {
     } catch (err) { toast(err.message, 'error', 5000); }
   },
 
-  async signUp(email, pw) {
+  async signUp(email, pw, displayName) {
     if (!this.auth) { toast('Firebase not configured.', 'warn'); return; }
     try {
-      await this.auth.createUserWithEmailAndPassword(email, pw);
+      const cred = await this.auth.createUserWithEmailAndPassword(email, pw);
+      if (displayName && cred.user) {
+        await cred.user.updateProfile({ displayName });
+        // Save name to settings immediately so dashboard greeting shows it
+        const s = DB.settings;
+        if (!s.name) { s.name = displayName; DB.settings = s; }
+        // Refresh the auth UI with the new name
+        this.updateAuthUI(cred.user);
+        updateGreeting();
+      }
       hideModal('authModal');
-      toast('Account created! Welcome to TrafxOS.', 'success');
+      toast(`Welcome to TrafxOS${displayName ? ', ' + displayName : ''}!`, 'success');
     } catch (err) { toast(err.message, 'error', 5000); }
   },
 
@@ -271,6 +347,48 @@ const FIREBASE = {
     hideModal('authModal');
   },
 
+  /* Read the user's Pro entitlement from Firestore (set server-side after payment). */
+  async loadProStatus() {
+    if (!this.user || !this.db) { PRO.setFromServer({ pro: false }); return; }
+    try {
+      const snap = await this.db.doc(`users/${this.user.uid}`).get();
+      const d = snap.exists ? snap.data() : {};
+      let since = null;
+      try { since = d.proSince && d.proSince.toDate ? d.proSince.toDate().toISOString() : (d.proSince || null); } catch (_) {}
+      PRO.setFromServer({ pro: !!d.pro, plan: d.plan || null, proSince: since, source: d.source || null, code: d.code || null });
+      renderSettingsProStatus();
+    } catch (err) {
+      // Offline / transient — keep whatever mirror we have, don't downgrade the user.
+      console.warn('[TrafxOS] Pro status load failed:', err.message);
+    }
+  },
+
+  async resetPassword(email) {
+    if (!this.auth) { toast('Firebase not configured.', 'warn'); return; }
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      toast('Type your email in the field above first, then tap "Forgot password".', 'warn', 5000);
+      document.getElementById('authEmail')?.focus();
+      return;
+    }
+    try {
+      await this.auth.sendPasswordResetEmail(email);
+      // Note: Firebase may not error on unknown emails (anti-enumeration), so keep the message neutral.
+      toast(`Password reset link sent to ${email}. Check your inbox and spam folder.`, 'success', 7000);
+    } catch (err) {
+      const code = err.code || '';
+      const msg = code === 'auth/invalid-email'
+        ? 'That email address looks invalid.'
+        : code === 'auth/user-not-found'
+        ? 'No account found with that email — try "Create Account" instead.'
+        : code === 'auth/too-many-requests'
+        ? 'Too many attempts. Wait a few minutes and try again.'
+        : code === 'auth/network-request-failed'
+        ? 'Network error — check your connection and try again.'
+        : 'Could not send reset email: ' + (err.message || code);
+      toast(msg, 'error', 6000);
+    }
+  },
+
   async syncTrades() {
     if (!this.user || !this.db) return;
     const syncText = document.getElementById('syncStatusText');
@@ -278,16 +396,49 @@ const FIREBASE = {
     if (syncIcon) { syncIcon.className = 'fa-solid fa-rotate'; syncIcon.style.animation = 'spin 1s linear infinite'; }
     if (syncText) syncText.textContent = 'Syncing…';
     try {
-      const trades = DB.trades;
-      const batch = this.db.batch();
-      for (const t of trades) {
-        const ref = this.db.collection(`users/${this.user.uid}/trades`).doc(t.id);
-        batch.set(ref, t, { merge: true });
+      const colRef = this.db.collection(`users/${this.user.uid}/trades`);
+
+      // STEP 1 — fetch all trades stored in Firestore (the canonical cloud backup)
+      const snapshot = await colRef.get();
+      const cloudMap = {};
+      snapshot.forEach(doc => { cloudMap[doc.id] = doc.data(); });
+
+      // STEP 2 — merge: cloud wins for existing IDs, keep local-only trades too
+      const localTrades = DB.trades;
+      const merged = {};
+      localTrades.forEach(t => { merged[t.id] = t; });
+      Object.assign(merged, cloudMap); // cloud overwrites for the same ID
+
+      const mergedArray = Object.values(merged)
+        .sort((a, b) => new Date(b.date || b.timestamp || 0) - new Date(a.date || a.timestamp || 0));
+
+      // STEP 3 — save merged set back to local DB
+      DB.trades = mergedArray;
+
+      // STEP 4 — push any local-only trades up to Firestore
+      const localOnlyTrades = localTrades.filter(t => !cloudMap[t.id]);
+      if (localOnlyTrades.length > 0) {
+        const batch = this.db.batch();
+        for (const t of localOnlyTrades) {
+          batch.set(colRef.doc(t.id), t, { merge: true });
+        }
+        await batch.commit();
       }
-      await batch.commit();
+
+      // STEP 5 — refresh whatever view is active
+      if (typeof renderDashboard === 'function') renderDashboard();
+      if (typeof renderJournal === 'function' && document.getElementById('view-journal')?.classList.contains('active')) renderJournal();
+      if (typeof renderAnalytics === 'function' && document.getElementById('view-analytics')?.classList.contains('active')) renderAnalytics();
+
       if (syncIcon) { syncIcon.className = 'fa-solid fa-cloud-check'; syncIcon.style.animation = 'none'; }
-      if (syncText) syncText.textContent = `${trades.length} trades synced`;
+      const pulled = Object.keys(cloudMap).length;
+      const pushed = localOnlyTrades.length;
+      if (syncText) syncText.textContent = pulled > 0
+        ? `${mergedArray.length} trades restored${pushed > 0 ? ' · ' + pushed + ' uploaded' : ''}`
+        : `${mergedArray.length} trades synced`;
     } catch (err) {
+      console.error('[TrafxOS] Sync error:', err);
+      if (syncIcon) { syncIcon.className = 'fa-solid fa-cloud-slash'; syncIcon.style.animation = 'none'; }
       if (syncText) syncText.textContent = 'Sync error — check connection.';
     }
   },
@@ -305,6 +456,15 @@ const FIREBASE = {
       if (el('authUserName'))  el('authUserName').textContent  = user.displayName || 'Trader';
       if (el('authUserEmail')) el('authUserEmail').textContent = user.email || '';
       if (el('authAvatarEl'))  el('authAvatarEl').textContent  = (user.displayName || user.email || '?')[0].toUpperCase();
+      // Sync Firebase display name into settings so dashboard greeting shows the user's name
+      if (user.displayName) {
+        const s = DB.settings;
+        if (!s.name) {
+          s.name = user.displayName;
+          DB.settings = s;
+          updateGreeting();
+        }
+      }
     } else {
       authBtn.innerHTML = '<i class="fa-solid fa-user"></i>';
       signedOutEl?.classList.remove('hidden');
@@ -671,6 +831,12 @@ function initNavigation() {
 }
 
 function navigateTo(view) {
+  // Pro gate — Analytics is a Pro-only feature
+  if (view === 'analytics' && !PRO.canAnalyze()) {
+    showUpgradeModal('Analytics');
+    return;
+  }
+
   // Hide all views
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -691,6 +857,8 @@ function navigateTo(view) {
   if (view === 'analytics') renderAnalytics();
   if (view === 'challenge') renderChallenges();
   if (view === 'log')       resetTradeForm();
+  if (view === 'settings')  renderSettingsProStatus();
+  if (view === 'psychology') renderMindsetTrendChart();
 
   // Scroll to top
   document.getElementById('mainContent').scrollTo(0, 0);
@@ -1547,6 +1715,7 @@ function renderAnalytics() {
   renderSessionChart(trades);
   renderStreakAnalysis(trades);
   renderSetupRanking(trades);
+  renderRRvsPnlChart(trades);
 }
 
 function renderAnalyticsEquityChart(trades) {
@@ -1831,6 +2000,232 @@ function renderSetupRanking(trades) {
 }
 
 /* ────────────────────────────────────────────────────────────
+   PATTERNS: R:R RATIO vs ACTUAL P&L SCATTER
+──────────────────────────────────────────────────────────── */
+function renderRRvsPnlChart(trades) {
+  const emptyEl   = document.getElementById('rrPnlEmpty');
+  const canvasEl  = document.getElementById('holdTimeChart');
+  const insightEl = document.getElementById('rrInsight');
+  if (charts.holdTime) { charts.holdTime.destroy(); charts.holdTime = null; }
+
+  const pts = trades.filter(t => t.rr != null && t.pnl != null
+    && !isNaN(parseFloat(t.rr)) && !isNaN(parseFloat(t.pnl))
+  ).map(t => ({ x: parseFloat(t.rr), y: parseFloat(t.pnl), inst: t.instrument || '' }));
+
+  if (pts.length < 2) {
+    if (emptyEl)   emptyEl.classList.remove('hidden');
+    if (canvasEl)  canvasEl.classList.add('hidden');
+    if (insightEl) insightEl.classList.add('hidden');
+    return;
+  }
+  if (emptyEl)  emptyEl.classList.add('hidden');
+  if (canvasEl) canvasEl.classList.remove('hidden');
+
+  // ── Pearson r + linear regression ──
+  const n     = pts.length;
+  const meanX = pts.reduce((s, p) => s + p.x, 0) / n;
+  const meanY = pts.reduce((s, p) => s + p.y, 0) / n;
+  const cov   = pts.reduce((s, p) => s + (p.x - meanX) * (p.y - meanY), 0);
+  const varX  = pts.reduce((s, p) => s + (p.x - meanX) ** 2, 0);
+  const stdY  = Math.sqrt(pts.reduce((s, p) => s + (p.y - meanY) ** 2, 0));
+  const r     = (varX && stdY) ? cov / (Math.sqrt(varX) * stdY) : 0;
+  const slope = varX ? cov / varX : 0;
+  const icept = meanY - slope * meanX;
+  const xs    = pts.map(p => p.x);
+  const xMin  = Math.min(...xs), xMax = Math.max(...xs);
+  const trendPts   = [{ x: xMin, y: slope * xMin + icept }, { x: xMax, y: slope * xMax + icept }];
+  const trendColor = r >= 0 ? 'rgba(16,185,129,0.5)' : 'rgba(239,68,68,0.5)';
+
+  const ctx = canvasEl.getContext('2d');
+  charts.holdTime = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'R:R vs P&L',
+          data: pts,
+          backgroundColor: pts.map(p => p.y >= 0 ? 'rgba(16,185,129,0.7)' : 'rgba(239,68,68,0.7)'),
+          borderColor: pts.map(p => p.y >= 0 ? '#10b981' : '#ef4444'),
+          borderWidth: 1.5,
+          pointRadius: 7,
+          pointHoverRadius: 10,
+          order: 1,
+        },
+        {
+          label: 'Trend',
+          data: trendPts,
+          type: 'line',
+          borderColor: trendColor,
+          borderWidth: 1.5,
+          borderDash: [5, 4],
+          pointRadius: 0,
+          fill: false,
+          tension: 0,
+          order: 2,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          filter: item => item.datasetIndex === 0,
+          callbacks: {
+            label: ctx => `${ctx.raw.inst || 'Trade'} · R:R ${ctx.parsed.x.toFixed(1)} → ${fmt(ctx.parsed.y)}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: 'Planned R:R', color: 'rgba(255,255,255,0.35)', font: { size: 9 } },
+          ticks: { font: { size: 10 }, color: 'rgba(255,255,255,0.45)' },
+          grid: { color: 'rgba(255,255,255,0.05)' }
+        },
+        y: {
+          title: { display: true, text: 'Actual P&L', color: 'rgba(255,255,255,0.35)', font: { size: 9 } },
+          ticks: { callback: v => fmt(v), font: { size: 10 }, color: 'rgba(255,255,255,0.45)' },
+          grid: { color: 'rgba(255,255,255,0.05)' }
+        }
+      }
+    }
+  });
+
+  // ── Insight bar below chart ──
+  if (insightEl) {
+    const absR     = Math.abs(r);
+    const strength = absR >= 0.6 ? 'strong' : absR >= 0.35 ? 'moderate' : 'weak';
+    const dir      = r >= 0 ? 'positive' : 'negative';
+    const dirIcon  = r >= 0 ? '↗' : '↘';
+    const dirColor = r >= 0 ? 'var(--green)' : 'var(--red)';
+    const verdict  =
+      r >= 0.35  ? 'Higher R:R setups are translating to better results' :
+      r <= -0.35 ? 'Higher R:R isn\'t paying off — review your entry quality' :
+                   'R:R alone isn\'t predicting outcomes yet — execution is the variable';
+
+    const highRR  = pts.filter(p => p.x >= 2);
+    const lowRR   = pts.filter(p => p.x < 2);
+    const avgHigh = highRR.length ? highRR.reduce((s, p) => s + p.y, 0) / highRR.length : null;
+    const avgLow  = lowRR.length  ? lowRR.reduce((s, p) => s + p.y, 0) / lowRR.length  : null;
+
+    let statsHtml = '';
+    if (avgHigh !== null) statsHtml += `
+      <span class="rr-ins-stat">
+        <span class="rr-ins-label">R:R ≥ 2 avg</span>
+        <span class="rr-ins-val ${avgHigh >= 0 ? 'green' : 'red'}">${fmt(avgHigh)}</span>
+      </span>`;
+    if (avgLow !== null) statsHtml += `
+      <span class="rr-ins-stat">
+        <span class="rr-ins-label">R:R &lt; 2 avg</span>
+        <span class="rr-ins-val ${avgLow >= 0 ? 'green' : 'red'}">${fmt(avgLow)}</span>
+      </span>`;
+    statsHtml += `
+      <span class="rr-ins-stat">
+        <span class="rr-ins-label">Trades plotted</span>
+        <span class="rr-ins-val" style="color:var(--text-2)">${pts.length}</span>
+      </span>`;
+
+    insightEl.innerHTML = `
+      <div class="rr-ins-row">
+        <span class="rr-ins-corr" style="color:${dirColor}">${dirIcon} r&nbsp;=&nbsp;${r.toFixed(2)}<span class="rr-ins-str"> · ${strength} ${dir} correlation</span></span>
+        <span class="rr-ins-msg">${verdict}</span>
+      </div>
+      <div class="rr-ins-stats">${statsHtml}</div>`;
+    insightEl.classList.remove('hidden');
+  }
+}
+
+/* ────────────────────────────────────────────────────────────
+   PSYCHOLOGY LAB: MINDSET PERFORMANCE TREND (PRO)
+──────────────────────────────────────────────────────────── */
+function renderMindsetTrendChart() {
+  const el = document.getElementById('mindsetTrendSection');
+  if (!el) return;
+
+  // Show PRO badge in section heading only for non-Pro users
+  const proHdBadge = document.getElementById('mindsetProBadge');
+  if (proHdBadge) proHdBadge.style.display = PRO.active ? 'none' : '';
+
+  if (!PRO.active) {
+    el.innerHTML = `
+      <div class="mindset-gate-card" onclick="showUpgradeModal('Mindset Performance Trend')">
+        <div class="mindset-gate-top">
+          <span class="mindset-gate-icon"><i class="fa-solid fa-brain"></i></span>
+          <span class="pro-badge-inline"><i class="fa-solid fa-crown"></i> PRO</span>
+        </div>
+        <h3 class="mindset-gate-title">Mindset Performance Trend</h3>
+        <p class="mindset-gate-desc">See exactly how your sleep, stress, and focus correlate with your trading P&L over time. The data will change how you prepare.</p>
+        <span class="btn-primary btn-sm" style="pointer-events:none">Unlock with Pro</span>
+      </div>`;
+    return;
+  }
+
+  const checkins = [...DB.checkins].sort((a, b) => a.date.localeCompare(b.date)).slice(-14);
+  const trades = DB.trades;
+
+  if (checkins.length < 2) {
+    el.innerHTML = '<p class="empty-state-mini">Complete at least 2 daily check-ins to unlock your trend chart.</p>';
+    return;
+  }
+
+  const labels = checkins.map(c => {
+    const d = new Date(c.date + 'T00:00:00');
+    return d.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' });
+  });
+  const readinessData = checkins.map(c =>
+    Math.round(((c.sleep + (10 - c.stress) + c.focus + c.stability) / 40) * 100)
+  );
+  const pnlData = checkins.map(c => {
+    const dayTrades = trades.filter(t => (t.datetime || '').startsWith(c.date));
+    if (!dayTrades.length) return null;
+    return parseFloat(dayTrades.reduce((s, t) => s + (parseFloat(t.pnl) || 0), 0).toFixed(2));
+  });
+
+  el.innerHTML = '<div class="chart-container chart-sm"><canvas id="mindsetTrendChart"></canvas></div>';
+
+  setTimeout(() => {
+    const ctx = document.getElementById('mindsetTrendChart')?.getContext('2d');
+    if (!ctx) return;
+    if (charts.mindsetTrend) charts.mindsetTrend.destroy();
+    charts.mindsetTrend = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Readiness %',
+            data: readinessData,
+            borderColor: 'rgba(99,102,241,0.9)',
+            backgroundColor: 'rgba(99,102,241,0.12)',
+            fill: true, tension: 0.4, yAxisID: 'y1', pointRadius: 3, borderWidth: 2,
+          },
+          {
+            label: 'Daily P&L',
+            data: pnlData,
+            borderColor: 'rgba(16,185,129,0.9)',
+            backgroundColor: 'transparent',
+            fill: false, tension: 0.4, yAxisID: 'y2', pointRadius: 4, borderWidth: 2,
+            borderDash: [5, 3],
+          }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: true,
+        plugins: {
+          legend: { display: true, labels: { font: { size: 10 }, color: 'rgba(255,255,255,0.55)', boxWidth: 10, padding: 12 } },
+          tooltip: { callbacks: { label: ctx => ctx.dataset.label === 'Daily P&L' ? `P&L: ${fmt(ctx.raw)}` : `Readiness: ${ctx.raw}%` } }
+        },
+        scales: {
+          x: { ticks: { font: { size: 9 }, color: 'rgba(255,255,255,0.4)' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+          y1: { type: 'linear', position: 'left', min: 0, max: 100, ticks: { callback: v => v + '%', font: { size: 9 }, color: 'rgba(99,102,241,0.7)' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+          y2: { type: 'linear', position: 'right', ticks: { callback: v => fmt(v), font: { size: 9 }, color: 'rgba(16,185,129,0.7)' }, grid: { display: false } }
+        }
+      }
+    });
+  }, 50);
+}
+
+/* ────────────────────────────────────────────────────────────
    CHALLENGE TRACKER
 ──────────────────────────────────────────────────────────── */
 function initChallengeTracker() {
@@ -2005,6 +2400,14 @@ const LESSONS = {
         <li><strong>Pre-session rule:</strong> Write your rule before you trade. Read it before every entry.</li>
         <li><strong>Pattern recognition:</strong> TrafxOS will alert you when it detects revenge-emotion entries.</li>
       </ul>
+      <div class="lesson-watch">
+        <h3><i class="fa-brands fa-youtube" style="color:#ff4444"></i> Watch &amp; Learn</h3>
+        <div class="lesson-video-links">
+          <a href="https://www.youtube.com/results?search_query=how+to+stop+revenge+trading+psychology" target="_blank" rel="noopener" class="video-link-card"><i class="fa-brands fa-youtube"></i><span>How to Stop Revenge Trading</span><i class="fa-solid fa-arrow-up-right-from-square fa-xs"></i></a>
+          <a href="https://www.youtube.com/results?search_query=trading+tilt+emotional+discipline+forex" target="_blank" rel="noopener" class="video-link-card"><i class="fa-brands fa-youtube"></i><span>Trading Tilt &amp; Emotional Discipline</span><i class="fa-solid fa-arrow-up-right-from-square fa-xs"></i></a>
+          <a href="https://www.youtube.com/results?search_query=mark+douglas+trading+psychology+loss" target="_blank" rel="noopener" class="video-link-card"><i class="fa-brands fa-youtube"></i><span>Mark Douglas — Trading After a Loss</span><i class="fa-solid fa-arrow-up-right-from-square fa-xs"></i></a>
+        </div>
+      </div>
     `
   },
   sizing: {
@@ -2023,6 +2426,14 @@ const LESSONS = {
       </ul>
       <h3>The "Sleep Test"</h3>
       <p>Before entering: could you hold this position overnight without anxiety? If no — reduce your size until you can answer yes. That is your correct position size.</p>
+      <div class="lesson-watch">
+        <h3><i class="fa-brands fa-youtube" style="color:#ff4444"></i> Watch &amp; Learn</h3>
+        <div class="lesson-video-links">
+          <a href="https://www.youtube.com/results?search_query=position+sizing+psychology+trading" target="_blank" rel="noopener" class="video-link-card"><i class="fa-brands fa-youtube"></i><span>Position Sizing Psychology</span><i class="fa-solid fa-arrow-up-right-from-square fa-xs"></i></a>
+          <a href="https://www.youtube.com/results?search_query=risk+management+forex+1+percent+rule" target="_blank" rel="noopener" class="video-link-card"><i class="fa-brands fa-youtube"></i><span>The 1% Risk Rule Explained</span><i class="fa-solid fa-arrow-up-right-from-square fa-xs"></i></a>
+          <a href="https://www.youtube.com/results?search_query=trading+lot+size+calculator+tutorial" target="_blank" rel="noopener" class="video-link-card"><i class="fa-brands fa-youtube"></i><span>How to Size Your Trades Correctly</span><i class="fa-solid fa-arrow-up-right-from-square fa-xs"></i></a>
+        </div>
+      </div>
     `
   },
   patience: {
@@ -2041,6 +2452,14 @@ const LESSONS = {
       </ul>
       <h3>The Sniper Mindset</h3>
       <p>Elite snipers fire 1.3 rounds per target on average. They don't spray. Your trading edge works the same way. Choose your shots with precision, then execute without hesitation.</p>
+      <div class="lesson-watch">
+        <h3><i class="fa-brands fa-youtube" style="color:#ff4444"></i> Watch &amp; Learn</h3>
+        <div class="lesson-video-links">
+          <a href="https://www.youtube.com/results?search_query=overtrading+forex+how+to+stop" target="_blank" rel="noopener" class="video-link-card"><i class="fa-brands fa-youtube"></i><span>How to Stop Overtrading</span><i class="fa-solid fa-arrow-up-right-from-square fa-xs"></i></a>
+          <a href="https://www.youtube.com/results?search_query=sniper+trading+strategy+patience+setups" target="_blank" rel="noopener" class="video-link-card"><i class="fa-brands fa-youtube"></i><span>The Sniper Trading Approach</span><i class="fa-solid fa-arrow-up-right-from-square fa-xs"></i></a>
+          <a href="https://www.youtube.com/results?search_query=trading+less+making+more+quality+vs+quantity" target="_blank" rel="noopener" class="video-link-card"><i class="fa-brands fa-youtube"></i><span>Trade Less, Earn More</span><i class="fa-solid fa-arrow-up-right-from-square fa-xs"></i></a>
+        </div>
+      </div>
     `
   },
   cognitive: {
@@ -2058,6 +2477,14 @@ const LESSONS = {
         <li><strong>Physical cues:</strong> Stand up, step away from screen for 5 minutes before entries</li>
         <li><strong>Partner accountability:</strong> Share your rule-card with someone</li>
       </ul>
+      <div class="lesson-watch">
+        <h3><i class="fa-brands fa-youtube" style="color:#ff4444"></i> Watch &amp; Learn</h3>
+        <div class="lesson-video-links">
+          <a href="https://www.youtube.com/results?search_query=trading+psychology+emotional+discipline+system+1+system+2" target="_blank" rel="noopener" class="video-link-card"><i class="fa-brands fa-youtube"></i><span>Emotional vs Rational Trading Mind</span><i class="fa-solid fa-arrow-up-right-from-square fa-xs"></i></a>
+          <a href="https://www.youtube.com/results?search_query=kahneman+thinking+fast+slow+trading" target="_blank" rel="noopener" class="video-link-card"><i class="fa-brands fa-youtube"></i><span>Thinking Fast &amp; Slow in Trading</span><i class="fa-solid fa-arrow-up-right-from-square fa-xs"></i></a>
+          <a href="https://www.youtube.com/results?search_query=pre+trading+routine+checklist+mindset" target="_blank" rel="noopener" class="video-link-card"><i class="fa-brands fa-youtube"></i><span>Pre-Trade Mental Routine</span><i class="fa-solid fa-arrow-up-right-from-square fa-xs"></i></a>
+        </div>
+      </div>
     `
   },
   lossaversion: {
@@ -2080,6 +2507,14 @@ const LESSONS = {
         <li>Disable P&L display on your platform during live trades</li>
         <li>Only move stoplosses in the direction of the trade, never to breakeven prematurely</li>
       </ul>
+      <div class="lesson-watch">
+        <h3><i class="fa-brands fa-youtube" style="color:#ff4444"></i> Watch &amp; Learn</h3>
+        <div class="lesson-video-links">
+          <a href="https://www.youtube.com/results?search_query=loss+aversion+trading+psychology" target="_blank" rel="noopener" class="video-link-card"><i class="fa-brands fa-youtube"></i><span>Loss Aversion in Trading</span><i class="fa-solid fa-arrow-up-right-from-square fa-xs"></i></a>
+          <a href="https://www.youtube.com/results?search_query=R+multiple+trading+risk+reward+van+tharp" target="_blank" rel="noopener" class="video-link-card"><i class="fa-brands fa-youtube"></i><span>R-Multiples &amp; Thinking in Risk</span><i class="fa-solid fa-arrow-up-right-from-square fa-xs"></i></a>
+          <a href="https://www.youtube.com/results?search_query=breakeven+stop+loss+mistake+trading" target="_blank" rel="noopener" class="video-link-card"><i class="fa-brands fa-youtube"></i><span>The Breakeven Stop Mistake</span><i class="fa-solid fa-arrow-up-right-from-square fa-xs"></i></a>
+        </div>
+      </div>
     `
   },
   processgoals: {
@@ -2103,6 +2538,14 @@ const LESSONS = {
         <li>Do not trade after 2 losses in a day: zero exceptions</li>
       </ul>
       <p>When process is the goal, a losing day where you executed perfectly is a <strong>success</strong>. This mindset is what separates professionals from gamblers.</p>
+      <div class="lesson-watch">
+        <h3><i class="fa-brands fa-youtube" style="color:#ff4444"></i> Watch &amp; Learn</h3>
+        <div class="lesson-video-links">
+          <a href="https://www.youtube.com/results?search_query=process+goals+trading+mindset+consistency" target="_blank" rel="noopener" class="video-link-card"><i class="fa-brands fa-youtube"></i><span>Process vs Outcome in Trading</span><i class="fa-solid fa-arrow-up-right-from-square fa-xs"></i></a>
+          <a href="https://www.youtube.com/results?search_query=trading+journal+habits+consistency" target="_blank" rel="noopener" class="video-link-card"><i class="fa-brands fa-youtube"></i><span>Building Consistent Trading Habits</span><i class="fa-solid fa-arrow-up-right-from-square fa-xs"></i></a>
+          <a href="https://www.youtube.com/results?search_query=professional+trader+mindset+daily+routine" target="_blank" rel="noopener" class="video-link-card"><i class="fa-brands fa-youtube"></i><span>The Professional Trader Mindset</span><i class="fa-solid fa-arrow-up-right-from-square fa-xs"></i></a>
+        </div>
+      </div>
     `
   },
 };
@@ -2135,6 +2578,8 @@ function initPsychologyLab() {
   });
 
   updateTradeReadiness();
+  renderMindsetTrendChart();
+  initNotifyBtn();
 }
 
 function updateTradeReadiness() {
@@ -2203,6 +2648,46 @@ function loadSettings() {
   if (s.notifDailyLimit !== undefined) notifDailyLimit.checked = s.notifDailyLimit;
 }
 
+function renderSettingsProStatus() {
+  const el = document.getElementById('settingsProStatusSection');
+  if (!el) return;
+  const isPro = PRO.active;
+  const st = PRO._state || {};
+  const since = st.proSince || localStorage.getItem('trafxos_pro_since');
+  const plan = st.plan || localStorage.getItem('trafxos_flw_plan') || 'code';
+  const code = st.code || null;
+  const sinceStr = since ? new Date(since).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : null;
+
+  if (isPro) {
+    el.innerHTML = `
+      <div class="pro-status-card pro-status-active">
+        <div class="pro-status-top">
+          <span class="pro-status-badge"><i class="fa-solid fa-crown"></i> TrafxOS Pro</span>
+          <span class="pro-status-plan-tag">${plan === 'annual' ? 'Annual' : plan === 'monthly' ? 'Monthly' : 'Access Code'}</span>
+        </div>
+        <p class="pro-status-detail">Unlimited trades &middot; Analytics &middot; Psychology Lab &middot; Export</p>
+        ${sinceStr ? `<p class="pro-status-since">Active since ${sinceStr}${code ? ' &middot; Code: <code>' + sanitize(code) + '</code>' : ''}</p>` : ''}
+      </div>`;
+  } else {
+    const used = DB.trades.length;
+    const pct = Math.min(100, Math.round((used / PRO.FREE_LIMIT) * 100));
+    el.innerHTML = `
+      <div class="pro-status-card pro-status-free">
+        <div class="pro-status-top">
+          <span class="pro-status-badge free"><i class="fa-solid fa-lock"></i> Free Plan</span>
+          <span class="pro-status-plan-tag">${used} / ${PRO.FREE_LIMIT} trades</span>
+        </div>
+        <div class="pro-limit-bar-wrap">
+          <div class="pro-limit-bar-track"><div class="pro-limit-bar-fill" style="width:${pct}%;background:${pct>=90?'var(--red)':pct>=70?'var(--yellow)':'var(--accent)'}"></div></div>
+        </div>
+        <p class="pro-status-detail">Upgrade for unlimited trades, advanced analytics, and psychology insights.</p>
+        <button class="btn-primary" style="margin-top:12px" onclick="showUpgradeModal('Pro features')">
+          <i class="fa-solid fa-crown"></i> Upgrade to Pro
+        </button>
+      </div>`;
+  }
+}
+
 function initSettingsPage() {
   document.getElementById('saveSettingsBtn').addEventListener('click', () => {
     const s = {
@@ -2257,6 +2742,8 @@ function initSettingsPage() {
   });
 
   initMT4Import();
+  // Render plan status card
+  renderSettingsProStatus();
 }
 
 function importCSV(text) {
@@ -2435,9 +2922,20 @@ function initPWAInstallPrompt() {
       fab?.classList.add('hidden');
       banner?.classList.add('hidden');
       if (outcome === 'accepted') toast('TrafxOS installed! 🎉 Find it on your home screen.', 'success', 4000);
-    } else if (!isIOS) {
-      modal.classList.add('hidden');
-      toast('Open your browser menu → “Add to Home Screen” to install.', 'info', 5000);
+    } else {
+      // No native prompt - show platform-specific instructions
+      const hint = document.getElementById('pwaIosHint');
+      if (hint) {
+        if (isIOS) {
+          hint.innerHTML = '<i class="fa-solid fa-arrow-up-from-bracket"></i> Tap <strong>Share</strong> then <strong>Add to Home Screen</strong>';
+        } else if (/android/i.test(navigator.userAgent)) {
+          hint.innerHTML = '<i class="fa-solid fa-ellipsis-vertical"></i> Tap <strong>Menu &#8942;</strong> (top right) then <strong>Add to Home Screen</strong>';
+        } else {
+          hint.innerHTML = '<i class="fa-solid fa-ellipsis-vertical"></i> Open browser <strong>Menu</strong> then <strong>Install App</strong> or <strong>Add to Home Screen</strong>';
+        }
+        hint.classList.remove('hidden');
+      }
+      document.getElementById('pwaModalInstallBtn')?.classList.add('hidden');
     }
   });
 
@@ -2465,19 +2963,54 @@ function initAuthModal() {
 
   document.getElementById('googleSignInBtn')?.addEventListener('click', () => FIREBASE.signInWithGoogle());
 
-  document.getElementById('emailSignInBtn')?.addEventListener('click', () => {
+  // Forgot password — sends a Firebase reset email to whatever is typed in the email field
+  document.getElementById('forgotPasswordLink')?.addEventListener('click', () => {
+    const email = document.getElementById('authEmail')?.value.trim();
+    FIREBASE.resetPassword(email);
+  });
+
+  // Sign-up mode toggle: show name field when user clicks Create Account
+  let authMode = 'signin';
+  const nameField = document.getElementById('authDisplayName');
+  const signInBtn = document.getElementById('emailSignInBtn');
+  const signUpBtn = document.getElementById('emailSignUpBtn');
+  const modeHint  = document.getElementById('authModeHint');
+  function setAuthMode(mode) {
+    authMode = mode;
+    if (mode === 'signup') {
+      nameField?.classList.remove('hidden');
+      nameField?.setAttribute('required', '');
+      if (signInBtn) signInBtn.textContent = 'Sign In';
+      if (signUpBtn) { signUpBtn.textContent = 'Create Account ✓'; signUpBtn.classList.remove('btn-secondary'); signUpBtn.classList.add('btn-primary'); }
+      if (signInBtn) { signInBtn.classList.remove('btn-primary'); signInBtn.classList.add('btn-secondary'); }
+      if (modeHint) modeHint.textContent = 'Already have an account? Sign in';
+    } else {
+      nameField?.classList.add('hidden');
+      nameField?.removeAttribute('required');
+      if (signInBtn) { signInBtn.textContent = 'Sign In'; signInBtn.classList.add('btn-primary'); signInBtn.classList.remove('btn-secondary'); }
+      if (signUpBtn) { signUpBtn.textContent = 'Create Account'; signUpBtn.classList.add('btn-secondary'); signUpBtn.classList.remove('btn-primary'); }
+      if (modeHint) modeHint.textContent = "Don't have an account? Create one";
+    }
+  }
+  setAuthMode('signin');
+  modeHint?.addEventListener('click', () => setAuthMode(authMode === 'signin' ? 'signup' : 'signin'));
+
+  signInBtn?.addEventListener('click', () => {
     const email = document.getElementById('authEmail')?.value.trim();
     const pw    = document.getElementById('authPassword')?.value;
     if (!email || !pw) { toast('Enter your email and password.', 'warn'); return; }
     FIREBASE.signInWithEmail(email, pw);
   });
 
-  document.getElementById('emailSignUpBtn')?.addEventListener('click', () => {
+  signUpBtn?.addEventListener('click', () => {
+    if (authMode === 'signin') { setAuthMode('signup'); return; }
+    const name  = (nameField?.value || '').trim();
     const email = document.getElementById('authEmail')?.value.trim();
     const pw    = document.getElementById('authPassword')?.value;
-    if (!email || !pw) { toast('Enter your email and a password to create an account.', 'warn'); return; }
+    if (!name)  { toast('Enter your name to create an account.', 'warn'); nameField?.focus(); return; }
+    if (!email || !pw) { toast('Enter your email and a password.', 'warn'); return; }
     if (pw.length < 6)  { toast('Password must be at least 6 characters.', 'warn'); return; }
-    FIREBASE.signUp(email, pw);
+    FIREBASE.signUp(email, pw, name);
   });
 
   document.getElementById('signOutBtn')?.addEventListener('click', () => FIREBASE.signOut());
@@ -2507,19 +3040,31 @@ function initUpgradeModal() {
     }
   };
 
-  document.getElementById('upgradeModalClose')?.addEventListener('click', () => {
+  const closeUpgrade = () => {
     hideModal('upgradeModal');
     document.getElementById('upgradeFeatureRow')?.classList.add('hidden');
-  });
+  };
+  document.getElementById('upgradeModalClose')?.addEventListener('click', closeUpgrade);
+  document.getElementById('upgradeMaybeLater')?.addEventListener('click', closeUpgrade);
   document.getElementById('upgradeModal')?.addEventListener('click', e => {
-    if (e.target === e.currentTarget) hideModal('upgradeModal');
+    if (e.target === e.currentTarget) closeUpgrade();
   });
 
   document.getElementById('billMonthly')?.addEventListener('click', () => setPeriod('monthly'));
   document.getElementById('billAnnual')?.addEventListener('click',  () => setPeriod('annual'));
+  document.getElementById('billMonthly')?.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setPeriod('monthly'); } });
+  document.getElementById('billAnnual')?.addEventListener('keydown',  e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setPeriod('annual');  } });
 
   // Checkout via Flutterwave
   document.getElementById('upgradeCheckoutBtn')?.addEventListener('click', () => {
+    // Pro is tied to an account so the payment can be verified server-side and
+    // granted to the right user. Require sign-in before checkout.
+    if (!FIREBASE.user) {
+      toast('Please sign in first so we can link your Pro access to your account.', 'warn', 5000);
+      hideModal('upgradeModal');
+      showModal('authModal');
+      return;
+    }
     // Auto-fill from signed-in user
     const u = FIREBASE.user;
     const emailEl = document.getElementById('checkoutEmail');
@@ -2543,8 +3088,19 @@ function initUpgradeModal() {
     const pubKey   = (window.FLW_PUBLIC_KEY || '').trim();
 
     // Validate it’s a real Flutterwave public key (must start with FLWPUBK)
-    if (!pubKey.toUpperCase().startsWith('FLWPUBK')) {
-      toast('Payment is being set up. Use your Pro key below, or email hello@trafxos.com for early access.', 'info', 7000);
+    // Block known malformed/placeholder keys so Flutterwave never shows "contact blocked".
+    const PLACEHOLDER_KEY = 'FLWPUBK-5e59bbecccd-f01432d01be0c1354209a-X'; // malformed key with extra hyphen
+    if (!pubKey.toUpperCase().startsWith('FLWPUBK') || pubKey === PLACEHOLDER_KEY) {
+      toast('Payment checkout is being set up. Use your Pro key below to unlock instantly.', 'info', 5000);
+      const keyInput = document.getElementById('proKeyInput');
+      if (keyInput) {
+        keyInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        setTimeout(() => {
+          keyInput.focus();
+          keyInput.classList.add('input-highlight');
+          setTimeout(() => keyInput.classList.remove('input-highlight'), 1500);
+        }, 350);
+      }
       return;
     }
 
@@ -2561,7 +3117,7 @@ function initUpgradeModal() {
         tx_ref:          txRef,
         amount,
         currency,
-        payment_options: 'card,banktransfer,ussd',
+        payment_options: 'card,banktransfer,ussd,mobilemoney',
         meta: {
           plan:    isAnnual ? 'annual' : 'monthly',
           product: 'TrafxOS Pro',
@@ -2574,10 +3130,27 @@ function initUpgradeModal() {
         },
         callback(data) {
           if (data.status === 'successful' || data.status === 'completed') {
-            localStorage.setItem('trafxos_flw_tx', String(data.transaction_id || txRef));
-            activateProFull();
+            try { data.instance?.close(); } catch (_) {}
             hideModal('upgradeModal');
-            toast('\uD83C\uDF89 Pro unlocked! Welcome to TrafxOS Pro. Check your email for the receipt.', 'success', 7000);
+            toast('Verifying your payment…', 'info', 4000);
+            // SECURITY: never trust the browser's "successful" — confirm the payment
+            // on our server, which re-checks it with Flutterwave's secret key and
+            // only then writes the Pro flag (which the client cannot fake).
+            callFn('verify-payment', {
+              transactionId: data.transaction_id,
+              plan: isAnnual ? 'annual' : 'monthly',
+            }).then(res => {
+              if (res && res.pro) {
+                activateProFull(email);
+                toast('🎉 Payment confirmed! TrafxOS Pro is now active. Check your email for the receipt.', 'success', 8000);
+              } else {
+                toast('Payment received but not verified yet. If Pro doesn\'t unlock shortly, email hello@trafxos.com with your receipt.', 'warn', 9000);
+              }
+            }).catch(err => {
+              toast('Could not verify payment: ' + err.message + '. Email hello@trafxos.com with your receipt and we\'ll sort it out.', 'error', 9000);
+            });
+          } else if (data.status === 'failed') {
+            toast('Payment failed. Please try again or use a Pro key.', 'error', 6000);
           }
         },
         onclose() {},
@@ -2588,16 +3161,38 @@ function initUpgradeModal() {
   });
 
   // Pro key activation
-  document.getElementById('proKeyApplyBtn')?.addEventListener('click', () => {
-    const code = (document.getElementById('proKeyInput')?.value || '').trim();
+  document.getElementById('proKeyApplyBtn')?.addEventListener('click', async () => {
+    const keyInput = document.getElementById('proKeyInput');
+    const code = (keyInput?.value || '').trim();
     if (!code) { toast('Enter your Pro key first.', 'warn'); return; }
-    if (PRO.activate(code)) {
-      activateProFull();
+    // Codes are validated server-side now and tied to your account.
+    if (!FIREBASE.user) {
+      toast('Please sign in first to redeem a Pro key — it links to your account.', 'warn', 5000);
       hideModal('upgradeModal');
-      document.getElementById('upgradeFeatureRow')?.classList.add('hidden');
-      toast('\uD83C\uDF89 Pro key accepted! Full access unlocked.', 'success', 5000);
-    } else {
-      toast('Invalid Pro key. Double-check for typos or contact hello@trafxos.com.', 'error');
+      showModal('authModal');
+      return;
+    }
+    const btn = document.getElementById('proKeyApplyBtn');
+    btn.disabled = true;
+    try {
+      const res = await callFn('redeem-code', { code });
+      if (res && res.pro) {
+        await activateProFull();
+        hideModal('upgradeModal');
+        document.getElementById('upgradeFeatureRow')?.classList.add('hidden');
+        if (keyInput) keyInput.value = '';
+        toast('🎉 Pro key accepted! Full access unlocked across your devices.', 'success', 5000);
+      } else {
+        throw new Error('Invalid code');
+      }
+    } catch (err) {
+      if (keyInput) { keyInput.classList.add('input-error'); setTimeout(() => keyInput.classList.remove('input-error'), 1200); }
+      const msg = (err.message === 'Invalid code')
+        ? 'Invalid Pro key. Check for typos or email hello@trafxos.com'
+        : 'Could not redeem key: ' + err.message;
+      toast(msg, 'error', 5000);
+    } finally {
+      btn.disabled = false;
     }
   });
   document.getElementById('proKeyInput')?.addEventListener('keydown', e => {
@@ -2632,15 +3227,28 @@ function renderNotifPanel() {
   const list = document.getElementById('notifList');
   const notifs = NotifStore.all;
   if (!notifs.length) {
-    list.innerHTML = '<div class="notif-empty">No notifications yet. Trade well!</div>';
+    list.innerHTML = '<div class="notif-empty"><i class="fa-solid fa-bell-slash" style="display:block;margin-bottom:8px;opacity:0.3;font-size:1.4rem"></i>No notifications yet. Trade well!</div>';
     return;
   }
-  list.innerHTML = notifs.slice(0, 20).map(n => `
+  const iconMap = {
+    warn:    { cls: 'type-warn',    icon: 'fa-triangle-exclamation' },
+    error:   { cls: 'type-error',   icon: 'fa-circle-xmark' },
+    success: { cls: 'type-success', icon: 'fa-circle-check' },
+    info:    { cls: 'type-info',    icon: 'fa-circle-info' },
+  };
+  list.innerHTML = notifs.slice(0, 20).map(n => {
+    const t = iconMap[n.type] || iconMap.info;
+    return `
     <div class="notif-item ${n.read ? '' : 'unread'}">
-      <div class="notif-msg">${sanitize(n.msg)}</div>
-      <div class="notif-time">${fmtDateTime(n.time)}</div>
-    </div>
-  `).join('');
+      <div class="notif-item-inner">
+        <div class="notif-icon ${t.cls}"><i class="fa-solid ${t.icon}"></i></div>
+        <div class="notif-body">
+          <div class="notif-msg">${sanitize(n.msg)}</div>
+          <div class="notif-time">${fmtDateTime(n.time)}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
   // Mark all as read
   const updated = NotifStore.all.map(n => ({ ...n, read: true }));
   NotifStore.all = updated;
@@ -2707,13 +3315,14 @@ function initFeedback() {
   document.getElementById('feedbackSubmitBtn').addEventListener('click', () => {
     const text = document.getElementById('feedbackText').value.trim();
     if (!feedbackRating) { toast('Please select a rating emoji first.', 'warn'); return; }
-    // Store feedback locally + send to Firestore if signed in
+    const ratingLabels = { 1: '1 - Terrible', 2: '2 - Bad', 3: '3 - Okay', 4: '4 - Good', 5: '5 - Amazing' };
     const feedback = {
       rating: feedbackRating,
       text,
       timestamp: new Date().toISOString(),
       userId: FIREBASE.user?.uid || 'anonymous',
     };
+    // Store locally
     const stored = JSON.parse(localStorage.getItem('trafxos_feedback') || '[]');
     stored.push(feedback);
     localStorage.setItem('trafxos_feedback', JSON.stringify(stored));
@@ -2721,6 +3330,18 @@ function initFeedback() {
     if (FIREBASE.db && FIREBASE.user) {
       FIREBASE.db.collection('feedback').add(feedback).catch(() => {});
     }
+    // Send to Netlify Forms -> email notification
+    const formData = new URLSearchParams();
+    formData.append('form-name', 'trafxos-feedback');
+    formData.append('rating', ratingLabels[feedbackRating] || feedbackRating);
+    formData.append('message', text || '(no message)');
+    formData.append('user', FIREBASE.user?.email || FIREBASE.user?.uid || 'anonymous');
+    formData.append('timestamp', feedback.timestamp);
+    fetch('/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: formData.toString(),
+    }).catch(() => {}); // best-effort, don't block UX
     hideModal('feedbackModal');
     feedbackRating = 0;
     document.getElementById('feedbackText').value = '';
@@ -3299,11 +3920,6 @@ function renderCommunityDash() {
   const state = getCommunityState();
   const trades = DB.trades;
 
-  if (!trades.length) {
-    container.innerHTML = `<div class="community-empty"><i class="fa-solid fa-users"></i><p>Start logging trades to join community challenges and compete with traders worldwide.</p></div>`;
-    return;
-  }
-
   const joined = state.joined || [];
 
   let html = COMMUNITY_CHALLENGES.map(ch => {
@@ -3393,7 +4009,7 @@ function initDashInstallCard() {
         toast('TrafxOS installed! 🎉', 'success');
       }
     } else {
-      // Show the full install modal
+      // No native prompt — open the install modal
       const modal = document.getElementById('pwaInstallModal');
       if (modal) modal.classList.remove('hidden');
     }
@@ -3406,11 +4022,53 @@ function initDashInstallCard() {
 }
 
 /* ────────────────────────────────────────────────────────────
+   MT4/MT5 LAUNCH NOTIFICATION
+──────────────────────────────────────────────────────────── */
+function notifyMT5Launch() {
+  const btn = document.getElementById('csNotifyBtn');
+  const email = FIREBASE.user?.email;
+  if (!email) {
+    toast('Sign in first to get notified when this launches.', 'warn');
+    return;
+  }
+  // Submit to Netlify Forms → email lands in your inbox
+  const formData = new URLSearchParams();
+  formData.append('form-name', 'trafxos-notify');
+  formData.append('email', email);
+  formData.append('feature', 'MT4/MT5 Auto-Journal');
+  formData.append('timestamp', new Date().toISOString());
+  fetch('/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: formData.toString(),
+  }).catch(() => {});
+  // Mark notified locally so button updates on next visit
+  const notified = JSON.parse(localStorage.getItem('trafxos_notify_list') || '[]');
+  if (!notified.includes('mt5')) { notified.push('mt5'); localStorage.setItem('trafxos_notify_list', JSON.stringify(notified)); }
+  if (btn) { btn.textContent = '✓ You\'re on the list'; btn.disabled = true; }
+  toast('🔔 Done! We\'ll email you at ' + email + ' when MT4/MT5 sync launches.', 'success', 6000);
+}
+
+function initNotifyBtn() {
+  const btn = document.getElementById('csNotifyBtn');
+  if (!btn) return;
+  const notified = JSON.parse(localStorage.getItem('trafxos_notify_list') || '[]');
+  if (notified.includes('mt5')) {
+    btn.textContent = '✓ You\'re on the list';
+    btn.disabled = true;
+  }
+}
+
+/* ────────────────────────────────────────────────────────────
    SERVICE WORKER REGISTRATION
 ──────────────────────────────────────────────────────────── */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      // Check for updates immediately, then every 60s
+      reg.update();
+      setInterval(() => reg.update(), 60000);
+    }).catch(() => {});
   });
 }
 

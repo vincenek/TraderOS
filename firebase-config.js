@@ -9,19 +9,19 @@
 //  3. Scroll to "Your apps" → click Web app (</>)
 //  4. Copy the firebaseConfig object values below
 //
+// authDomain: use Netlify proxy on production (ISP blocks *.firebaseapp.com),
+// but fall back to the real Firebase domain on localhost where the proxy doesn't run.
+const _isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+
 window.FIREBASE_CONFIG = {
   apiKey:            'AIzaSyByv7zwSod9JCnYqUxC3Mb7VrPKihvjOHA',
-  authDomain:        'trafxos.netlify.app',
+  authDomain:        _isLocalhost ? 'trader-os.firebaseapp.com' : 'trafxos.netlify.app',
   projectId:         'trader-os',
   storageBucket:     'trader-os.firebasestorage.app',
   messagingSenderId: '879978387606',
   appId:             '1:879978387606:web:a37e5aa8075032b6294ab7',
   measurementId:     'G-BL4PJWJJCV',
 };
-//
-//  ⚠️  To enable Google Sign-in:
-//    Firebase Console → trader-os → Authentication → Settings → Authorized domains
-//    → Add domain: trafxos.netlify.app
 
 // ══════════════════════════════════════════════════════════
 //  FLUTTERWAVE PAYMENTS  (Nigeria-friendly)
@@ -45,14 +45,10 @@ window.FLW_ANNUAL_USD   = 149;
 window.FLW_CURRENCY     = 'USD';  // USD so international users can pay by card in dollars
 
 // ══════════════════════════════════════════════════════════
-//  PRO ACCESS CODES
-//  Issue these to paying customers. Add new codes as users pay.
-//  For automation: connect Stripe → Zapier → update this list
-//  OR use Firestore to validate codes server-side (recommended).
+//  PRO ACCESS CODES — now validated SERVER-SIDE only.
+//  Codes are NO LONGER stored in this file. They used to be readable by anyone
+//  who viewed the page source (a free-Pro hole). They now live in the Netlify
+//  environment variable PRO_CODES (comma-separated) and are checked by the
+//  redeem-code serverless function against the signed-in user.
+//  Set/rotate them in Netlify → Site settings → Environment variables.
 // ══════════════════════════════════════════════════════════
-window.PRO_CODES = [
-  'TRAFXOS-BETA-2026',
-  'TRAFXOS-VIP-2026',
-  'TRAFXOS-EARLY-2026',
-  // Add more here ↓
-];

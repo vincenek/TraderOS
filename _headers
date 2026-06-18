@@ -1,0 +1,13 @@
+# Prevent browsers from caching app files so updates land immediately
+/index.html
+  Cache-Control: no-cache, must-revalidate
+/app.js
+  Cache-Control: no-cache, must-revalidate
+/app.css
+  Cache-Control: no-cache, must-revalidate
+/firebase-config.js
+  Cache-Control: no-cache, must-revalidate
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+/manifest.json
+  Cache-Control: no-cache, must-revalidate

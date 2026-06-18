@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trafxos-v4';
+const CACHE_NAME = 'trafxos-v14';
 const ASSETS = [
     './',
     './index.html',
@@ -29,7 +29,7 @@ self.addEventListener('activate', event => {
     );
 });
 
-// Fetch — network-first for API calls, cache-first for static assets
+// Fetch — network-first for local files (so updates land immediately), cache-first for CDN
 self.addEventListener('fetch', event => {
     const url = new URL(event.request.url);
 
@@ -41,18 +41,30 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    event.respondWith(
-        caches.match(event.request).then(cached => {
-            const fetchPromise = fetch(event.request).then(response => {
-                // Cache successful responses
-                if (response && response.status === 200 && response.type === 'basic') {
+    // Local app files (same origin): network-first so updates land immediately
+    if (url.origin === self.location.origin) {
+        event.respondWith(
+            fetch(event.request).then(response => {
+                if (response && response.status === 200) {
                     const clone = response.clone();
                     caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
                 }
                 return response;
-            }).catch(() => cached); // Fall back to cache if offline
+            }).catch(() => caches.match(event.request))
+        );
+        return;
+    }
 
-            return cached || fetchPromise;
+    // External CDN assets: cache-first (they don't change)
+    event.respondWith(
+        caches.match(event.request).then(cached => {
+            return cached || fetch(event.request).then(response => {
+                if (response && response.status === 200) {
+                    const clone = response.clone();
+                    caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+                }
+                return response;
+            });
         })
     );
 });

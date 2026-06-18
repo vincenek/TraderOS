@@ -1,0 +1,22 @@
+# TrafxOS — Netlify configuration
+# The site is a static PWA served from this folder, plus serverless functions
+# that verify payments and grant Pro entitlements.
+
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[functions]
+  # esbuild bundles firebase-admin cleanly for the Node runtime
+  node_bundler = "esbuild"
+
+# Proxy Firebase auth handler through Netlify so Google sign-in works
+# (some ISPs block *.firebaseapp.com — this routes it through the site domain)
+[[redirects]]
+  from = "/__/auth/*"
+  to = "https://trader-os.firebaseapp.com/__/auth/:splat"
+  status = 200
+  force = false
