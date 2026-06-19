@@ -2969,6 +2969,17 @@ function initAuthModal() {
     FIREBASE.resetPassword(email);
   });
 
+  // Show/hide password toggle
+  const pwToggle = document.getElementById('authPwToggle');
+  pwToggle?.addEventListener('click', () => {
+    const pw = document.getElementById('authPassword');
+    if (!pw) return;
+    const reveal = pw.type === 'password';
+    pw.type = reveal ? 'text' : 'password';
+    pwToggle.innerHTML = reveal ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+    pwToggle.setAttribute('aria-label', reveal ? 'Hide password' : 'Show password');
+  });
+
   // Sign-up mode toggle: show name field when user clicks Create Account
   let authMode = 'signin';
   const nameField = document.getElementById('authDisplayName');

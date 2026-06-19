@@ -3128,3 +3128,63 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 .notif-body { flex: 1; min-width: 0; }
 
 
+
+/* ──────────────────────────────────────────────
+   AUTH MODAL POLISH (v15) + LOGO IMAGE
+────────────────────────────────────────────── */
+.auth-intro {
+  font-size: 0.85rem;
+  color: var(--text-2);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+/* Password field with show/hide toggle */
+.auth-pw-wrap { position: relative; margin-bottom: 6px; }
+.auth-pw-wrap .form-input { margin-bottom: 0; padding-right: 46px; width: 100%; }
+.auth-pw-toggle {
+  position: absolute;
+  right: 4px; top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none;
+  color: var(--text-3);
+  cursor: pointer;
+  padding: 10px;
+  font-size: 1rem;
+  line-height: 1;
+}
+.auth-pw-toggle:hover { color: var(--text); }
+
+/* Clearly visible Forgot-password button */
+.auth-forgot-btn {
+  display: block;
+  width: 100%;
+  text-align: right;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 4px 2px 0;
+  margin: 0 0 16px;
+}
+.auth-forgot-btn i { margin-right: 5px; font-size: 0.8rem; }
+.auth-forgot-btn:hover { text-decoration: underline; }
+.auth-forgot-btn:active { opacity: 0.7; }
+
+/* Real app icon used as the in-app logo */
+.topbar-logo-img {
+  width: 26px; height: 26px;
+  border-radius: 7px;
+  flex-shrink: 0;
+  display: block;
+  object-fit: cover;
+}
+.splash-logo-img {
+  width: 46px; height: 46px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  display: block;
+  object-fit: cover;
+}
