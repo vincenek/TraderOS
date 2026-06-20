@@ -2,3 +2,4 @@
 .netlify
 
 firebase-debug.log
+netlify/functions/node_modules/
