@@ -3224,3 +3224,49 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
   cursor: pointer;
 }
 .auth-switch-hint b { color: var(--accent); font-weight: 700; }
+
+/* ──────────────────────────────────────────────
+   POLISH PASS (v17): button loading, focus, disabled
+────────────────────────────────────────────── */
+.btn-spinner {
+  display: inline-block;
+  width: 16px; height: 16px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  vertical-align: -3px;
+}
+.btn-loading-text { margin-left: 8px; }
+button.is-loading { cursor: progress; }
+
+/* Consistent disabled feel */
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-google:disabled,
+.auth-tab:disabled,
+.upgrade-close-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Keyboard accessibility — visible focus ring */
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.btn-google:focus-visible,
+.auth-tab:focus-visible,
+.auth-forgot-btn:focus-visible,
+.form-input:focus-visible,
+.icon-btn:focus-visible,
+.billing-pill:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* App-icon header inside the auth modal for brand cohesion */
+.auth-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin: 2px 0 16px;
+}
+.auth-brand img { width: 34px; height: 34px; border-radius: 9px; }
+.auth-brand span { font-size: 1.15rem; font-weight: 800; letter-spacing: -0.5px; }

@@ -101,6 +101,40 @@ async function callFn(path, body) {
   return data;
 }
 
+/* Reusable button loading state. setBtnLoading(btn, true, 'Signing in…') shows a
+   spinner and disables the button; setBtnLoading(btn, false) restores its label. */
+function setBtnLoading(btn, loading, loadingText) {
+  if (!btn) return;
+  if (loading) {
+    if (btn.dataset.origHtml === undefined) btn.dataset.origHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.classList.add('is-loading');
+    btn.innerHTML = '<span class="btn-spinner" aria-hidden="true"></span>' +
+      (loadingText ? '<span class="btn-loading-text">' + loadingText + '</span>' : '');
+  } else {
+    btn.disabled = false;
+    btn.classList.remove('is-loading');
+    if (btn.dataset.origHtml !== undefined) { btn.innerHTML = btn.dataset.origHtml; delete btn.dataset.origHtml; }
+  }
+}
+
+/* Map Firebase auth error codes to friendly, human messages. */
+function authErrorMessage(err) {
+  const code = (err && err.code) || '';
+  switch (code) {
+    case 'auth/invalid-email':          return 'That email address looks invalid.';
+    case 'auth/user-disabled':          return 'This account has been disabled.';
+    case 'auth/user-not-found':         return 'No account found with that email — try "Create account".';
+    case 'auth/wrong-password':
+    case 'auth/invalid-credential':     return 'Incorrect email or password. Try again, or reset your password.';
+    case 'auth/email-already-in-use':   return 'That email already has an account — switch to "Sign in".';
+    case 'auth/weak-password':          return 'Password is too weak — use at least 6 characters.';
+    case 'auth/too-many-requests':      return 'Too many attempts. Please wait a few minutes and try again.';
+    case 'auth/network-request-failed': return 'Network error — check your connection and try again.';
+    default: return (err && err.message) ? err.message.replace('Firebase: ', '') : 'Something went wrong. Please try again.';
+  }
+}
+
 function showUpgradeModal(featureName) {
   const row = document.getElementById('upgradeFeatureRow');
   const nameEl = document.getElementById('upgradeFeatureName');
@@ -314,16 +348,17 @@ const FIREBASE = {
   },
 
   async signInWithEmail(email, pw) {
-    if (!this.auth) { toast('Firebase not configured.', 'warn'); return; }
+    if (!this.auth) { toast('Firebase not configured.', 'warn'); return false; }
     try {
       await this.auth.signInWithEmailAndPassword(email, pw);
       hideModal('authModal');
-      toast('Signed in!', 'success');
-    } catch (err) { toast(err.message, 'error', 5000); }
+      toast('Signed in — welcome back!', 'success');
+      return true;
+    } catch (err) { toast(authErrorMessage(err), 'error', 5000); return false; }
   },
 
   async signUp(email, pw, displayName) {
-    if (!this.auth) { toast('Firebase not configured.', 'warn'); return; }
+    if (!this.auth) { toast('Firebase not configured.', 'warn'); return false; }
     try {
       const cred = await this.auth.createUserWithEmailAndPassword(email, pw);
       if (displayName && cred.user) {
@@ -337,7 +372,8 @@ const FIREBASE = {
       }
       hideModal('authModal');
       toast(`Welcome to TrafxOS${displayName ? ', ' + displayName : ''}!`, 'success');
-    } catch (err) { toast(err.message, 'error', 5000); }
+      return true;
+    } catch (err) { toast(authErrorMessage(err), 'error', 5000); return false; }
   },
 
   async signOut() {
@@ -2964,9 +3000,12 @@ function initAuthModal() {
   document.getElementById('googleSignInBtn')?.addEventListener('click', () => FIREBASE.signInWithGoogle());
 
   // Forgot password — sends a Firebase reset email to whatever is typed in the email field
-  document.getElementById('forgotPasswordLink')?.addEventListener('click', () => {
+  document.getElementById('forgotPasswordLink')?.addEventListener('click', async () => {
     const email = document.getElementById('authEmail')?.value.trim();
-    FIREBASE.resetPassword(email);
+    const fb = document.getElementById('forgotPasswordLink');
+    setBtnLoading(fb, true, 'Sending…');
+    await FIREBASE.resetPassword(email);
+    setBtnLoading(fb, false);
   });
 
   // Show/hide password toggle
@@ -3013,7 +3052,8 @@ function initAuthModal() {
   tabSignup?.addEventListener('click', () => setAuthMode('signup'));
   modeHint?.addEventListener('click', () => setAuthMode(authMode === 'signin' ? 'signup' : 'signin'));
 
-  function submitAuth() {
+  async function submitAuth() {
+    if (submitBtn?.disabled) return;
     const email = emailField?.value.trim();
     const pw    = pwField?.value;
     if (!email) { toast('Enter your email.', 'warn'); emailField?.focus(); return; }
@@ -3022,10 +3062,13 @@ function initAuthModal() {
       const name = (nameField?.value || '').trim();
       if (!name)         { toast('Enter your name to create an account.', 'warn'); nameField?.focus(); return; }
       if (pw.length < 6) { toast('Password must be at least 6 characters.', 'warn'); pwField?.focus(); return; }
-      FIREBASE.signUp(email, pw, name);
+      setBtnLoading(submitBtn, true, 'Creating account…');
+      await FIREBASE.signUp(email, pw, name);
     } else {
-      FIREBASE.signInWithEmail(email, pw);
+      setBtnLoading(submitBtn, true, 'Signing in…');
+      await FIREBASE.signInWithEmail(email, pw);
     }
+    setBtnLoading(submitBtn, false);
   }
   submitBtn?.addEventListener('click', submitAuth);
   // Enter key submits from any of the auth fields
@@ -3193,7 +3236,7 @@ function initUpgradeModal() {
       return;
     }
     const btn = document.getElementById('proKeyApplyBtn');
-    btn.disabled = true;
+    setBtnLoading(btn, true, 'Checking…');
     try {
       const res = await callFn('redeem-code', { code });
       if (res && res.pro) {
@@ -3212,7 +3255,7 @@ function initUpgradeModal() {
         : 'Could not redeem key: ' + err.message;
       toast(msg, 'error', 5000);
     } finally {
-      btn.disabled = false;
+      setBtnLoading(btn, false);
     }
   });
   document.getElementById('proKeyInput')?.addEventListener('keydown', e => {

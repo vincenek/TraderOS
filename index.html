@@ -5,7 +5,7 @@
   <script>
   // Force-clear old service worker cache so updates actually reach the browser
   (function(){
-    var V=16;
+    var V=17;
     var s=parseInt(localStorage.getItem('trafxos_cv')||'0');
     if(s<V){
       localStorage.setItem('trafxos_cv',V);
@@ -53,12 +53,12 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
-  <script src="firebase-config.js?v=16"></script>
+  <script src="firebase-config.js?v=17"></script>
 
   <!-- Flutterwave Inline Payment (Nigeria-friendly) -->
   <script src="https://checkout.flutterwave.com/v3.js"></script>
 
-  <link rel="stylesheet" href="app.css?v=16" />
+  <link rel="stylesheet" href="app.css?v=17" />
 </head>
 <body>
 
@@ -1128,6 +1128,7 @@
       <button class="modal-close" id="authModalClose">✕</button>
     </div>
     <div id="authSignedOut">
+      <div class="auth-brand"><img src="https://i.postimg.cc/PxH6xwBr/web-app-manifest-192x192.png" alt="" /><span>Trafx<span class="logo-accent">OS</span></span></div>
       <div class="auth-tabs">
         <button type="button" class="auth-tab active" id="authTabSignin">Sign in</button>
         <button type="button" class="auth-tab" id="authTabSignup">Create account</button>
@@ -1277,6 +1278,6 @@
   </div>
 </div>
 
-<script src="app.js?v=16"></script>
+<script src="app.js?v=17"></script>
 </body>
 </html>
