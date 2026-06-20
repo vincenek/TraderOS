@@ -2980,49 +2980,58 @@ function initAuthModal() {
     pwToggle.setAttribute('aria-label', reveal ? 'Hide password' : 'Show password');
   });
 
-  // Sign-up mode toggle: show name field when user clicks Create Account
+  // Standard tabbed auth: Sign in / Create account, with one primary action button.
   let authMode = 'signin';
-  const nameField = document.getElementById('authDisplayName');
-  const signInBtn = document.getElementById('emailSignInBtn');
-  const signUpBtn = document.getElementById('emailSignUpBtn');
-  const modeHint  = document.getElementById('authModeHint');
+  const nameField  = document.getElementById('authDisplayName');
+  const emailField = document.getElementById('authEmail');
+  const pwField    = document.getElementById('authPassword');
+  const submitBtn  = document.getElementById('authSubmitBtn');
+  const forgotBtn  = document.getElementById('forgotPasswordLink');
+  const introEl    = document.getElementById('authIntro');
+  const modeHint   = document.getElementById('authModeHint');
+  const tabSignin  = document.getElementById('authTabSignin');
+  const tabSignup  = document.getElementById('authTabSignup');
+
   function setAuthMode(mode) {
     authMode = mode;
-    if (mode === 'signup') {
-      nameField?.classList.remove('hidden');
-      nameField?.setAttribute('required', '');
-      if (signInBtn) signInBtn.textContent = 'Sign In';
-      if (signUpBtn) { signUpBtn.textContent = 'Create Account ✓'; signUpBtn.classList.remove('btn-secondary'); signUpBtn.classList.add('btn-primary'); }
-      if (signInBtn) { signInBtn.classList.remove('btn-primary'); signInBtn.classList.add('btn-secondary'); }
-      if (modeHint) modeHint.textContent = 'Already have an account? Sign in';
-    } else {
-      nameField?.classList.add('hidden');
-      nameField?.removeAttribute('required');
-      if (signInBtn) { signInBtn.textContent = 'Sign In'; signInBtn.classList.add('btn-primary'); signInBtn.classList.remove('btn-secondary'); }
-      if (signUpBtn) { signUpBtn.textContent = 'Create Account'; signUpBtn.classList.add('btn-secondary'); signUpBtn.classList.remove('btn-primary'); }
-      if (modeHint) modeHint.textContent = "Don't have an account? Create one";
-    }
+    const signup = mode === 'signup';
+    tabSignin?.classList.toggle('active', !signup);
+    tabSignup?.classList.toggle('active', signup);
+    nameField?.classList.toggle('hidden', !signup);   // name only when creating an account
+    forgotBtn?.classList.toggle('hidden', signup);    // forgot only when signing in
+    if (pwField) pwField.setAttribute('autocomplete', signup ? 'new-password' : 'current-password');
+    if (submitBtn) submitBtn.textContent = signup ? 'Create account' : 'Sign in';
+    if (introEl) introEl.textContent = signup
+      ? 'Create a free account to sync your trades and unlock Pro across devices.'
+      : 'Welcome back — sign in to sync your trades and access Pro.';
+    if (modeHint) modeHint.innerHTML = signup
+      ? 'Already have an account? <b>Sign in</b>'
+      : 'New here? <b>Create an account</b>';
   }
   setAuthMode('signin');
+  tabSignin?.addEventListener('click', () => setAuthMode('signin'));
+  tabSignup?.addEventListener('click', () => setAuthMode('signup'));
   modeHint?.addEventListener('click', () => setAuthMode(authMode === 'signin' ? 'signup' : 'signin'));
 
-  signInBtn?.addEventListener('click', () => {
-    const email = document.getElementById('authEmail')?.value.trim();
-    const pw    = document.getElementById('authPassword')?.value;
-    if (!email || !pw) { toast('Enter your email and password.', 'warn'); return; }
-    FIREBASE.signInWithEmail(email, pw);
-  });
-
-  signUpBtn?.addEventListener('click', () => {
-    if (authMode === 'signin') { setAuthMode('signup'); return; }
-    const name  = (nameField?.value || '').trim();
-    const email = document.getElementById('authEmail')?.value.trim();
-    const pw    = document.getElementById('authPassword')?.value;
-    if (!name)  { toast('Enter your name to create an account.', 'warn'); nameField?.focus(); return; }
-    if (!email || !pw) { toast('Enter your email and a password.', 'warn'); return; }
-    if (pw.length < 6)  { toast('Password must be at least 6 characters.', 'warn'); return; }
-    FIREBASE.signUp(email, pw, name);
-  });
+  function submitAuth() {
+    const email = emailField?.value.trim();
+    const pw    = pwField?.value;
+    if (!email) { toast('Enter your email.', 'warn'); emailField?.focus(); return; }
+    if (!pw)    { toast('Enter your password.', 'warn'); pwField?.focus(); return; }
+    if (authMode === 'signup') {
+      const name = (nameField?.value || '').trim();
+      if (!name)         { toast('Enter your name to create an account.', 'warn'); nameField?.focus(); return; }
+      if (pw.length < 6) { toast('Password must be at least 6 characters.', 'warn'); pwField?.focus(); return; }
+      FIREBASE.signUp(email, pw, name);
+    } else {
+      FIREBASE.signInWithEmail(email, pw);
+    }
+  }
+  submitBtn?.addEventListener('click', submitAuth);
+  // Enter key submits from any of the auth fields
+  [nameField, emailField, pwField].forEach(f => f?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); submitAuth(); }
+  }));
 
   document.getElementById('signOutBtn')?.addEventListener('click', () => FIREBASE.signOut());
 
