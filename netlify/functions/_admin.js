@@ -10,7 +10,7 @@ function getAdmin() {
     const svc = JSON.parse(raw);
     // Private keys often get their newlines escaped when stored as an env var.
     if (svc.private_key) svc.private_key = svc.private_key.replace(/\\n/g, '\n');
-    admin.initializeApp({ credential: admin.cert(svc) });
+    admin.initializeApp({ credential: admin.credential.cert(svc) });
   }
   return admin;
 }
