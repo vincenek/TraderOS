@@ -5,7 +5,7 @@
   <script>
   // Force-clear old service worker cache so updates actually reach the browser
   (function(){
-    var V=17;
+    var V=18;
     var s=parseInt(localStorage.getItem('trafxos_cv')||'0');
     if(s<V){
       localStorage.setItem('trafxos_cv',V);
@@ -53,12 +53,12 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
-  <script src="firebase-config.js?v=17"></script>
+  <script src="firebase-config.js?v=18"></script>
 
   <!-- Flutterwave Inline Payment (Nigeria-friendly) -->
   <script src="https://checkout.flutterwave.com/v3.js"></script>
 
-  <link rel="stylesheet" href="app.css?v=17" />
+  <link rel="stylesheet" href="app.css?v=18" />
 </head>
 <body>
 
@@ -838,19 +838,19 @@
       </div>
       <div id="mindsetTrendSection"></div>
 
-      <!-- MT4/MT5 Auto-Journal Coming Soon -->
+      <!-- MT4/MT5 Auto-Journal (live) -->
       <div class="coming-soon-card">
-        <div class="cs-badge">Coming Soon</div>
+        <div class="cs-badge cs-badge-live">Pro · Live</div>
         <div class="cs-icon"><i class="fa-solid fa-plug-circle-bolt"></i></div>
         <h3 class="cs-title">MT4 / MT5 Auto-Journal</h3>
-        <p class="cs-desc">Connect TrafxOS directly to your trading terminal. Every trade you execute is automatically logged — with a post-trade emotion prompt so the psychology data captures itself.</p>
+        <p class="cs-desc">Import your full MetaTrader history in seconds — instrument, direction, P&amp;L, R:R and session filled in automatically — then tag how you felt so the psychology data captures itself.</p>
         <ul class="cs-features">
-          <li><i class="fa-solid fa-check"></i> Auto-import your full trade history</li>
-          <li><i class="fa-solid fa-check"></i> Real-time position monitoring</li>
-          <li><i class="fa-solid fa-check"></i> Instant emotion prompt after each close</li>
-          <li><i class="fa-solid fa-check"></i> Zero manual logging needed</li>
+          <li><i class="fa-solid fa-check"></i> Import your full trade history (MT4 .htm / MT5 .csv)</li>
+          <li><i class="fa-solid fa-check"></i> Duplicates skipped — safe to re-run anytime</li>
+          <li><i class="fa-solid fa-check"></i> Post-import emotion &amp; rule tagging</li>
+          <li><i class="fa-solid fa-check"></i> Live auto-sync from your terminal (set up inside)</li>
         </ul>
-        <div class="cs-footer">Premium Feature &middot; <button class="cs-notify-btn" id="csNotifyBtn" onclick="notifyMT5Launch()">Notify me when live</button></div>
+        <div class="cs-footer"><button class="btn-primary" id="csOpenAutoJournalBtn"><i class="fa-solid fa-bolt"></i>&nbsp; Open Auto-Journal</button></div>
       </div>
 
       <!-- Lesson Modal -->
@@ -1120,6 +1120,49 @@
   </div>
 </div>
 
+<!-- ═══ AUTO-JOURNAL (MT4/MT5) MODAL ═══ -->
+<div class="modal-overlay hidden" id="autoJournalModal">
+  <div class="modal modal--wide">
+    <div class="modal-header">
+      <h2><i class="fa-solid fa-plug-circle-bolt"></i>&nbsp; MT4 / MT5 Auto-Journal</h2>
+      <button class="modal-close" id="autoJournalClose">✕</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="aj-tabs">
+      <button type="button" class="aj-tab active" id="ajTabImport">Import history</button>
+      <button type="button" class="aj-tab" id="ajTabLive">Live sync</button>
+    </div>
+
+    <!-- IMPORT TAB -->
+    <div id="ajPaneImport">
+      <p class="aj-intro">Import your real trade history from MetaTrader — TrafxOS fills in instrument, direction, P&amp;L, R:R and session automatically. Re-run anytime; duplicates are skipped.</p>
+      <ol class="aj-steps">
+        <li><b>MT4:</b> Terminal → <b>Account History</b> → right-click → <b>Save as Detailed Report</b> (<code>.htm</code>).</li>
+        <li><b>MT5:</b> Toolbox → <b>History</b> → right-click → <b>Report</b>, then export deals as <code>.csv</code>.</li>
+        <li>Drop the file below 👇</li>
+      </ol>
+      <div class="aj-drop" id="autoJournalDrop">
+        <i class="fa-solid fa-file-arrow-up"></i>
+        <span>Drop your <code>.htm</code> / <code>.csv</code> here<br>or tap to choose a file</span>
+      </div>
+      <input type="file" id="autoJournalFileInput" accept=".htm,.html,.csv" class="hidden" />
+
+      <div id="ajPreview" class="hidden">
+        <div class="aj-summary" id="ajSummary"></div>
+        <div class="aj-list" id="ajList"></div>
+        <button class="btn-primary btn-full btn-lg" id="autoJournalImportBtn"><i class="fa-solid fa-file-import"></i>&nbsp; Import trades</button>
+        <p class="aj-note">Imported trades have no emotion yet — tag them after import to power your psychology analytics.</p>
+      </div>
+    </div>
+
+    <!-- LIVE SYNC TAB (filled by loadLiveSyncTab) -->
+    <div id="ajPaneLive" class="hidden">
+      <div id="ajLiveContent"><div class="aj-loading"><span class="btn-spinner"></span> Loading…</div></div>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ AUTH MODAL ═══ -->
 <div class="modal-overlay hidden" id="authModal">
   <div class="modal">
@@ -1278,6 +1321,6 @@
   </div>
 </div>
 
-<script src="app.js?v=17"></script>
+<script src="app.js?v=18"></script>
 </body>
 </html>

@@ -3270,3 +3270,69 @@ button.is-loading { cursor: progress; }
 }
 .auth-brand img { width: 34px; height: 34px; border-radius: 9px; }
 .auth-brand span { font-size: 1.15rem; font-weight: 800; letter-spacing: -0.5px; }
+
+/* ──────────────────────────────────────────────
+   MT4/MT5 AUTO-JOURNAL (v18)
+────────────────────────────────────────────── */
+.modal--wide { max-width: 520px; }
+
+.aj-tabs { display: flex; gap: 4px; background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: 10px; padding: 4px; margin-bottom: 16px; }
+.aj-tab { flex: 1; padding: 9px 8px; border: none; background: none; color: var(--text-3);
+  font-size: 0.85rem; font-weight: 700; border-radius: 7px; cursor: pointer; transition: all .15s; }
+.aj-tab:hover:not(.active) { color: var(--text); }
+.aj-tab.active { background: var(--accent); color: #fff; }
+
+.aj-intro { font-size: 0.85rem; color: var(--text-2); line-height: 1.5; margin-bottom: 12px; }
+.aj-steps { margin: 0 0 14px; padding-left: 20px; display: flex; flex-direction: column; gap: 7px; }
+.aj-steps li { font-size: 0.82rem; color: var(--text-2); line-height: 1.45; }
+.aj-steps code, .aj-key-code { background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: 5px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 0.78em; color: var(--accent); }
+
+.aj-drop { border: 2px dashed var(--border-light); border-radius: 14px; padding: 28px 18px;
+  display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;
+  cursor: pointer; transition: all .18s; color: var(--text-2); background: var(--bg-card2); }
+.aj-drop:hover { border-color: var(--accent); color: var(--text); }
+.aj-drop.dragging { border-color: var(--accent); background: var(--accent-glow); color: var(--text); transform: scale(1.01); }
+.aj-drop i { font-size: 1.8rem; color: var(--accent); }
+.aj-drop span { font-size: 0.85rem; line-height: 1.4; }
+
+#ajPreview { margin-top: 16px; }
+.aj-summary { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.aj-stat { font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
+.aj-stat-found { background: var(--bg-input); color: var(--text-2); }
+.aj-stat-new   { background: var(--green-bg); color: var(--green); }
+.aj-stat-dup   { background: var(--yellow-bg); color: var(--yellow); }
+
+.aj-list { max-height: 230px; overflow-y: auto; border: 1px solid var(--border);
+  border-radius: 10px; margin-bottom: 14px; }
+.aj-row { display: grid; grid-template-columns: 1fr auto auto auto; align-items: center; gap: 10px;
+  padding: 9px 12px; border-bottom: 1px solid var(--border); font-size: 0.82rem; }
+.aj-row:last-child { border-bottom: none; }
+.aj-row-dup { opacity: 0.5; }
+.aj-row-inst { font-weight: 700; color: var(--text); }
+.aj-row-dir { font-size: 0.72rem; font-weight: 700; }
+.aj-row-dir.pos, .aj-row-pnl.pos { color: var(--green); }
+.aj-row-dir.neg, .aj-row-pnl.neg { color: var(--red); }
+.aj-row-pnl { font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+.aj-row-tag { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: var(--yellow);
+  background: var(--yellow-bg); padding: 2px 6px; border-radius: 5px; }
+.aj-more { text-align: center; padding: 8px; font-size: 0.78rem; color: var(--text-3); }
+.aj-note { font-size: 0.76rem; color: var(--text-3); text-align: center; margin-top: 10px; line-height: 1.4; }
+.aj-loading { display: flex; align-items: center; gap: 10px; justify-content: center; padding: 30px; color: var(--text-3); }
+
+/* Live sync tab */
+.aj-live-intro { font-size: 0.85rem; color: var(--text-2); line-height: 1.5; margin-bottom: 14px; }
+.aj-key-box { background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px;
+  padding: 12px; margin-bottom: 14px; }
+.aj-key-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: .5px; color: var(--text-3); margin-bottom: 6px; }
+.aj-key-row { display: flex; gap: 8px; align-items: center; }
+.aj-key-code { flex: 1; word-break: break-all; padding: 8px 10px; font-size: 0.74rem; }
+.aj-copy-btn { flex-shrink: 0; background: var(--accent); color: #fff; border: none; border-radius: 7px;
+  padding: 8px 12px; font-weight: 700; font-size: 0.78rem; cursor: pointer; }
+.aj-copy-btn:active { transform: scale(0.96); }
+.aj-setup-step { display: flex; gap: 10px; margin-bottom: 12px; }
+.aj-step-num { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: var(--accent);
+  color: #fff; font-size: 0.75rem; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+.aj-setup-step div { font-size: 0.82rem; color: var(--text-2); line-height: 1.45; }
+.cs-badge-live { background: var(--green-bg); color: var(--green); }

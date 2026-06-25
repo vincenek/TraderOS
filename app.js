@@ -3485,172 +3485,361 @@ function initScreenshotUpload() {
 /* ────────────────────────────────────────────────────────────
    MT4 / MT5 TRADE IMPORT
 ──────────────────────────────────────────────────────────── */
+let autoJournalParsed = []; // last parsed batch awaiting user confirmation
+
 function initMT4Import() {
-  document.getElementById('importMT4Btn').addEventListener('click', () => {
-    document.getElementById('importMT4FileInput').click();
+  // Entry points: settings button + dashboard card both open the Auto-Journal modal
+  document.getElementById('importMT4Btn')?.addEventListener('click', openAutoJournal);
+  document.getElementById('csOpenAutoJournalBtn')?.addEventListener('click', openAutoJournal);
+  document.getElementById('autoJournalClose')?.addEventListener('click', () => hideModal('autoJournalModal'));
+  document.getElementById('autoJournalModal')?.addEventListener('click', e => {
+    if (e.target === e.currentTarget) hideModal('autoJournalModal');
   });
 
-  document.getElementById('importMT4FileInput').addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { toast('File too large. Max 5MB.', 'error'); return; }
-    const reader = new FileReader();
-    const isHTML = file.name.endsWith('.htm') || file.name.endsWith('.html');
-    reader.onload = ev => {
-      try {
-        if (isHTML) {
-          importMT4HTML(ev.target.result);
-        } else {
-          importMT5CSV(ev.target.result);
-        }
-      } catch (err) {
-        toast('Import failed. Please check the file format.', 'error');
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
+  // Tabs
+  const tabImport = document.getElementById('ajTabImport');
+  const tabLive   = document.getElementById('ajTabLive');
+  const paneImport = document.getElementById('ajPaneImport');
+  const paneLive   = document.getElementById('ajPaneLive');
+  tabImport?.addEventListener('click', () => {
+    tabImport.classList.add('active'); tabLive?.classList.remove('active');
+    paneImport?.classList.remove('hidden'); paneLive?.classList.add('hidden');
   });
+  tabLive?.addEventListener('click', () => {
+    tabLive.classList.add('active'); tabImport?.classList.remove('active');
+    paneLive?.classList.remove('hidden'); paneImport?.classList.add('hidden');
+    if (typeof loadLiveSyncTab === 'function') loadLiveSyncTab();
+  });
+
+  // File picker + drag/drop
+  const fileInput = document.getElementById('autoJournalFileInput');
+  fileInput?.addEventListener('change', e => { handleAutoJournalFile(e.target.files[0]); e.target.value = ''; });
+  const dz = document.getElementById('autoJournalDrop');
+  dz?.addEventListener('click', () => fileInput?.click());
+  ['dragover', 'dragenter'].forEach(ev => dz?.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('dragging'); }));
+  ['dragleave', 'dragend'].forEach(ev => dz?.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('dragging'); }));
+  dz?.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('dragging');
+    handleAutoJournalFile(e.dataTransfer.files[0]);
+  });
+
+  document.getElementById('autoJournalImportBtn')?.addEventListener('click', commitAutoJournalImport);
 }
 
-function importMT4HTML(html) {
-  // MT4 exports trade history as HTML tables
-  // Parse by creating a temporary DOM element
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, 'text/html');
-  const rows = doc.querySelectorAll('tr');
-  let imported = 0;
-  const trades = DB.trades;
+// Auto-Journal is a premium feature — gate behind Pro.
+function openAutoJournal() {
+  if (!PRO.active) {
+    hideModal('settingsModal');
+    showUpgradeModal('MT4 / MT5 Auto-Journal');
+    return;
+  }
+  autoJournalParsed = [];
+  resetAutoJournalPreview();
+  showModal('autoJournalModal');
+}
 
+function resetAutoJournalPreview() {
+  document.getElementById('ajPreview')?.classList.add('hidden');
+  const list = document.getElementById('ajList'); if (list) list.innerHTML = '';
+  const sum = document.getElementById('ajSummary'); if (sum) sum.innerHTML = '';
+}
+
+function handleAutoJournalFile(file) {
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { toast('File too large. Max 5MB.', 'error'); return; }
+  const reader = new FileReader();
+  const isHTML = /\.(html?|xls)$/i.test(file.name);
+  reader.onload = ev => {
+    try {
+      const parsed = isHTML ? parseMTHTML(ev.target.result) : parseMTCSV(ev.target.result);
+      if (!parsed.length) {
+        toast('No buy/sell trades found in that file. Make sure it\'s an MT4 Detailed Report (.htm) or MT5 history (.csv).', 'warn', 6000);
+        return;
+      }
+      showAutoJournalPreview(parsed);
+    } catch (err) {
+      console.error('[Auto-Journal] parse error:', err);
+      toast('Could not read that file. Make sure it\'s an MT4/MT5 history export.', 'error', 5000);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// Build a journal trade from raw imported fields — matches the hand-logged schema.
+function buildImportedTrade(d) {
+  const pnl = d.pnl != null ? d.pnl : 0;
+  const outcome = pnl > 0 ? 'WIN' : pnl < 0 ? 'LOSS' : 'BE';
+  let rr = null;
+  if (d.entry && d.sl && (d.tp || d.exit)) {
+    const risk = Math.abs(d.entry - d.sl), reward = Math.abs((d.tp || d.exit) - d.entry);
+    if (risk > 0) rr = parseFloat((reward / risk).toFixed(2));
+  }
+  return {
+    id: uid(),
+    ticket: d.ticket || null,
+    instrument: normalizeInstrument(d.instrument),
+    direction: d.direction,
+    outcome,
+    session: guessSession(d.datetime),
+    emotion: null,
+    setupQuality: null,
+    mistakes: [],
+    rules: { plan: false, sl: !!d.sl, rr: false, session: false, size: false },
+    entry: d.entry ?? null, exit: d.exit ?? null, sl: d.sl ?? null, tp: d.tp ?? null, rr,
+    pnl,
+    lotSize: d.lotSize ?? null,
+    notes: `Imported from ${(d.source || 'mt').toUpperCase()}${d.ticket ? ' · Ticket #' + d.ticket : ''}`,
+    screenshot: '',
+    datetime: d.datetime,
+    createdAt: new Date().toISOString(),
+    source: d.source,
+  };
+}
+
+// Mark which parsed trades already exist (dedupe by source+ticket).
+function markDuplicates(parsed) {
+  const existing = new Set(DB.trades.filter(t => t.ticket).map(t => (t.source || 'mt') + ':' + t.ticket));
+  parsed.forEach(t => { t._dup = t.ticket ? existing.has((t.source || 'mt') + ':' + t.ticket) : false; });
+  return parsed;
+}
+
+function showAutoJournalPreview(parsed) {
+  autoJournalParsed = markDuplicates(parsed);
+  const fresh = autoJournalParsed.filter(t => !t._dup);
+  const dupes = autoJournalParsed.length - fresh.length;
+
+  const sum = document.getElementById('ajSummary');
+  if (sum) {
+    sum.innerHTML =
+      `<span class="aj-stat aj-stat-found">${autoJournalParsed.length} found</span>` +
+      `<span class="aj-stat aj-stat-new">${fresh.length} new</span>` +
+      (dupes ? `<span class="aj-stat aj-stat-dup">${dupes} already imported</span>` : '');
+  }
+
+  const list = document.getElementById('ajList');
+  if (list) {
+    list.innerHTML = autoJournalParsed.slice(0, 40).map(t => {
+      const cls = t.outcome === 'WIN' ? 'pos' : t.outcome === 'LOSS' ? 'neg' : '';
+      const pnl = (t.pnl > 0 ? '+' : '') + (t.pnl ?? 0);
+      return `<div class="aj-row${t._dup ? ' aj-row-dup' : ''}">
+        <span class="aj-row-inst">${normalizeInstrument(t.instrument)}</span>
+        <span class="aj-row-dir ${t.direction === 'LONG' ? 'pos' : 'neg'}">${t.direction}</span>
+        <span class="aj-row-pnl ${cls}">${pnl}</span>
+        ${t._dup ? '<span class="aj-row-tag">dup</span>' : ''}
+      </div>`;
+    }).join('') + (autoJournalParsed.length > 40 ? `<div class="aj-more">…and ${autoJournalParsed.length - 40} more</div>` : '');
+  }
+
+  const btn = document.getElementById('autoJournalImportBtn');
+  if (btn) {
+    btn.disabled = fresh.length === 0;
+    btn.innerHTML = fresh.length
+      ? `<i class="fa-solid fa-file-import"></i>&nbsp; Import ${fresh.length} trade${fresh.length > 1 ? 's' : ''}`
+      : 'Nothing new to import';
+  }
+  document.getElementById('ajPreview')?.classList.remove('hidden');
+}
+
+function commitAutoJournalImport() {
+  const fresh = autoJournalParsed.filter(t => !t._dup);
+  if (!fresh.length) { toast('No new trades to import.', 'info'); return; }
+  const trades = DB.trades;
+  fresh.forEach(t => { delete t._dup; trades.push(t); });
+  DB.trades = trades;
+  if (FIREBASE.user) FIREBASE.syncTrades();
+  hideModal('autoJournalModal');
+  renderDashboard();
+  toast(`✅ Imported ${fresh.length} trades. Tag how you felt to unlock your psychology insights.`, 'success', 6000);
+  // Nudge the user to add emotions to freshly imported trades
+  if (typeof navigateTo === 'function') navigateTo('journal');
+  setTimeout(() => toast('Tip: tap any imported trade to add your emotion & rules.', 'info', 6000), 2200);
+}
+
+/* ── Live sync tab: issue a per-user key + generate a pre-filled MetaTrader EA ── */
+async function loadLiveSyncTab() {
+  const el = document.getElementById('ajLiveContent');
+  if (!el) return;
+  if (!FIREBASE.user) {
+    el.innerHTML = '<p class="aj-live-intro">Sign in first to set up live auto-sync.</p>';
+    return;
+  }
+  el.innerHTML = '<div class="aj-loading"><span class="btn-spinner"></span> Getting your secure key…</div>';
+  try {
+    const res = await callFn('link-terminal', {});
+    renderLiveSync(el, res.key, res.endpoint);
+  } catch (err) {
+    el.innerHTML = `<p class="aj-live-intro">Couldn't set up live sync: ${sanitize(err.message || 'error')}. Make sure you're signed in and try again.</p>`;
+  }
+}
+
+function renderLiveSync(el, key, endpoint) {
+  let origin = endpoint;
+  try { origin = new URL(endpoint).origin; } catch (_) {}
+  el.innerHTML = `
+    <p class="aj-live-intro">Install the TrafxOS robot in MetaTrader 5 once. After that every trade you close is auto-journaled here — you just tag the emotion.</p>
+    <div class="aj-key-box">
+      <div class="aj-key-label">Your connection key — keep it private</div>
+      <div class="aj-key-row">
+        <code class="aj-key-code" id="ajKeyCode">${sanitize(key)}</code>
+        <button class="aj-copy-btn" id="ajCopyKey">Copy</button>
+      </div>
+    </div>
+    <div class="aj-setup-step"><span class="aj-step-num">1</span><div>Tap <b>Download EA</b> below — it's already filled with your key.</div></div>
+    <div class="aj-setup-step"><span class="aj-step-num">2</span><div>In MT5: <b>File → Open Data Folder → MQL5 → Experts</b>, drop the file in, then restart MetaTrader.</div></div>
+    <div class="aj-setup-step"><span class="aj-step-num">3</span><div>Allow web access: <b>Tools → Options → Expert Advisors</b> → tick <b>Allow WebRequest for</b> and add <code class="aj-key-code">${sanitize(origin)}</code>.</div></div>
+    <div class="aj-setup-step"><span class="aj-step-num">4</span><div>Drag <b>TrafxOS AutoSync</b> from the Navigator onto any chart (allow algo trading). Done — closed trades flow in automatically.</div></div>
+    <button class="btn-primary btn-full btn-lg" id="ajDownloadEA"><i class="fa-solid fa-download"></i>&nbsp; Download EA (pre-filled)</button>
+    <p class="aj-note">Live sync supports MetaTrader 5. On MT4, use the <b>Import history</b> tab — it works great. Trades appear within a minute of closing.</p>
+  `;
+  document.getElementById('ajCopyKey')?.addEventListener('click', () => {
+    navigator.clipboard?.writeText(key).then(() => toast('Key copied.', 'success')).catch(() => {});
+  });
+  document.getElementById('ajDownloadEA')?.addEventListener('click', () => downloadEA(key, endpoint));
+}
+
+function downloadEA(key, endpoint) {
+  const blob = new Blob([buildEASource(key, endpoint)], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'TrafxOS_AutoSync.mq5';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  toast('EA downloaded — now follow steps 2–4 in MetaTrader 5.', 'info', 7000);
+}
+
+/* MQL5 Expert Advisor source, pre-filled with the user's key + endpoint.
+   Uses CharToString() for quotes/CRLF so there are zero escape headaches. */
+function buildEASource(key, endpoint) {
+  return `//+------------------------------------------------------------------+
+//|  TrafxOS AutoSync EA  —  auto-generated, pre-filled with your key |
+//|  Streams every closed trade to your TrafxOS journal.             |
+//+------------------------------------------------------------------+
+#property strict
+#property description "TrafxOS Auto-Journal — sends closed trades to your TrafxOS account."
+
+input string InpKey = "${key}";   // Your TrafxOS connection key
+string Endpoint     = "${endpoint}";
+
+string Q()    { return CharToString(34); }            // a double-quote character
+string CRLF() { return CharToString(13)+CharToString(10); }
+
+void OnInit() { Print("TrafxOS AutoSync active — closed trades will sync automatically."); }
+
+void OnTradeTransaction(const MqlTradeTransaction &trans,
+                        const MqlTradeRequest &request,
+                        const MqlTradeResult &result)
+{
+   if(trans.type != TRADE_TRANSACTION_DEAL_ADD) return;
+   ulong deal = trans.deal;
+   if(!HistoryDealSelect(deal)) return;
+   if((ENUM_DEAL_ENTRY)HistoryDealGetInteger(deal, DEAL_ENTRY) != DEAL_ENTRY_OUT) return; // only closes
+
+   string   symbol = HistoryDealGetString(deal, DEAL_SYMBOL);
+   long     dtype  = HistoryDealGetInteger(deal, DEAL_TYPE);
+   double   profit = HistoryDealGetDouble(deal, DEAL_PROFIT)
+                   + HistoryDealGetDouble(deal, DEAL_SWAP)
+                   + HistoryDealGetDouble(deal, DEAL_COMMISSION);
+   double   volume = HistoryDealGetDouble(deal, DEAL_VOLUME);
+   double   price  = HistoryDealGetDouble(deal, DEAL_PRICE);
+   datetime tm     = (datetime)HistoryDealGetInteger(deal, DEAL_TIME);
+   long     posid  = HistoryDealGetInteger(deal, DEAL_POSITION_ID);
+   string   dir    = (dtype == DEAL_TYPE_SELL) ? "buy" : "sell"; // closing deal is opposite of entry
+
+   string j = "{" +
+     Q()+"key"+Q()+":"+Q()+InpKey+Q()+"," +
+     Q()+"ticket"+Q()+":"+Q()+(string)posid+Q()+"," +
+     Q()+"symbol"+Q()+":"+Q()+symbol+Q()+"," +
+     Q()+"type"+Q()+":"+Q()+dir+Q()+"," +
+     Q()+"volume"+Q()+":"+DoubleToString(volume,2)+"," +
+     Q()+"profit"+Q()+":"+DoubleToString(profit,2)+"," +
+     Q()+"entry"+Q()+":"+DoubleToString(price,5)+"," +
+     Q()+"openTime"+Q()+":"+Q()+TimeToString(tm, TIME_DATE|TIME_SECONDS)+Q()+"," +
+     Q()+"platform"+Q()+":"+Q()+"MT5"+Q() +
+     "}";
+
+   char post[]; char res[]; string resHeaders;
+   int len = StringToCharArray(j, post, 0, StringLen(j), CP_UTF8);
+   ArrayResize(post, len);
+   string reqHeaders = "Content-Type: application/json" + CRLF();
+   ResetLastError();
+   int code = WebRequest("POST", Endpoint, reqHeaders, 5000, post, res, resHeaders);
+   if(code == -1)
+      Print("TrafxOS: WebRequest blocked (err ", GetLastError(),
+            "). Add the site URL under Tools>Options>Expert Advisors>Allow WebRequest.");
+   else
+      Print("TrafxOS: synced ticket ", posid, " (HTTP ", code, ")");
+}
+`;
+}
+
+// Parse an MT4/MT5 HTML statement → array of raw trade objects (no side effects).
+function parseMTHTML(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const rows = doc.querySelectorAll('tr');
+  const out = [];
   for (const row of rows) {
     const cells = row.querySelectorAll('td');
     if (cells.length < 13) continue;
+    const cell = i => cells[i]?.textContent?.trim() || '';
 
-    const ticket = cells[0]?.textContent?.trim();
-    const openTime = cells[1]?.textContent?.trim();
-    const type = cells[2]?.textContent?.trim()?.toLowerCase();
-    const size = cells[3]?.textContent?.trim();
-    const item = cells[4]?.textContent?.trim();
-    const closeTime = cells[8]?.textContent?.trim();
-    const profit = cells[12]?.textContent?.trim();
-
-    // Only import buy/sell trades, skip balance/deposit/withdrawal lines
-    if (!type || (!type.includes('buy') && !type.includes('sell'))) continue;
+    const type = cell(2).toLowerCase();
+    if (!type.includes('buy') && !type.includes('sell')) continue; // skip balance/deposit lines
+    const item = cell(4), openTime = cell(1);
     if (!item || !openTime) continue;
 
-    const instrument = normalizeInstrument(item);
-    const direction = type.includes('buy') ? 'LONG' : 'SHORT';
-    const pnl = parseFloat(profit) || 0;
-    const outcome = pnl > 0 ? 'WIN' : pnl < 0 ? 'LOSS' : 'BE';
-
-    // Parse MT4 date format (usually yyyy.mm.dd hh:mm)
-    const dt = parseMT4Date(openTime);
-
-    trades.push({
-      id: uid(),
-      instrument,
-      direction,
-      outcome,
-      pnl,
-      lotSize: parseFloat(size) || null,
-      session: guessSession(dt),
-      emotion: null,
-      setupQuality: null,
-      mistakes: [],
-      rules: { plan: false, sl: false, rr: false, session: false, size: false },
-      notes: `Imported from MT4 (Ticket #${ticket})`,
-      screenshot: '',
-      datetime: dt,
-      createdAt: new Date().toISOString(),
+    out.push({
+      ticket: cell(0),
+      datetime: parseMT4Date(openTime),
+      direction: type.includes('buy') ? 'LONG' : 'SHORT',
+      instrument: item,
+      lotSize: parseFloat(cell(3)) || null,
+      entry: parseFloat(cell(5)) || null,
+      sl: parseFloat(cell(6)) || null,
+      tp: parseFloat(cell(7)) || null,
+      exit: parseFloat(cell(9)) || null,
+      pnl: parseFloat(cell(13).replace(/[^0-9.\-]/g, '')) || parseFloat(cell(12).replace(/[^0-9.\-]/g, '')) || 0,
       source: 'mt4',
     });
-    imported++;
   }
-
-  if (imported > 0) {
-    DB.trades = trades;
-    if (FIREBASE.user) FIREBASE.syncTrades();
-    toast(`Imported ${imported} trades from MT4! Add emotions & rules for deeper insights.`, 'success', 5000);
-    renderDashboard();
-  } else {
-    toast('No trades found in the MT4 report. Ensure you exported the Account History as a "Detailed Report".', 'warn', 5000);
-  }
+  return out.map(buildImportedTrade);
 }
 
-function importMT5CSV(text) {
-  if (text.length > 5 * 1024 * 1024) { toast('File too large. Max 5MB.', 'error'); return; }
-  const lines = text.trim().split('\n');
-  if (lines.length < 2) { toast('CSV appears empty.', 'warn'); return; }
-
-  const headers = lines[0].split(/[,\t]/).map(h => h.replace(/"/g, '').trim().toLowerCase());
-  let imported = 0;
-  const trades = DB.trades;
-
-  // MT5 CSV typical headers: Ticket, Open Time, Type, Volume, Symbol, Price, S/L, T/P, Close Time, Close Price, Commission, Swap, Profit
+// Parse an MT5 (or generic) CSV/TSV export → array of raw trade objects.
+function parseMTCSV(text) {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+  const split = line => line.split(/[,\t;]/).map(v => v.replace(/^"|"$/g, '').trim());
+  const headers = split(lines[0]).map(h => h.toLowerCase());
   const getCol = (row, ...names) => {
     for (const name of names) {
       const idx = headers.indexOf(name);
-      if (idx !== -1 && row[idx]) return row[idx].replace(/^"|"$/g, '').trim();
+      if (idx !== -1 && row[idx]) return row[idx];
     }
     return '';
   };
-
+  const out = [];
   for (let i = 1; i < lines.length; i++) {
-    const vals = lines[i].split(/[,\t]/).map(v => v.replace(/^"|"$/g, '').trim());
+    const vals = split(lines[i]);
     if (vals.length < 5) continue;
-
-    const ticket = getCol(vals, 'ticket', 'order', 'deal');
     const type = getCol(vals, 'type', 'direction').toLowerCase();
     const symbol = getCol(vals, 'symbol', 'item', 'instrument');
-    const volume = getCol(vals, 'volume', 'lots', 'size');
+    if (!symbol || (!type.includes('buy') && !type.includes('sell'))) continue;
     const openTime = getCol(vals, 'open time', 'time', 'open date');
-    const profit = getCol(vals, 'profit', 'p/l', 'net profit');
-    const entry = getCol(vals, 'price', 'open price', 'entry');
-    const closePrice = getCol(vals, 'close price', 'exit');
-    const sl = getCol(vals, 's/l', 'sl', 'stop loss');
-    const tp = getCol(vals, 't/p', 'tp', 'take profit');
-
-    if (!symbol) continue;
-    if (!type.includes('buy') && !type.includes('sell')) continue;
-
-    const instrument = normalizeInstrument(symbol);
-    const direction = type.includes('buy') ? 'LONG' : 'SHORT';
-    const pnl = parseFloat(profit) || 0;
-    const outcome = pnl > 0 ? 'WIN' : pnl < 0 ? 'LOSS' : 'BE';
-    const dt = openTime ? openTime.replace(/\./g, '-').slice(0, 16) : new Date().toISOString().slice(0, 16);
-
-    trades.push({
-      id: uid(),
-      instrument,
-      direction,
-      outcome,
-      pnl,
-      entry: parseFloat(entry) || null,
-      exit: parseFloat(closePrice) || null,
-      sl: parseFloat(sl) || null,
-      tp: parseFloat(tp) || null,
-      lotSize: parseFloat(volume) || null,
-      session: guessSession(dt),
-      emotion: null,
-      setupQuality: null,
-      mistakes: [],
-      rules: { plan: false, sl: !!parseFloat(sl), rr: false, session: false, size: false },
-      notes: `Imported from MT5 (Ticket #${ticket})`,
-      screenshot: '',
-      datetime: dt,
-      createdAt: new Date().toISOString(),
+    out.push({
+      ticket: getCol(vals, 'ticket', 'order', 'deal', 'position'),
+      datetime: openTime ? openTime.replace(/\./g, '-').replace(/\s/, 'T').slice(0, 16) : new Date().toISOString().slice(0, 16),
+      direction: type.includes('buy') ? 'LONG' : 'SHORT',
+      instrument: symbol,
+      lotSize: parseFloat(getCol(vals, 'volume', 'lots', 'size')) || null,
+      entry: parseFloat(getCol(vals, 'price', 'open price', 'entry')) || null,
+      exit: parseFloat(getCol(vals, 'close price', 'exit')) || null,
+      sl: parseFloat(getCol(vals, 's/l', 'sl', 'stop loss')) || null,
+      tp: parseFloat(getCol(vals, 't/p', 'tp', 'take profit')) || null,
+      pnl: parseFloat((getCol(vals, 'profit', 'p/l', 'net profit') || '').replace(/[^0-9.\-]/g, '')) || 0,
       source: 'mt5',
     });
-    imported++;
   }
-
-  if (imported > 0) {
-    DB.trades = trades;
-    if (FIREBASE.user) FIREBASE.syncTrades();
-    toast(`Imported ${imported} trades from MT5! Add emotions & rules for deeper insights.`, 'success', 5000);
-    renderDashboard();
-  } else {
-    toast('No trades found. Ensure the CSV has columns like Symbol, Type, Profit.', 'warn', 5000);
-  }
+  return out.map(buildImportedTrade);
 }
 
 function normalizeInstrument(raw) {
