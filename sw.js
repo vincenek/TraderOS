@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trafxos-v18';
+const CACHE_NAME = 'trafxos-v19';
 const ASSETS = [
     './',
     './index.html',

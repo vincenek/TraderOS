@@ -34,38 +34,62 @@ exports.handler = async (event) => {
     if (!keySnap.exists) return json(403, { error: 'Invalid key' });
     const uid = keySnap.data().uid;
 
+    // Heartbeat from the EA on attach — record it so the app can confirm "connected".
+    if (body.ping) {
+      await db.doc(`users/${uid}`).set({
+        terminalLastSeen: admin.firestore.FieldValue.serverTimestamp(),
+        terminalPlatform: String(body.platform || 'MT'),
+      }, { merge: true });
+      return json(200, { ok: true, ping: true });
+    }
+
     const ticket = String(body.ticket || '').replace(/[^A-Za-z0-9_-]/g, '');
     if (!ticket) return json(400, { error: 'Missing ticket' });
     const type = String(body.type || '').toLowerCase();
     if (!type.includes('buy') && !type.includes('sell')) return json(200, { skipped: true });
 
+    // Touch last-seen on every trade too, so status stays fresh.
+    db.doc(`users/${uid}`).set({ terminalLastSeen: admin.firestore.FieldValue.serverTimestamp() }, { merge: true }).catch(() => {});
+
     const col = db.collection(`users/${uid}/trades`);
     const docId = `mtlive_${ticket}`;
     if ((await col.doc(docId).get()).exists) return json(200, { duplicate: true });
 
-    const pnl = num(body.profit) || 0;
+    const net = num(body.profit) || 0;
     const entry = num(body.entry), exit = num(body.exit), sl = num(body.sl), tp = num(body.tp);
     let rr = null;
     if (entry && sl && (tp || exit)) {
       const risk = Math.abs(entry - sl), rew = Math.abs((tp || exit) - entry);
       if (risk > 0) rr = parseFloat((rew / risk).toFixed(2));
     }
-    const datetime = body.openTime
-      ? String(body.openTime).replace(/\./g, '-').replace(/\s/, 'T').slice(0, 16)
-      : new Date().toISOString().slice(0, 16);
+    const normTime = (s) => String(s || '').replace(/\./g, '-').replace(/\s/, 'T').slice(0, 16);
+    const datetime  = body.openTime ? normTime(body.openTime) : new Date().toISOString().slice(0, 16);
+    const closeTime = body.closeTime ? normTime(body.closeTime) : null;
+    let durationMin = null;
+    if (datetime && closeTime) {
+      const ms = new Date(closeTime) - new Date(datetime);
+      if (ms > 0) durationMin = Math.round(ms / 60000);
+    }
+    const fills = num(body.fills);
 
     const trade = {
       id: docId,
       ticket,
       instrument: normInstrument(body.symbol),
       direction: type.includes('buy') ? 'LONG' : 'SHORT',
-      outcome: pnl > 0 ? 'WIN' : pnl < 0 ? 'LOSS' : 'BE',
+      outcome: net > 0 ? 'WIN' : net < 0 ? 'LOSS' : 'BE',
       session: guessSession(datetime),
       emotion: null, setupQuality: null, mistakes: [],
       rules: { plan: false, sl: !!sl, rr: false, session: false, size: false },
-      entry, exit, sl, tp, rr, pnl,
+      entry, exit, sl, tp, rr,
+      pnl: net,
+      grossPnl: num(body.gross),
+      commission: num(body.commission),
+      swap: num(body.swap),
       lotSize: num(body.volume),
-      notes: `Live from ${(body.platform || 'MT').toUpperCase()} · Ticket #${ticket}`,
+      fills, deals: num(body.deals),
+      closeTime, durationMin,
+      notes: `Live from ${(body.platform || 'MT').toUpperCase()} · Ticket #${ticket}` + (fills > 1 ? ` · scaled in ${fills}×` : ''),
       screenshot: '',
       datetime,
       createdAt: new Date().toISOString(),

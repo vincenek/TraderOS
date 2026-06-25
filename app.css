@@ -3336,3 +3336,15 @@ button.is-loading { cursor: progress; }
   color: #fff; font-size: 0.75rem; font-weight: 800; display: flex; align-items: center; justify-content: center; }
 .aj-setup-step div { font-size: 0.82rem; color: var(--text-2); line-height: 1.45; }
 .cs-badge-live { background: var(--green-bg); color: var(--green); }
+
+/* Live-sync connection status (v19) */
+.aj-conn-row { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: var(--bg-card2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 14px; }
+.aj-conn { font-size: 0.8rem; font-weight: 700; display: inline-flex; align-items: center; gap: 7px; }
+.aj-conn i { font-size: 0.6rem; }
+.aj-conn-on   { color: var(--green); }
+.aj-conn-off  { color: var(--text-3); }
+.aj-conn-warn { color: var(--yellow); }
+.aj-adv { margin-top: 14px; }
+.aj-adv summary { font-size: 0.8rem; color: var(--text-3); cursor: pointer; }
+.aj-adv summary:hover { color: var(--text); }

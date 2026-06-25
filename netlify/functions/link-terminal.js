@@ -13,15 +13,24 @@ exports.handler = async (event) => {
     const userRef = db.doc(`users/${uid}`);
     const snap = await userRef.get();
 
-    let key = snap.exists ? snap.data().ingestKey : null;
+    const data = snap.exists ? snap.data() : {};
+    let key = data.ingestKey || null;
     if (!key) {
       key = 'tjx_' + crypto.randomBytes(24).toString('hex');
       await db.doc(`ingestKeys/${key}`).set({ uid, createdAt: admin.firestore.FieldValue.serverTimestamp() });
       await userRef.set({ ingestKey: key }, { merge: true });
     }
 
+    let lastSeen = null;
+    try { lastSeen = data.terminalLastSeen && data.terminalLastSeen.toDate ? data.terminalLastSeen.toDate().toISOString() : null; } catch (_) {}
+
     const base = process.env.URL || ('https://' + (event.headers.host || 'trafxos.netlify.app'));
-    return json(200, { key, endpoint: `${base}/.netlify/functions/ingest-trade` });
+    return json(200, {
+      key,
+      endpoint: `${base}/.netlify/functions/ingest-trade`,
+      lastSeen,
+      platform: data.terminalPlatform || null,
+    });
   } catch (err) {
     return json(err.statusCode || 500, { error: err.message || 'Server error' });
   }

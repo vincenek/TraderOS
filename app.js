@@ -3574,6 +3574,11 @@ function buildImportedTrade(d) {
     const risk = Math.abs(d.entry - d.sl), reward = Math.abs((d.tp || d.exit) - d.entry);
     if (risk > 0) rr = parseFloat((reward / risk).toFixed(2));
   }
+  let durationMin = null;
+  if (d.datetime && d.closeTime) {
+    const ms = new Date(d.closeTime) - new Date(d.datetime);
+    if (ms > 0) durationMin = Math.round(ms / 60000);
+  }
   return {
     id: uid(),
     ticket: d.ticket || null,
@@ -3587,7 +3592,12 @@ function buildImportedTrade(d) {
     rules: { plan: false, sl: !!d.sl, rr: false, session: false, size: false },
     entry: d.entry ?? null, exit: d.exit ?? null, sl: d.sl ?? null, tp: d.tp ?? null, rr,
     pnl,
+    grossPnl: d.grossPnl ?? null,
+    commission: d.commission ?? null,
+    swap: d.swap ?? null,
     lotSize: d.lotSize ?? null,
+    closeTime: d.closeTime ?? null,
+    durationMin,
     notes: `Imported from ${(d.source || 'mt').toUpperCase()}${d.ticket ? ' · Ticket #' + d.ticket : ''}`,
     screenshot: '',
     datetime: d.datetime,
@@ -3666,35 +3676,78 @@ async function loadLiveSyncTab() {
   el.innerHTML = '<div class="aj-loading"><span class="btn-spinner"></span> Getting your secure key…</div>';
   try {
     const res = await callFn('link-terminal', {});
-    renderLiveSync(el, res.key, res.endpoint);
+    renderLiveSync(el, res.key, res.endpoint, res.lastSeen);
   } catch (err) {
     el.innerHTML = `<p class="aj-live-intro">Couldn't set up live sync: ${sanitize(err.message || 'error')}. Make sure you're signed in and try again.</p>`;
   }
 }
 
-function renderLiveSync(el, key, endpoint) {
+function ajConnHtml(lastSeen) {
+  if (!lastSeen) return '<span class="aj-conn aj-conn-off"><i class="fa-solid fa-circle"></i> Not connected yet</span>';
+  const ageMs = Date.now() - new Date(lastSeen).getTime();
+  if (ageMs < 5 * 60000) return '<span class="aj-conn aj-conn-on"><i class="fa-solid fa-circle"></i> Connected &middot; live</span>';
+  const m = Math.round(ageMs / 60000);
+  const when = m < 60 ? `${m}m ago` : m < 1440 ? `${Math.round(m / 60)}h ago` : `${Math.round(m / 1440)}d ago`;
+  return `<span class="aj-conn aj-conn-warn"><i class="fa-solid fa-circle"></i> Last seen ${when}</span>`;
+}
+
+function renderLiveSync(el, key, endpoint, lastSeen) {
   let origin = endpoint;
   try { origin = new URL(endpoint).origin; } catch (_) {}
   el.innerHTML = `
-    <p class="aj-live-intro">Install the TrafxOS robot in MetaTrader 5 once. After that every trade you close is auto-journaled here — you just tag the emotion.</p>
+    <p class="aj-live-intro">Install the TrafxOS robot in MetaTrader 5 once. Every trade you close is then auto-journaled here — full detail captured (entry, exit, fees, how many times you scaled in). You just tag the emotion.</p>
+
+    <div class="aj-conn-row">
+      <div id="ajConnStatus">${ajConnHtml(lastSeen)}</div>
+      <button class="aj-copy-btn" id="ajCheckConn">Check connection</button>
+    </div>
+
     <div class="aj-key-box">
-      <div class="aj-key-label">Your connection key — keep it private</div>
+      <div class="aj-key-label">1 · Download your robot (key already inside)</div>
+      <button class="btn-primary btn-full" id="ajDownloadEA"><i class="fa-solid fa-download"></i>&nbsp; Download EA</button>
+    </div>
+
+    <div class="aj-key-box">
+      <div class="aj-key-label">2 · Allow web access — copy this exact URL</div>
       <div class="aj-key-row">
+        <code class="aj-key-code" id="ajWlUrl">${sanitize(origin)}</code>
+        <button class="aj-copy-btn" id="ajCopyUrl">Copy</button>
+      </div>
+      <div class="aj-key-label" style="margin-top:8px">In MT5: <b>Tools → Options → Expert Advisors</b> → tick <b>Allow WebRequest for listed URL</b> → paste it.</div>
+    </div>
+
+    <div class="aj-setup-step"><span class="aj-step-num">3</span><div><b>File → Open Data Folder → MQL5 → Experts</b>, drop the downloaded file in, then restart MetaTrader.</div></div>
+    <div class="aj-setup-step"><span class="aj-step-num">4</span><div>Drag <b>TrafxOS AutoSync</b> from the Navigator onto any chart and enable <b>Algo Trading</b>. It instantly back-fills your recent trades — tap <b>Check connection</b> above to confirm.</div></div>
+
+    <details class="aj-adv">
+      <summary>Show / copy my connection key</summary>
+      <div class="aj-key-row" style="margin-top:8px">
         <code class="aj-key-code" id="ajKeyCode">${sanitize(key)}</code>
         <button class="aj-copy-btn" id="ajCopyKey">Copy</button>
       </div>
-    </div>
-    <div class="aj-setup-step"><span class="aj-step-num">1</span><div>Tap <b>Download EA</b> below — it's already filled with your key.</div></div>
-    <div class="aj-setup-step"><span class="aj-step-num">2</span><div>In MT5: <b>File → Open Data Folder → MQL5 → Experts</b>, drop the file in, then restart MetaTrader.</div></div>
-    <div class="aj-setup-step"><span class="aj-step-num">3</span><div>Allow web access: <b>Tools → Options → Expert Advisors</b> → tick <b>Allow WebRequest for</b> and add <code class="aj-key-code">${sanitize(origin)}</code>.</div></div>
-    <div class="aj-setup-step"><span class="aj-step-num">4</span><div>Drag <b>TrafxOS AutoSync</b> from the Navigator onto any chart (allow algo trading). Done — closed trades flow in automatically.</div></div>
-    <button class="btn-primary btn-full btn-lg" id="ajDownloadEA"><i class="fa-solid fa-download"></i>&nbsp; Download EA (pre-filled)</button>
+    </details>
+
     <p class="aj-note">Live sync supports MetaTrader 5. On MT4, use the <b>Import history</b> tab — it works great. Trades appear within a minute of closing.</p>
   `;
-  document.getElementById('ajCopyKey')?.addEventListener('click', () => {
-    navigator.clipboard?.writeText(key).then(() => toast('Key copied.', 'success')).catch(() => {});
-  });
   document.getElementById('ajDownloadEA')?.addEventListener('click', () => downloadEA(key, endpoint));
+  document.getElementById('ajCopyUrl')?.addEventListener('click', () =>
+    navigator.clipboard?.writeText(origin).then(() => toast('URL copied — paste it into MT5.', 'success')).catch(() => {}));
+  document.getElementById('ajCopyKey')?.addEventListener('click', () =>
+    navigator.clipboard?.writeText(key).then(() => toast('Key copied.', 'success')).catch(() => {}));
+  document.getElementById('ajCheckConn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('ajCheckConn');
+    setBtnLoading(btn, true, 'Checking…');
+    try {
+      const res = await callFn('link-terminal', {});
+      const statusEl = document.getElementById('ajConnStatus');
+      if (statusEl) statusEl.innerHTML = ajConnHtml(res.lastSeen);
+      const ok = res.lastSeen && (Date.now() - new Date(res.lastSeen).getTime() < 5 * 60000);
+      if (ok) { toast('✅ Terminal connected! Pulling your trades…', 'success', 5000); if (FIREBASE.user) FIREBASE.syncTrades(); }
+      else toast('No signal yet. Make sure the EA is on a chart, Algo Trading is on, and the URL is whitelisted.', 'warn', 7000);
+    } catch (err) {
+      toast('Could not check: ' + (err.message || 'error'), 'error');
+    } finally { setBtnLoading(btn, false); }
+  });
 }
 
 function downloadEA(key, endpoint) {
@@ -3708,66 +3761,125 @@ function downloadEA(key, endpoint) {
 }
 
 /* MQL5 Expert Advisor source, pre-filled with the user's key + endpoint.
+   Aggregates each full position (entry/exit/times/scale-ins/fees) and:
+   - on attach, backfills recent closed trades so the journal fills in immediately
+   - sends a heartbeat so the app can confirm the connection
    Uses CharToString() for quotes/CRLF so there are zero escape headaches. */
 function buildEASource(key, endpoint) {
   return `//+------------------------------------------------------------------+
 //|  TrafxOS AutoSync EA  —  auto-generated, pre-filled with your key |
-//|  Streams every closed trade to your TrafxOS journal.             |
+//|  Streams every closed trade (full detail) to your TrafxOS journal.|
 //+------------------------------------------------------------------+
 #property strict
-#property description "TrafxOS Auto-Journal — sends closed trades to your TrafxOS account."
+#property description "TrafxOS Auto-Journal — streams closed trades with full detail to your TrafxOS account."
 
-input string InpKey = "${key}";   // Your TrafxOS connection key
-string Endpoint     = "${endpoint}";
+input string InpKey          = "${key}";   // Your TrafxOS connection key
+input int    InpBackfillDays = 30;          // On attach, sync closed trades from the last N days
+string Endpoint              = "${endpoint}";
 
-string Q()    { return CharToString(34); }            // a double-quote character
+string Q()    { return CharToString(34); }
 string CRLF() { return CharToString(13)+CharToString(10); }
 
-void OnInit() { Print("TrafxOS AutoSync active — closed trades will sync automatically."); }
+void Post(string body)
+{
+   char post[]; char res[]; string resHeaders;
+   int len = StringToCharArray(body, post, 0, StringLen(body), CP_UTF8);
+   ArrayResize(post, len);
+   ResetLastError();
+   int code = WebRequest("POST", Endpoint, "Content-Type: application/json"+CRLF(), 5000, post, res, resHeaders);
+   if(code == -1)
+      Print("TrafxOS: WebRequest blocked (err ", GetLastError(),
+            "). Add the site URL in Tools>Options>Expert Advisors>Allow WebRequest, then re-attach.");
+   else
+      Print("TrafxOS: sent (HTTP ", code, ")");
+}
+
+void OnInit()
+{
+   Print("TrafxOS AutoSync active.");
+   // Heartbeat — lets the TrafxOS app confirm you're connected
+   Post("{"+Q()+"key"+Q()+":"+Q()+InpKey+Q()+","+Q()+"ping"+Q()+":true,"+Q()+"platform"+Q()+":"+Q()+"MT5"+Q()+"}");
+   // Backfill recent history so trades show up right away
+   datetime from = TimeCurrent() - (datetime)InpBackfillDays*86400;
+   if(HistorySelect(from, TimeCurrent()))
+   {
+      int total = HistoryDealsTotal();
+      for(int i=0; i<total; i++)
+      {
+         ulong d = HistoryDealGetTicket(i);
+         if((ENUM_DEAL_ENTRY)HistoryDealGetInteger(d, DEAL_ENTRY)==DEAL_ENTRY_OUT)
+            SyncPosition(HistoryDealGetInteger(d, DEAL_POSITION_ID));
+      }
+   }
+}
 
 void OnTradeTransaction(const MqlTradeTransaction &trans,
                         const MqlTradeRequest &request,
                         const MqlTradeResult &result)
 {
    if(trans.type != TRADE_TRANSACTION_DEAL_ADD) return;
-   ulong deal = trans.deal;
-   if(!HistoryDealSelect(deal)) return;
-   if((ENUM_DEAL_ENTRY)HistoryDealGetInteger(deal, DEAL_ENTRY) != DEAL_ENTRY_OUT) return; // only closes
+   if(!HistoryDealSelect(trans.deal)) return;
+   if((ENUM_DEAL_ENTRY)HistoryDealGetInteger(trans.deal, DEAL_ENTRY) != DEAL_ENTRY_OUT) return;
+   SyncPosition(HistoryDealGetInteger(trans.deal, DEAL_POSITION_ID));
+}
 
-   string   symbol = HistoryDealGetString(deal, DEAL_SYMBOL);
-   long     dtype  = HistoryDealGetInteger(deal, DEAL_TYPE);
-   double   profit = HistoryDealGetDouble(deal, DEAL_PROFIT)
-                   + HistoryDealGetDouble(deal, DEAL_SWAP)
-                   + HistoryDealGetDouble(deal, DEAL_COMMISSION);
-   double   volume = HistoryDealGetDouble(deal, DEAL_VOLUME);
-   double   price  = HistoryDealGetDouble(deal, DEAL_PRICE);
-   datetime tm     = (datetime)HistoryDealGetInteger(deal, DEAL_TIME);
-   long     posid  = HistoryDealGetInteger(deal, DEAL_POSITION_ID);
-   string   dir    = (dtype == DEAL_TYPE_SELL) ? "buy" : "sell"; // closing deal is opposite of entry
+// Aggregate every deal belonging to one position into a single rich trade.
+void SyncPosition(long posid)
+{
+   if(!HistorySelectByPosition(posid)) return;
+   int deals = HistoryDealsTotal();
+   double inVol=0, inVal=0, outVol=0, outVal=0, profit=0, comm=0, swap=0;
+   datetime openT=0, closeT=0;
+   string symbol=""; long firstType=-1; int fills=0;
+   for(int i=0; i<deals; i++)
+   {
+      ulong d = HistoryDealGetTicket(i);
+      if(d==0) continue;
+      long   entry = HistoryDealGetInteger(d, DEAL_ENTRY);
+      double vol   = HistoryDealGetDouble(d, DEAL_VOLUME);
+      double price = HistoryDealGetDouble(d, DEAL_PRICE);
+      datetime t   = (datetime)HistoryDealGetInteger(d, DEAL_TIME);
+      symbol  = HistoryDealGetString(d, DEAL_SYMBOL);
+      profit += HistoryDealGetDouble(d, DEAL_PROFIT);
+      comm   += HistoryDealGetDouble(d, DEAL_COMMISSION);
+      swap   += HistoryDealGetDouble(d, DEAL_SWAP);
+      if(entry==DEAL_ENTRY_IN)
+      {
+         inVol += vol; inVal += vol*price; fills++;
+         if(openT==0 || t<openT) openT=t;
+         if(firstType<0) firstType=HistoryDealGetInteger(d, DEAL_TYPE);
+      }
+      else if(entry==DEAL_ENTRY_OUT)
+      {
+         outVol += vol; outVal += vol*price;
+         if(t>closeT) closeT=t;
+      }
+   }
+   if(inVol<=0) return;
+   double entryPrice = inVal/inVol;
+   double exitPrice  = (outVol>0) ? outVal/outVol : 0;
+   string dir = (firstType==DEAL_TYPE_BUY) ? "buy" : "sell";
+   double net = profit+comm+swap;
 
    string j = "{" +
      Q()+"key"+Q()+":"+Q()+InpKey+Q()+"," +
      Q()+"ticket"+Q()+":"+Q()+(string)posid+Q()+"," +
      Q()+"symbol"+Q()+":"+Q()+symbol+Q()+"," +
      Q()+"type"+Q()+":"+Q()+dir+Q()+"," +
-     Q()+"volume"+Q()+":"+DoubleToString(volume,2)+"," +
-     Q()+"profit"+Q()+":"+DoubleToString(profit,2)+"," +
-     Q()+"entry"+Q()+":"+DoubleToString(price,5)+"," +
-     Q()+"openTime"+Q()+":"+Q()+TimeToString(tm, TIME_DATE|TIME_SECONDS)+Q()+"," +
+     Q()+"volume"+Q()+":"+DoubleToString(inVol,2)+"," +
+     Q()+"entry"+Q()+":"+DoubleToString(entryPrice,5)+"," +
+     Q()+"exit"+Q()+":"+DoubleToString(exitPrice,5)+"," +
+     Q()+"profit"+Q()+":"+DoubleToString(net,2)+"," +
+     Q()+"gross"+Q()+":"+DoubleToString(profit,2)+"," +
+     Q()+"commission"+Q()+":"+DoubleToString(comm,2)+"," +
+     Q()+"swap"+Q()+":"+DoubleToString(swap,2)+"," +
+     Q()+"fills"+Q()+":"+(string)fills+"," +
+     Q()+"deals"+Q()+":"+(string)deals+"," +
+     Q()+"openTime"+Q()+":"+Q()+TimeToString(openT, TIME_DATE|TIME_SECONDS)+Q()+"," +
+     Q()+"closeTime"+Q()+":"+Q()+TimeToString(closeT, TIME_DATE|TIME_SECONDS)+Q()+"," +
      Q()+"platform"+Q()+":"+Q()+"MT5"+Q() +
      "}";
-
-   char post[]; char res[]; string resHeaders;
-   int len = StringToCharArray(j, post, 0, StringLen(j), CP_UTF8);
-   ArrayResize(post, len);
-   string reqHeaders = "Content-Type: application/json" + CRLF();
-   ResetLastError();
-   int code = WebRequest("POST", Endpoint, reqHeaders, 5000, post, res, resHeaders);
-   if(code == -1)
-      Print("TrafxOS: WebRequest blocked (err ", GetLastError(),
-            "). Add the site URL under Tools>Options>Expert Advisors>Allow WebRequest.");
-   else
-      Print("TrafxOS: synced ticket ", posid, " (HTTP ", code, ")");
+   Post(j);
 }
 `;
 }
@@ -3825,9 +3937,13 @@ function parseMTCSV(text) {
     const symbol = getCol(vals, 'symbol', 'item', 'instrument');
     if (!symbol || (!type.includes('buy') && !type.includes('sell'))) continue;
     const openTime = getCol(vals, 'open time', 'time', 'open date');
+    const closeTimeRaw = getCol(vals, 'close time', 'close date', 'time.1');
+    const commission = parseFloat((getCol(vals, 'commission', 'comm') || '').replace(/[^0-9.\-]/g, ''));
+    const swap = parseFloat((getCol(vals, 'swap') || '').replace(/[^0-9.\-]/g, ''));
     out.push({
       ticket: getCol(vals, 'ticket', 'order', 'deal', 'position'),
       datetime: openTime ? openTime.replace(/\./g, '-').replace(/\s/, 'T').slice(0, 16) : new Date().toISOString().slice(0, 16),
+      closeTime: closeTimeRaw ? closeTimeRaw.replace(/\./g, '-').replace(/\s/, 'T').slice(0, 16) : null,
       direction: type.includes('buy') ? 'LONG' : 'SHORT',
       instrument: symbol,
       lotSize: parseFloat(getCol(vals, 'volume', 'lots', 'size')) || null,
@@ -3835,6 +3951,8 @@ function parseMTCSV(text) {
       exit: parseFloat(getCol(vals, 'close price', 'exit')) || null,
       sl: parseFloat(getCol(vals, 's/l', 'sl', 'stop loss')) || null,
       tp: parseFloat(getCol(vals, 't/p', 'tp', 'take profit')) || null,
+      commission: isNaN(commission) ? null : commission,
+      swap: isNaN(swap) ? null : swap,
       pnl: parseFloat((getCol(vals, 'profit', 'p/l', 'net profit') || '').replace(/[^0-9.\-]/g, '')) || 0,
       source: 'mt5',
     });
